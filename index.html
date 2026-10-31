@@ -168,6 +168,12 @@ main{padding-bottom:calc(var(--safe-b) + 110px)}
 #startOverlay.hide{display:none}
 #startOverlay .ver{margin-top:6px;font-size:13px;color:var(--muted)}
 #startOverlay .ver b{color:var(--accent)}
+#updBar{position:fixed;left:50%;top:calc(var(--safe-t) + 70px);transform:translateX(-50%);z-index:110;display:none;align-items:center;gap:10px;
+  background:#1f2536;border:1px solid rgba(242,196,109,.5);border-radius:16px;padding:10px 10px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:15px;font-weight:600;max-width:94vw}
+#updBar.show{display:flex}
+#updBar button{padding:9px 14px;border-radius:12px;font-weight:700;font-size:14px}
+#updLater{color:var(--muted)}
+#updNow{background:var(--accent);color:#1b1607}
 /* Arrastrar */
 .pad.dragSrc{opacity:.25}
 .dragGhost{position:fixed;z-index:60;pointer-events:none;transform:scale(1.08);box-shadow:0 18px 40px rgba(0,0,0,.55)!important;opacity:.95}
@@ -318,11 +324,12 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
 </div></div>
 
 <div id="startOverlay"><img src="icon-512.png" alt=""><h1>SenaBoard</h1><p id="startInfo">Preparando…</p><button class="go" id="startBtn">Toca para empezar</button><span class="ver">Versión <b class="appVer"></b></span></div>
+<div id="updBar"><span>✨ Hay una versión nueva de SenaBoard</span><button id="updLater">Luego</button><button id="updNow">Actualizar</button></div>
 <div id="toast"></div>
 
 <script>
 'use strict';
-const APP_VERSION = '8';
+const APP_VERSION = '9';
 /* ================= Utilidades ================= */
 const $ = s => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -1237,6 +1244,35 @@ document.querySelectorAll('#sizeSeg button').forEach(b => b.onclick = () => { st
 document.querySelectorAll('#progSeg button').forEach(b => b.onclick = () => { state.progress = b.dataset.v; save(); applyPrefs(); });
 document.querySelectorAll('#fadeAllStep button').forEach(b => b.onclick = () => { state.fadeAllSec = clamp(Math.round((state.fadeAllSec + parseFloat(b.dataset.d)) * 2) / 2, 0.5, 20); save(); applyPrefs(); });
 document.querySelectorAll('.appVer').forEach(e => { e.textContent = APP_VERSION; });
+/* ================= Actualizaciones ================= */
+let swReg = null, updating = false;
+function setupUpdates(){
+  if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (updating) location.reload(); });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    swReg = reg;
+    const hasOld = () => !!navigator.serviceWorker.controller;
+    const watch = w => { if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && hasOld()) showUpdate(); }); };
+    if (reg.waiting && hasOld()) showUpdate();
+    if (reg.installing) watch(reg.installing);
+    reg.addEventListener('updatefound', () => watch(reg.installing));
+    const check = () => { if (navigator.onLine !== false) reg.update().catch(() => {}); };
+    check(); setInterval(check, 3 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+  }).catch(() => {});
+}
+function showUpdate(){ $('#updBar').classList.add('show'); }
+$('#updLater').onclick = () => $('#updBar').classList.remove('show');
+$('#updNow').onclick = async () => {
+  const busy = [...players.values()].some(p => p.state !== 'idle');
+  if (busy && !await ask('¿Actualizar ahora?', 'Está sonando música y se cortará. La app se recargará en un segundo.', 'Actualizar', true)) return;
+  $('#updBar').classList.remove('show');
+  await saveNow();
+  updating = true;
+  const w = swReg && swReg.waiting;
+  if (w) w.postMessage('skipWaiting'); else location.reload();
+  setTimeout(() => location.reload(), 3000); // por si acaso
+};
 (async function init(){
   try { db = await openDB(); state = await idb('meta', 'readonly', s => s.get('state')); }
   catch (e) { toast('Error abriendo la base de datos: ' + e.message); }
@@ -1247,7 +1283,7 @@ document.querySelectorAll('.appVer').forEach(e => { e.textContent = APP_VERSION;
   const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   let closed = false; try { closed = localStorage.getItem('tipClosed') === '1'; } catch (e) {}
   if (!standalone && !closed && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1))) $('#installTip').style.display = 'block';
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  setupUpdates();
   requestWake();
 })();
 // Acceso para pruebas
