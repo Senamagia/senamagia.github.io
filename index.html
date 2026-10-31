@@ -142,6 +142,17 @@ main{padding-bottom:calc(var(--safe-b) + 110px)}
 .actRow .n{font-size:13px;color:var(--muted);font-weight:600}
 .actRow .fixed{padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px dashed var(--line);font-size:16px;color:#cfd4e2}
 .actRow .del{height:44px;border-radius:12px;background:rgba(229,87,79,.12);color:#f19790;font-size:18px}
+.stepper{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stepper button{height:46px;font-size:22px;color:var(--accent);font-weight:500}
+.stepper button:active{background:rgba(255,255,255,.08)}
+.stepper span{text-align:center;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+#startOverlay{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:radial-gradient(900px 600px at 50% 35%, #232a3d 0%, #0f1117 70%);text-align:center}
+#startOverlay img{width:150px;height:150px;border-radius:34px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#startOverlay h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.4px}
+#startOverlay p{margin:0;color:var(--muted);font-size:16px}
+#startOverlay .go{margin-top:8px;padding:16px 40px;border-radius:30px;background:var(--accent);color:#1b1607;font-size:18px;font-weight:800}
+#startOverlay.hide{display:none}
 /* Arrastrar */
 .pad.dragSrc{opacity:.25}
 .dragGhost{position:fixed;z-index:60;pointer-events:none;transform:scale(1.08);box-shadow:0 18px 40px rgba(0,0,0,.55)!important;opacity:.95}
@@ -199,8 +210,8 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <div class="row"><label>Color</label><div class="swatches" id="pColors"></div></div>
   <div class="row"><label>Volumen <b id="pVolL"></b></label><input type="range" id="pVol" min="0" max="150" step="1"></div>
   <div class="row two">
-    <div><label>Fade in (seg)</label><input type="number" id="pFin" min="0" max="30" step="0.5" inputmode="decimal"></div>
-    <div><label>Fade out (seg)</label><input type="number" id="pFout" min="0" max="30" step="0.5" inputmode="decimal"></div>
+    <div><label>Fade in</label><div class="stepper"><button data-f="fadeIn" data-d="-0.5" aria-label="Menos">−</button><span id="pFinV">0 s</span><button data-f="fadeIn" data-d="0.5" aria-label="Más">＋</button></div></div>
+    <div><label>Fade out</label><div class="stepper"><button data-f="fadeOut" data-d="-0.5" aria-label="Menos">−</button><span id="pFoutV">2 s</span><button data-f="fadeOut" data-d="0.5" aria-label="Más">＋</button></div></div>
   </div>
   <label class="switch"><span>Repetir en bucle<small>Vuelve a empezar al terminar</small></span><input type="checkbox" id="pLoop"></label>
   <hr>
@@ -284,6 +295,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <button class="btn" id="askCancel">Cancelar</button>
 </div></div>
 
+<div id="startOverlay"><img src="icon-512.png" alt=""><h1>SenaBoard</h1><p id="startInfo">Preparando…</p><button class="go" id="startBtn">Toca para empezar</button></div>
 <div id="toast"></div>
 
 <script>
@@ -355,6 +367,7 @@ function migrate(){
   }
 }
 let saveT;
+function saveNow(){ clearTimeout(saveT); return idb('meta', 'readwrite', s => s.put(state, 'state')).catch(e => toast('Error al guardar: ' + e.message)); }
 function save(){ clearTimeout(saveT); saveT = setTimeout(() => idb('meta', 'readwrite', s => s.put(state, 'state')).catch(e => toast('Error al guardar: ' + e.message)), 250); }
 const board = () => state.boards.find(b => b.id === state.current) || state.boards[0];
 
@@ -424,13 +437,19 @@ function getPlayer(pad){
 // iOS solo deja reproducir un audio si antes se tocó la pantalla para él.
 // Al primer toque "desbloqueamos" todas las pistas (en silencio) para que
 // las acciones automáticas (lanzar la siguiente al terminar) funcionen.
-function unlockAll(){
-  if (!ctx) return;
-  for (const p of players.values()){
-    if (p.unlocked || p.state !== 'idle') continue;
-    p.unlocked = true;
-    const pr = p.el.play();
-    if (pr) pr.then(() => { if (p.state === 'idle') p.el.pause(); }).catch(() => { p.unlocked = false; });
+function unlockPlayer(p){
+  if (!p || p.unlocked || p.state !== 'idle') return;
+  p.unlocked = true;
+  const pr = p.el.play();
+  if (pr) pr.then(() => { if (p.state === 'idle') p.el.pause(); }).catch(() => { p.unlocked = false; });
+}
+// Prepara (en silencio) solo las pistas que se lanzarán solas al terminar ésta
+function unlockChain(padId){
+  let id = padId;
+  for (let n = 0; n < 8; n++){
+    const pad = state.pads[id]; if (!pad || pad.onEnd !== 'next') break;
+    const b = boardOf(id); id = b && nextIdOf(b, id); if (!id) break;
+    unlockPlayer(players.get(id));
   }
 }
 function applyLoop(p){ p.el.loop = !!(p.pad.loop && !(p.pad.start > 0) && !(p.pad.end > 0)); }
@@ -455,7 +474,8 @@ const DUCK = 0.3; // volumen de fondo: 30 %
 const vol = p => p.pad.volume * (p.ducked ? DUCK : 1);
 function startPad(p, preview){
   const pad = p.pad; p.token++; p.after = null; p.ducked = false;
-  try { p.el.currentTime = pad.start || 0; } catch (e) {}
+  const st0 = pad.start || 0;
+  if (Math.abs(p.el.currentTime - st0) > 0.02){ try { p.el.currentTime = st0; } catch (e) {} }
   const t = ctx.currentTime, param = p.g.gain;
   param.cancelScheduledValues(t);
   if (pad.fadeIn > 0){ param.setValueAtTime(0, t); param.linearRampToValueAtTime(pad.volume, t + pad.fadeIn); }
@@ -546,7 +566,7 @@ function runAction(p, a){
 }
 function onPadTap(pad){
   if (editMode) return openPadEditor(pad.id);
-  ensureCtx(); requestWake(); unlockAll();
+  ensureCtx(); requestWake();
   const p = players.get(pad.id);
   if (!p) return launch(pad.id);
   if (p.state === 'idle') return playExclusive(p);
@@ -624,6 +644,7 @@ function updateWakeUI(){
   $('#wakeInfo').textContent = !('wakeLock' in navigator) ? 'Tu iPad no lo permite desde aquí: pon Ajustes → Pantalla y brillo → Bloqueo automático → Nunca'
     : wakeLock ? 'Activo: el punto verde de arriba lo indica' : 'Evita que el iPhone se bloquee solo';
 }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && state) saveNow(); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { requestWake(); if (ctx && ctx.state !== 'running') ctx.resume().catch(()=>{}); } });
 
 /* ================= Interfaz: rejilla ================= */
@@ -639,7 +660,7 @@ function renderBoard(){
     el.className = 'pad'; el.style.setProperty('--c', pad.color); el.dataset.id = id;
     el.innerHTML = '<div class="shade"></div><div class="bar"></div><div class="top"><div class="name"></div><div class="pnote"></div></div><div class="meta"><span class="time"></span><span class="tags"></span></div>';
     el.querySelector('.name').textContent = pad.name;
-    el.addEventListener('click', () => { if (dragJustEnded) return; onPadTap(state.pads[id]); });
+    el.addEventListener('click', () => { if (dragJustEnded) return; const pd = state.pads[id]; onPadTap(pd); if (!editMode) unlockChain(id); });
     attachDrag(el, id);
     grid.appendChild(el); padEls.set(id, el);
     renderPadState(id);
@@ -765,11 +786,15 @@ $('#timerReset').onclick = async () => {
   if (!await ask('¿Reiniciar el cronómetro?', 'Volverá a 0:00:00 y arrancará solo con el próximo sonido.', 'Reiniciar', true)) return;
   state.timer = { start: null, acc: 0 }; save(); renderClock();
 };
-document.addEventListener('click', () => { if (ctx) unlockAll(); }, true);
 
 /* ================= Hojas ================= */
 function openSheet(id){ $('#' + id).classList.add('open'); }
-function closeSheet(id){ $('#' + id).classList.remove('open'); if (id === 'padSheet') editingId = null; if (id === 'recSheet') cancelRec(); }
+function closeSheet(id){
+  if (id === 'padSheet'){ try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {} commitEditor(); }
+  $('#' + id).classList.remove('open');
+  if (id === 'padSheet') editingId = null;
+  if (id === 'recSheet') cancelRec();
+}
 document.querySelectorAll('.sheet').forEach(s => {
   s.addEventListener('click', e => { if (e.target === s && s.id !== 'recSheet') closeSheet(s.id); });
   s.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(s.id)));
@@ -853,10 +878,10 @@ function cancelRec(){ if (rec && rec.state === 'recording'){ rec._cancel = true;
 let editingId = null;
 function openPadEditor(id){
   const pad = state.pads[id]; if (!pad) return;
-  editingId = id;
+  editingId = id; edPad = pad;
   $('#pName').value = pad.name;
   $('#pVol').value = Math.round(pad.volume * 100); $('#pVolL').textContent = Math.round(pad.volume * 100) + '%';
-  $('#pFin').value = pad.fadeIn; $('#pFout').value = pad.fadeOut; $('#pLoop').checked = pad.loop;
+  renderFades(); $('#pLoop').checked = pad.loop;
   $('#pStart').value = pad.start > 0 ? fmt(pad.start, true) : '';
   $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : '';
   renderActions(); $('#pOnEnd').value = pad.onEnd || 'none'; $('#pNotes').value = pad.notes || '';
@@ -869,7 +894,8 @@ function openPadEditor(id){
   }
   updateEditorPos(); openSheet('padSheet');
 }
-const editing = () => state.pads[editingId];
+let edPad = null;
+const editing = () => edPad;
 function renderActions(){
   const pad = editing(), box = $('#pActions'); box.innerHTML = '';
   pad.actions.forEach((a, i) => {
@@ -889,7 +915,25 @@ function renderActions(){
   $('#pAddAct').hidden = pad.actions.length >= 8;
 }
 $('#pAddAct').onclick = () => { const pad = editing(); pad.actions.push(pad.actions.length === 1 ? 'fadeOut' : 'fadeNext'); renderActions(); changed(); };
-function changed(){ const pad = editing(); if (!pad) return; const p = players.get(pad.id); if (p){ p.pad = pad; applyLoop(p); if (p.state === 'playing') setGain(p, vol(p), 0.05); } renderPadState(pad.id); save(); }
+function changed(){ const pad = editing(); if (!pad || !state.pads[pad.id]) return; const p = players.get(pad.id); if (p){ p.pad = pad; applyLoop(p); if (p.state === 'playing') setGain(p, vol(p), 0.05); } renderPadState(pad.id); save(); }
+$('#pName').oninput = $('#pName').onchange = e => { const v = e.target.value.trim(); if (v){ editing().name = v; changed(); } };
+$('#pVol').oninput = e => { editing().volume = e.target.value / 100; $('#pVolL').textContent = e.target.value + '%'; changed(); };
+function renderFades(){ const pad = editing(); $('#pFinV').textContent = pad.fadeIn + ' s'; $('#pFoutV').textContent = pad.fadeOut + ' s'; }
+document.querySelectorAll('.stepper button').forEach(b => b.addEventListener('click', () => {
+  const pad = editing(); if (!pad) return; const f = b.dataset.f;
+  pad[f] = clamp(Math.round((pad[f] + parseFloat(b.dataset.d)) * 2) / 2, 0, 30);
+  renderFades(); changed();
+}));
+// Guarda lo escrito aunque el teclado siga abierto al pulsar «Listo»
+function commitEditor(){
+  const pad = editing(); if (!pad || editingId == null) return;
+  const n = $('#pName').value.trim(); if (n && n !== pad.name){ pad.name = n; }
+  pad.notes = $('#pNotes').value;
+  const sv = $('#pStart').value.trim(), ev = $('#pEnd').value.trim();
+  if (sv !== (pad.start > 0 ? fmt(pad.start, true) : '')) setStart(parseTime(sv));
+  if (ev !== (pad.end > 0 ? fmt(pad.end, true) : '')) setEnd(parseTime(ev));
+  changed(); saveNow();
+}
 $('#pOnEnd').onchange = e => { editing().onEnd = e.target.value; changed(); };
 $('#pNotes').oninput = e => { editing().notes = e.target.value; changed(); };
 $('#pLoop').onchange = e => { editing().loop = e.target.checked; $('#pOnEndNote').hidden = !e.target.checked; changed(); };
@@ -899,10 +943,10 @@ function setStart(v){ const pad = editing(); const d = pad.duration || Infinity;
 function setEnd(v){ const pad = editing(); const d = pad.duration || Infinity;
   if (v == null || v >= d) pad.end = null; else if (isNaN(v) || v <= (pad.start || 0)){ toast('El final debe ir después del inicio'); } else pad.end = v;
   $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : ''; changed(); }
-$('#pStart').onchange = e => setStart(parseTime(e.target.value));
-$('#pEnd').onchange = e => setEnd(parseTime(e.target.value));
-$('#pMarkStart').onclick = () => { const p = players.get(editingId); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setStart(p.el.currentTime); };
-$('#pMarkEnd').onclick = () => { const p = players.get(editingId); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setEnd(p.el.currentTime); };
+$('#pStart').onchange = e => { if (editing()) setStart(parseTime(e.target.value)); };
+$('#pEnd').onchange = e => { if (editing()) setEnd(parseTime(e.target.value)); };
+$('#pMarkStart').onclick = () => { const p = players.get(editing().id); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setStart(p.el.currentTime); };
+$('#pMarkEnd').onclick = () => { const p = players.get(editing().id); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setEnd(p.el.currentTime); };
 $('#pPreview').onclick = async () => {
   const pad = editing(); ensureCtx();
   let p; try { p = await getPlayer(pad); } catch (e) { return toast('No encuentro el audio'); }
@@ -990,6 +1034,11 @@ $('#keepAwake').onchange = e => { state.keepAwake = e.target.checked; save(); if
 $('#editBtn').onclick = () => { editMode = !editMode; document.body.classList.toggle('edit', editMode); $('#editBtn').classList.toggle('on', editMode); $('#editBtn').textContent = editMode ? 'Hecho' : 'Editar'; renderBoard(); };
 $('#masterVol').oninput = e => { state.masterVolume = e.target.value / 100; $('#mvLabel').textContent = e.target.value + '%'; if (master) master.gain.setTargetAtTime(state.masterVolume, ctx.currentTime, 0.02); save(); };
 $('#stopAll').onclick = () => { ensureCtx(); stopAll(); };
+$('#startBtn').onclick = $('#startOverlay').onclick = () => {
+  ensureCtx(); requestWake();
+  for (const id of board().pads){ const pd = state.pads[id]; if (pd && pd.onEnd === 'next') unlockChain(id); }
+  $('#startOverlay').classList.add('hide');
+};
 $('#tipClose').onclick = () => { $('#installTip').style.display = 'none'; try { localStorage.setItem('tipClosed', '1'); } catch (e) {} };
 
 // Formato de copia: "SBK1" + longitud (uint32) + JSON + audios seguidos
@@ -1061,6 +1110,7 @@ function applyState(){
   let closed = false; try { closed = localStorage.getItem('tipClosed') === '1'; } catch (e) {}
   if (!standalone && !closed && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1))) $('#installTip').style.display = 'block';
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  $('#startInfo').textContent = Object.keys(state.pads).length + ' pistas listas';
   requestWake();
 })();
 // Acceso para pruebas
