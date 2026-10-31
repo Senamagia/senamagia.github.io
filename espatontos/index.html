@@ -34,7 +34,7 @@ input,textarea,select{font:inherit;font-size:16px;color:var(--text);-webkit-user
 button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;text-align:inherit}
 svg{display:block}
 #views{position:fixed;inset:0;bottom:calc(64px + var(--sb))}
-.view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;padding:calc(var(--st) + 12px) 0 40px}
+.view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;display:none;padding:calc(var(--st) + 12px) 0 40px}
 .view.on{display:block}
 .wrap{max-width:760px;margin:0 auto;padding:0 16px}
 .hdr{display:flex;justify-content:space-between;align-items:center;min-height:44px;padding:0 4px}
@@ -69,7 +69,8 @@ h1{font-size:34px;font-weight:800;letter-spacing:-.8px;padding:0 4px;margin-bott
 .num .ix{width:24px;font-size:15px;font-weight:700;color:var(--sec);text-align:center;flex:none}
 .num .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
 .nm{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sec);flex-wrap:wrap}
+.meta{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sec);flex-wrap:wrap;min-width:0}
+.meta .emo{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .emo{padding:2px 8px;border-radius:8px;color:#1C1C1E;font-weight:600;font-size:12px;white-space:nowrap}
 .dots{letter-spacing:1.5px;color:var(--text);font-size:11px}
 .flash{color:var(--accent);font-weight:700}
@@ -94,7 +95,7 @@ h1{font-size:34px;font-weight:800;letter-spacing:-.8px;padding:0 4px;margin-bott
 .qa .d{width:10px;height:10px;border-radius:5px;flex:none}
 .qa .t{flex:1;min-width:0}
 .qa .t b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.qa .t small{font-size:12px;color:var(--sec)}
+.qa .t small{font-size:12px;color:var(--sec);white-space:nowrap}
 .qa .plus{color:var(--accent);font-size:22px;font-weight:400;width:28px;text-align:center}
 .search{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;background:var(--field);color:var(--sec);margin-bottom:12px}
 .search input{flex:1;border:0;background:transparent;outline:none;min-width:0}
@@ -102,15 +103,18 @@ h1{font-size:34px;font-weight:800;letter-spacing:-.8px;padding:0 4px;margin-bott
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;height:32px;padding:0 14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1px var(--sep);font-size:14px;font-weight:500;white-space:nowrap}
 .chip.on{background:var(--text);color:var(--bg);box-shadow:none;font-weight:600}
+.grid>*{min-width:0}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (min-width:980px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.rc{padding:14px;display:flex;flex-direction:column;gap:10px;min-height:132px;text-align:left;width:100%}
-.rc .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.rc .top span:last-child{font-size:12.5px;color:var(--sec);font-weight:500}
-.rc .ttl{font-size:15.5px;font-weight:600;line-height:20px;flex:1}
-.rc .bot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sec);gap:6px}
-.rc .bot span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc{padding:14px;display:flex;flex-direction:column;gap:10px;min-height:132px;text-align:left;width:100%;min-width:0;overflow:hidden}
+.rc .top{display:flex;justify-content:space-between;align-items:center;gap:6px;min-width:0}
+.rc .top .emo{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.rc .top span:last-child{font-size:12.5px;color:var(--sec);font-weight:500;flex:none}
+.rc .ttl{font-size:15.5px;font-weight:600;line-height:20px;flex:1;overflow-wrap:anywhere}
+.rc .bot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sec);gap:6px;min-width:0}
+.rc .bot span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.rc .bot .dots{flex:none;letter-spacing:.5px;font-size:10px}
 .group{background:var(--card);border-radius:14px;overflow:hidden}
 .li{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 14px;border-bottom:1px solid var(--sep);text-align:left}
 .li:last-child{border-bottom:0}
@@ -201,6 +205,8 @@ textarea{width:100%;min-height:90px;border:0;border-radius:14px;background:var(-
 #toast{position:fixed;left:50%;bottom:calc(80px + var(--sb));transform:translate(-50%,20px);background:#2A2A30;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;display:flex;gap:14px;align-items:center;font-size:14.5px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;max-width:calc(100% - 32px)}
 #toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 #toast button{color:#A8B2FF;font-weight:700;padding:6px 8px}
+.guide{padding:4px 16px 16px;font-size:15px;line-height:22px;-webkit-user-select:text;user-select:text}
+.guide p{margin-top:10px}.guide ul{margin:10px 0 0 20px}.guide li{margin-top:6px}.guide b{font-weight:600}
 .note{font-size:13px;color:var(--sec);line-height:19px;padding:6px 4px 0}
 </style>
 </head>
@@ -237,8 +243,13 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
-const TIPOS=[['Con objetos',['Aparición','Desaparición','Transformación','Transposición','Penetración','Restauración','Multiplicación']],['Leyes físicas',['Levitación','Animación','Invulnerabilidad','Anomalía física','Simpatía']],['Mente',['Predicción','Lectura de mente','Adivinación','Telequinesis','Influencia','Coincidencia imposible']],['Otros',['Localización','Escapismo','Destreza y juego','Magia del espectador','Comedia']]];
-const REVEAL=['Predicción','Coincidencia imposible','Lectura de mente','Adivinación'];
+const TIPOS=[
+ ['Con objetos',['Aparición','Desaparición','Transformación','Cambio de color','Transposición','Penetración','Restauración','Multiplicación','Unión y separación','Cambio de tamaño']],
+ ['Leyes físicas',['Levitación','Suspensión','Animación','Invulnerabilidad','Anomalía física','Simpatía']],
+ ['Mente',['Predicción','Lectura de mente','Transmisión de pensamiento','Clarividencia','Adivinación','Psicometría','Telequinesis','Influencia','Control','Coincidencia imposible','Hipnosis','Mediumnidad','Memoria y cálculo']],
+ ['El espectador',['Localización','Magia del espectador','Fallo del espectador','Desafío']],
+ ['Otros',['Escapismo','Destreza y juego','Explicación falsa','Comedia','Historia o narrativa']]];
+const REVEAL=['Predicción','Coincidencia imposible','Lectura de mente','Adivinación','Transmisión de pensamiento','Clarividencia','Psicometría'];
 const WHERE={maleta:'Maleta',bolsillo:'Bolsillo',mesa:'Mesa'};
 const RESET={inmediato:'Inmediato','menos1':'Menos de 1 min',esconder:'Necesita esconderse'};
 const SETS=[['A','Set A','Tu set principal para cada grupo'],['B','Set B','Para grupos que repiten o ya te han visto'],['X','Set extendido','Para los grupos más entregados']];
@@ -434,7 +445,7 @@ const ICON={
   search:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="7" cy="7" r="4.6"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg>',
   more:'<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><circle cx="4" cy="10" r="1.8"/><circle cx="10" cy="10" r="1.8"/><circle cx="16" cy="10" r="1.8"/></svg>'
 };
-const hdr=(left,right)=>`<div class="hdr"><div class="l">${left||''}</div><div style="display:flex;gap:8px;align-items:center">${right||''}<button class="ibtn" data-a="settings" aria-label="Ajustes">${ICON.gear}</button></div></div>`;
+const hdr=(left,right)=>`<div class="hdr"><div class="l">${left||''}</div><div style="display:flex;gap:8px;align-items:center">${right||''}<button class="ibtn" data-a="guide" aria-label="Guía" style="font-size:17px;font-weight:700;box-shadow:inset 0 0 0 1.7px currentColor;width:26px;height:26px;border-radius:13px;margin:0 5px">?</button><button class="ibtn" data-a="settings" aria-label="Ajustes">${ICON.gear}</button></div></div>`;
 
 function render(){
   applyTheme();
@@ -745,6 +756,7 @@ function openSettings(){EED=null;NT='';openSheet({title:'Ajustes',left:'Listo',b
 function settingsHTML(){
   const st=D.set,hasSample=D.nums.some(x=>x.sample)||D.shows.some(x=>x.sample);
   return `<div class="f">
+   <div class="act"><button data-a="guide">Guía: cómo funciona y teoría</button></div>
    <div><div class="fl">Apariencia</div><div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[['auto','Automático'],['light','Claro'],['dark','Oscuro']].map(([k,n])=>`<button class="${st.appearance===k?'on':''}" data-a="setAp" data-k="${k}">${n}</button>`).join('')}</div>
      <div class="fg" style="margin-top:10px"><div class="fr"><span>Color de acento</span><span style="color:var(--sec);font-size:14px">${esc((ACCENTS.find(a=>a.id===st.accent)||ACCENTS[0]).n)}</span></div><div class="accs">${ACCENTS.map(a=>`<button class="${st.accent===a.id?'on':''}" style="background:${document.documentElement.dataset.theme==='dark'?a.d:a.l}" data-a="setAc" data-k="${a.id}" aria-label="${a.n}"></button>`).join('')}</div></div></div>
    <div><div class="fl">Emociones <span>toca para editar</span></div><div class="fg">${D.emos.map(e=>`<button class="li" data-a="emoEd" data-id="${e.id}"><i style="width:22px;height:22px;border-radius:11px;background:${e.c};flex:none"></i><span class="tx"><b>${esc(e.n)}</b></span><small style="color:var(--sec)">${(c=>c===1?'1 número':c+' números')(D.nums.filter(x=>x.emo===e.id).length)}</small></button>
@@ -760,7 +772,7 @@ function settingsHTML(){
      <button data-a="exportData">Exportar copia</button><button data-a="importData">Importar copia</button>
      ${hasSample?'<button class="d" data-a="delSample">Borrar datos de ejemplo</button>':''}</div>
      <div class="note">La copia es un archivo con todos tus números, shows y ajustes. Guárdalo en Google Drive o mándaselo a quien quieras: al importarlo puedes reemplazarlo todo o añadir sus números a los tuyos.</div></div>
-   <div class="note" style="text-align:center;padding:10px 0 0">Espatontos · Monta tu show · v1</div>
+   <div class="note" style="text-align:center;padding:10px 0 0">Espatontos · Monta tu show · v1.1</div>
   </div>`;
 }
 Object.assign(S,{
@@ -795,9 +807,33 @@ $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
     S.impReplace=()=>{closeSheet();withUndo('Copia restaurada',()=>{const d=defaults();o.set=Object.assign(d.set,o.set||{});D=Object.assign(d,o)})};
   };r.readAsText(f)});
 
+
+/* ============ guía ============ */
+const GUIDE=[
+ ['Qué es Espatontos','<p>Espatontos te ayuda a montar, preparar y revisar tus shows de magia. Guardas cada número en una ficha, los colocas en orden como si fueran post-its y la app te enseña la curva de energía del show, te avisa de lo que un director te diría en un ensayo y te prepara la lista de material.</p><p>Todo se guarda en tu dispositivo y funciona sin internet.</p>'],
+ ['Repertorio: tus fichas','<p>Cada número tiene su ficha. Lo más importante es que sea realista, porque el asistente trabaja con estos datos:</p><ul><li><b>Duración</b> en minutos y segundos.</li><li><b>Emoción</b> principal que transmite. Puedes crear las tuyas y elegir su color en Ajustes.</li><li><b>Potencia</b> del 1 (suave) al 5 (demoledora): cuánto impacta en el público.</li><li><b>Tipo de efecto</b>: puedes marcar varios, y crear los tuyos.</li><li><b>Público</b>: voluntarios, si suben al escenario y si es un número de presentación.</li><li><b>Condiciones</b>: si aguanta público rodeando, si necesita mesa o música, si termina limpio y si pide al público sujetar cosas.</li><li><b>Reset</b>: cuánto tardas en tenerlo listo otra vez.</li><li><b>Material</b>: dónde va (maleta, bolsillo o mesa) y si es consumible, con las unidades que te quedan.</li></ul><p>Usa el buscador y los filtros para encontrar números rápido. «Apto cóctel» muestra los que aguantan rodeado, duran 3 minutos o menos y tienen potencia 4 o 5.</p>'],
+ ['Montar un show','<ul><li><b>Añadir:</b> pulsa «Añadir número» y elige de tu repertorio. En el iPad en horizontal tienes el repertorio a la derecha: tócalo para añadir.</li><li><b>Ordenar:</b> mantén el dedo en el icono ≡ de la derecha y arrastra.</li><li><b>Opciones de un número:</b> toca su nombre para editar la ficha, añadir una transición o quitarlo del show.</li><li><b>Transiciones:</b> entre número y número toca «+ transición» y apunta la frase puente, el chiste o el cambio de música.</li><li><b>La curva:</b> cada punto es un número, su altura es la potencia y su color la emoción. La línea gris discontinua es la curva ideal de la plantilla elegida.</li><li><b>El asistente:</b> bajo la curva aparecen los avisos más importantes. Tócalos para leer la explicación. Si algo lo haces a propósito, ocúltalo solo para ese show.</li></ul><p>Los colores de los avisos: rojo es importante, naranja es para revisar y gris es una sugerencia.</p>'],
+ ['Material y shows','<p><b>Material</b> junta automáticamente el material de todos los números del show, sin repetidos y agrupado por maleta, bolsillo y mesa. Ve marcando lo que metes al hacer la maleta. «Reiniciar» deja la lista en blanco para el próximo bolo.</p><p><b>Shows</b> guarda todos tus shows. Toca uno para abrirlo en Montar. Con «···» puedes cambiar nombre, duración objetivo y plantilla, duplicarlo o eliminarlo. Si eliminas algo por error, pulsa «Deshacer» en el aviso que aparece abajo.</p>'],
+ ['Ajustes y copias','<ul><li><b>Apariencia:</b> automático (sigue al dispositivo), claro u oscuro, y el color de acento.</li><li><b>Emociones y tipos propios:</b> créalos, renómbralos y elige colores.</li><li><b>Asistente:</b> activa o desactiva cada regla y ajusta la duración máxima de tu flash.</li><li><b>Copia de seguridad:</b> «Exportar copia» crea un archivo con todo. Guárdalo en Google Drive. «Importar copia» lo recupera en otro dispositivo, o añade el repertorio de un amigo al tuyo.</li></ul><p>Cada dispositivo guarda sus propios datos: para tener lo mismo en el iPhone y en el iPad, exporta en uno e importa en el otro.</p>'],
+ ['Teoría: la regla de presentación','<p>El público se forma una impresión de alguien en muy pocos segundos, y lo primero que ve pesa más en cómo recuerda todo lo demás. Por eso la app propone abrir siempre con un <b>flash corto</b> (1:30 como máximo, ajustable) marcado como <b>número de presentación</b>: algo que en los primeros 30 segundos deje claro quién eres, aunque alguien tenga que irse pronto.</p><p>Se aplica a todas las plantillas y se puede desactivar.</p>'],
+ ['Teoría: Crescendo constante','<p><b>Origen:</b> Darwin Ortiz, en <i>Strong Magic</i> (1994), uno de los libros de referencia sobre cómo presentar magia. Organiza el acto en apertura, construcción y cierre, y defiende que el show debe ir siempre a más, equilibrando unidad (un hilo común) y variedad.</p><p><b>Curva ideal:</b> una rampa que sube de principio a fin.</p><p><b>Qué comprueba la app:</b> que el cierre sea tu número más fuerte, que la potencia no caiga más de un punto de golpe entre dos números y que, tras la presentación, abras con algo fuerte.</p><p><b>Ideal para:</b> close-up, salón y bolos cortos.</p>'],
+ ['Teoría: Tres actos','<p><b>Origen:</b> Dariel Fitzkee, en <i>Showmanship for Magicians</i> (1943), aplicando a la magia la estructura clásica del teatro. Un primer acto que presenta y sube el interés, un segundo que lo complica y un tercero que lo lleva todo a un clímax. Fitzkee proponía planificar empezando por el gran final y trabajar hacia atrás.</p><p><b>Curva ideal:</b> tres escalones, cada uno terminando más arriba.</p><p><b>Qué comprueba la app:</b> divide el show en tres bloques y avisa si alguno termina más flojo de lo que empieza, y si el cierre no es tu número más fuerte.</p><p><b>Ideal para:</b> espectáculos de escenario de 45 a 90 minutos.</p>'],
+ ['Teoría: Pirámide de Freytag','<p><b>Origen:</b> Gustav Freytag, dramaturgo alemán, describió en 1863 la estructura en cinco partes del drama clásico: introducción, acción ascendente, clímax, acción descendente y desenlace. El director de magia Will Given la ha trasladado a los espectáculos de magia.</p><p><b>Curva ideal:</b> una montaña con el pico hacia el 60–70 % del show.</p><p><b>Qué comprueba la app:</b> que el clímax (tu número más fuerte) no llegue demasiado pronto, que después queden pocos números y que no sean largos, para acelerar hacia un final decidido.</p><p><b>Ideal para:</b> shows con un número estrella que lo cambia todo.</p>'],
+ ['Teoría: Viaje del héroe','<p><b>Origen:</b> Joseph Campbell describió en 1949 una estructura que se repite en mitos de todo el mundo: partida, iniciación y regreso. En magia la han usado escuelas como la de Jeff McBride para construir espectáculos con historia.</p><p><b>Curva ideal:</b> sube, cae en una prueba en el centro y renace hacia el final.</p><p><b>Qué comprueba la app:</b> que en el centro haya un momento de riesgo o tensión (potencia baja o emoción de tensión) y que el cierre sea de transformación: emoción, ternura o asombro.</p><p><b>Ideal para:</b> shows temáticos o teatrales.</p>'],
+ ['Teoría: Kishōtenketsu','<p><b>Origen:</b> estructura en cuatro partes nacida en la poesía clásica china y muy usada en Japón: introducción, desarrollo, giro y conclusión. Su giro no es un conflicto, sino algo inesperado que da un sentido nuevo a todo lo anterior. No viene de un libro de magia: es una adaptación pensada para el mentalismo.</p><p><b>Curva ideal:</b> tranquila durante casi todo el show y un salto final.</p><p><b>Qué comprueba la app:</b> que el penúltimo o el último número sea una predicción, coincidencia, lectura de mente o revelación. No avisa de curvas planas.</p><p><b>Ideal para:</b> mentalismo y shows de «todo estaba predicho».</p>'],
+ ['Teoría: Magia de cóctel','<p><b>Origen:</b> la práctica de los magos que trabajan de grupo en grupo en bodas, cócteles y eventos. No hay un único show, sino un mini-set que repites con cada grupo.</p><ul><li><b>Gancho:</b> rápido y visual. Te sirve de termómetro para saber si el grupo quiere más.</li><li><b>Conexión:</b> interacción y personalidad.</li><li><b>Cierre:</b> fuerte y memorable.</li></ul><p>El <b>set B</b> es para grupos que repiten o ya te han visto, y el <b>extendido</b> para los más entregados.</p><p><b>Qué comprueba la app:</b> sets de 5 a 10 minutos y de 2 o 3 números, cada número de 3 minutos como máximo, potencia 4 o 5, que aguante público rodeando, reset inmediato, que termine limpio, que no pida sujetar cosas, material de bolsillo y que el set B no repita números del A.</p>'],
+ ['Teoría: los tipos de efecto','<p>La lista de tipos reúne las clasificaciones clásicas de efectos mágicos, como la de Fitzkee, junto con las categorías habituales del mentalismo, agrupadas en cinco familias: con objetos, leyes físicas, mente, el espectador y otros.</p><p>Sirven para que el asistente detecte cuándo pones dos efectos iguales seguidos (el segundo pierde fuerza) y para saber qué números sirven como giro final. Si echas en falta alguno, créalo en Ajustes → Tus tipos de efecto.</p>'],
+ ['Plantilla libre','<p>Solo aplica las reglas generales (emociones, tipos y voluntarios seguidos, números flojos, curva plana, duración y cierre), sin curva ideal. Para cuando quieres total libertad.</p>']
+];
+let GOPEN=0;
+function openGuide(){GOPEN=0;openSheet({title:'Guía',left:'Cerrar',body:()=>`<div class="f" style="gap:10px">${GUIDE.map((g,i)=>`<div class="fg"><button class="li" data-a="gTog" data-i="${i}" style="justify-content:space-between"><span class="tx"><b style="font-weight:600">${g[0]}</b></span><span style="color:var(--sec);transform:rotate(${GOPEN===i?180:0}deg);transition:transform .2s">${ICON.chev}</span></button>${GOPEN===i?`<div class="guide">${g[1]}</div>`:''}</div>`).join('')}</div>`})}
+S.gTog=el=>{const i=+el.dataset.i;GOPEN=GOPEN===i?-1:i;drawSheet()};
+S.guide=()=>openGuide();
+
 /* ============ arranque ============ */
 addEventListener('resize',()=>{if(tab==='mon')render()});
 render();
+if(!D.set.seenGuide){D.set.seenGuide=true;save();setTimeout(openGuide,400)}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
