@@ -1,6 +1,6 @@
 // Guarda la app en el iPad para que funcione sin internet.
 // Cada versión nueva cambia VERSION; la app avisa y se actualiza solo cuando el usuario lo pide.
-const VERSION = 'sb-v10';
+const VERSION = 'sb-v11';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

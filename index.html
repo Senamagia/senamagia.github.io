@@ -232,7 +232,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <h2><span>Editar pista</span><button data-close>Listo</button></h2>
   <div class="row"><label>Nombre</label><input type="text" id="pName" maxlength="60"></div>
   <div class="row"><label>Color</label><div class="swatches" id="pColors"></div></div>
-  <div class="row"><label>Volumen <b id="pVolL"></b></label><input type="range" id="pVol" min="0" max="150" step="1"></div>
+  <div class="row"><label>Volumen <b id="pVolL"></b></label><input type="range" id="pVol" min="0" max="150" step="1"><p class="note" id="pVolWarn" hidden>⚠︎ Por encima del 100 % el sonido puede saturar y oírse peor. Mejor sube el volumen del iPad o del altavoz.</p></div>
   <div class="row two">
     <div><label>Fade in</label><div class="stepper"><button data-f="fadeIn" data-d="-0.5" aria-label="Menos">−</button><span id="pFinV">0 s</span><button data-f="fadeIn" data-d="0.5" aria-label="Más">＋</button></div></div>
     <div><label>Fade out</label><div class="stepper"><button data-f="fadeOut" data-d="-0.5" aria-label="Menos">−</button><span id="pFoutV">2 s</span><button data-f="fadeOut" data-d="0.5" aria-label="Más">＋</button></div></div>
@@ -303,6 +303,12 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
     <p class="note">La copia incluye todos los tableros y canciones. Guárdala en Archivos o iCloud Drive.</p>
   </div>
   <hr>
+  <div class="row"><label>Sonido</label>
+    <p class="note" id="audioInfo"></p>
+    <button class="btn" id="resetAudio">↻ Reiniciar sonido</button>
+    <p class="note">Úsalo si alguna vez el sonido se oye raro o distorsionado (por ejemplo, tras conectar un altavoz Bluetooth). Tarda unos segundos en volver a preparar las pistas.</p>
+  </div>
+  <hr>
   <p class="note" id="storageInfo"></p>
   <p class="note">SenaBoard · versión <b class="appVer"></b></p>
   <p class="note"><b>Consejos para el show:</b> pon el iPad en modo avión o «No molestar» para que no entren llamadas, y usa el <b>Acceso guiado</b> (Ajustes → Accesibilidad) para fijar la app. En este iPad, pon también el <b>bloqueo automático en «Nunca»</b>. El sonido se corta si bloqueas la pantalla o cambias de app.</p>
@@ -331,7 +337,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
 
 <script>
 'use strict';
-const APP_VERSION = '10';
+const APP_VERSION = '11';
 /* ================= Utilidades ================= */
 const $ = s => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -407,13 +413,13 @@ function save(){ clearTimeout(saveT); saveT = setTimeout(() => idb('meta', 'read
 const board = () => state.boards.find(b => b.id === state.current) || state.boards[0];
 
 /* ================= Motor de audio ================= */
-let ctx, master;
+let ctx, master, audioGen = 0;
 function setSession(type){ try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (e) {} }
 setSession('playback'); // suena aunque el interruptor de silencio esté activado (iOS 16.4+)
 // En iPadOS 15 no existe audioSession: un audio silencioso en bucle hace lo mismo
 let silentEl = null;
-function silentWavUrl(){
-  const sr = 8000, n = sr / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+function silentWavUrl(rate){
+  const sr = rate || 44100, n = Math.round(sr / 2), buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
   const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
   w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
   v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true);
@@ -422,13 +428,13 @@ function silentWavUrl(){
 }
 function unmuteIOS(){
   if (navigator.audioSession || (silentEl && !silentEl.paused)) return;
-  if (!silentEl){ silentEl = document.createElement('audio'); silentEl.setAttribute('x-webkit-airplay', 'deny'); silentEl.setAttribute('playsinline', ''); silentEl.loop = true; silentEl.src = silentWavUrl(); }
+  if (!silentEl){ silentEl = document.createElement('audio'); silentEl.setAttribute('x-webkit-airplay', 'deny'); silentEl.setAttribute('playsinline', ''); silentEl.loop = true; silentEl.src = silentWavUrl(ctx ? ctx.sampleRate : 44100); }
   silentEl.play().catch(() => {});
 }
 function ensureCtx(){
   if (!ctx){
     const AC = window.AudioContext || window.webkitAudioContext;
-    ctx = new AC({ latencyHint: 'playback' });
+    ctx = new AC({ latencyHint: 'playback' }); audioGen++;
     master = ctx.createGain(); master.gain.value = state.masterVolume; master.connect(ctx.destination);
   }
   if (ctx.state !== 'running') ctx.resume().catch(() => {});
@@ -510,7 +516,7 @@ function decodePcm(blob){
     const ch = [];
     for (let c = 0; c < nc; c++){
       const f = abuf.getChannelData(c), a = new Int16Array(f.length);
-      for (let i = 0; i < f.length; i++){ let v = f[i]; v = v < -1 ? -1 : v > 1 ? 1 : v; a[i] = v < 0 ? v * 32768 : v * 32767; }
+      for (let i = 0; i < f.length; i++){ let v = f[i]; v = v < -1 ? -1 : v > 1 ? 1 : v; a[i] = Math.round(v < 0 ? v * 32768 : v * 32767); }
       ch.push(a);
     }
     pcmBytes += bytes;
@@ -526,14 +532,15 @@ function getPlayer(pad){
   if (players.has(pad.id)) return Promise.resolve(players.get(pad.id));
   if (pending.has(pad.id)) return pending.get(pad.id);
   const pr = (async () => {
-    ensureCtx();
+    ensureCtx(); const gen = audioGen;
     const blob = await getAudio(pad.audioId);
     if (!blob) throw new Error('Falta el audio');
+    let el, src = null, url = null, mode = 'pcm', pcm = null;
+    try { pcm = await decodePcm(blob); } catch (e) { mode = 'media'; }
+    if (gen !== audioGen){ if (pcm) pcmBytes -= pcm.bytes; throw new Error('obsoleto'); } // el sonido se reinició mientras tanto
     const g = ctx.createGain(); g.gain.value = 0; g.connect(master);
-    let el, src = null, url = null, mode = 'pcm';
-    try { el = new PcmTrack(g, await decodePcm(blob)); }
-    catch (e) {
-      mode = 'media';
+    if (pcm) el = new PcmTrack(g, pcm);
+    else {
       url = URL.createObjectURL(blob);
       el = new Audio(); el.setAttribute('playsinline', ''); el.preload = 'auto'; el.src = url;
       src = ctx.createMediaElementSource(el); src.connect(g);
@@ -1036,7 +1043,7 @@ function openPadEditor(id){
   const pad = state.pads[id]; if (!pad) return;
   editingId = id; edPad = pad;
   $('#pName').value = pad.name;
-  $('#pVol').value = Math.round(pad.volume * 100); $('#pVolL').textContent = Math.round(pad.volume * 100) + '%';
+  $('#pVol').value = Math.round(pad.volume * 100); $('#pVolL').textContent = Math.round(pad.volume * 100) + '%'; $('#pVolWarn').hidden = pad.volume <= 1;
   renderFades(); $('#pLoop').checked = pad.loop;
   $('#pStart').value = pad.start > 0 ? fmt(pad.start, true) : '';
   $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : '';
@@ -1073,7 +1080,7 @@ function renderActions(){
 $('#pAddAct').onclick = () => { const pad = editing(); pad.actions.push(pad.actions.length === 1 ? 'fadeOut' : 'fadeNext'); renderActions(); changed(); };
 function changed(){ const pad = editing(); if (!pad || !state.pads[pad.id]) return; const p = players.get(pad.id); if (p){ p.pad = pad; applyLoop(p); if (p.state === 'idle') cueToStart(p); if (p.state === 'playing') setGain(p, vol(p), 0.05); } renderPadState(pad.id); save(); }
 $('#pName').oninput = $('#pName').onchange = e => { const v = e.target.value.trim(); if (v){ editing().name = v; changed(); } };
-$('#pVol').oninput = e => { editing().volume = e.target.value / 100; $('#pVolL').textContent = e.target.value + '%'; changed(); };
+$('#pVol').oninput = e => { editing().volume = e.target.value / 100; $('#pVolL').textContent = e.target.value + '%'; $('#pVolWarn').hidden = e.target.value <= 100; changed(); };
 function renderFades(){ const pad = editing(); $('#pFinV').textContent = pad.fadeIn + ' s'; $('#pFoutV').textContent = pad.fadeOut + ' s'; }
 document.querySelectorAll('#padSheet .stepper button').forEach(b => b.addEventListener('click', () => {
   const pad = editing(); if (!pad) return; const f = b.dataset.f;
@@ -1271,16 +1278,57 @@ $('#menuBtn').onclick = async () => {
   try { const e = await navigator.storage.estimate(); s += ' Espacio usado: ' + (e.usage / 1048576).toFixed(0) + ' MB.'; } catch (e) {}
   s += ' Sonido preparado en memoria: ' + Math.round(pcmBytes / 1048576) + ' MB.';
   const res = [...players.values()].filter(p => p.mode === 'media').length; if (res) s += ' ' + res + ' pista(s) en modo de reserva.';
-  $('#storageInfo').textContent = s;
+  $('#storageInfo').textContent = s; renderAudioInfo();
   openSheet('menuSheet');
 };
+$('#resetAudio').onclick = () => { lastMismatch = ''; ensureCtx(); if (anyActive()) return toast('Para la música antes de reiniciar el sonido'); closeSheet('menuSheet'); checkRoute(true); };
 $('#keepAwake').onchange = e => { state.keepAwake = e.target.checked; save(); if (state.keepAwake) requestWake(); else releaseWake(); };
 $('#editBtn').onclick = () => { editMode = !editMode; document.body.classList.toggle('edit', editMode); $('#editBtn').classList.toggle('on', editMode); $('#editBtn').textContent = editMode ? 'Hecho' : 'Editar'; renderBoard(); };
 $('#masterVol').oninput = e => { state.masterVolume = e.target.value / 100; $('#mvLabel').textContent = e.target.value + '%'; if (master) master.gain.setTargetAtTime(state.masterVolume, ctx.currentTime, 0.02); save(); };
 $('#stopAll').onclick = () => { ensureCtx(); stopAll(); };
 $('#fadeAll').onclick = () => { ensureCtx(); fadeAll(); };
+/* ================= Salida de audio (Bluetooth, mini jack, altavoz) =================
+   Safari en iPadOS 15 distorsiona el sonido si la frecuencia de la salida cambia
+   (p. ej. al conectar un altavoz Bluetooth) y el audio sigue con la antigua.
+   Comprobamos la frecuencia real y, si no coincide, rehacemos el sonido. */
+function hardwareRate(){
+  try { const AC = window.AudioContext || window.webkitAudioContext; const c = new AC({ latencyHint: 'playback' }); const r = c.sampleRate; if (c.close) c.close(); return r; }
+  catch (e) { return ctx ? ctx.sampleRate : 0; }
+}
+const anyActive = () => [...players.values()].some(p => p.state !== 'idle');
+let rebuilding = false, lastMismatch = '';
+async function rebuildAudio(reason){
+  if (rebuilding) return; rebuilding = true;
+  try {
+    for (const id of [...players.keys()]){ const pl = players.get(id); if (pl.state !== 'idle') hardStop(pl, false); disposePlayer(id); }
+    pending.clear(); pcmBytes = 0;
+    if (silentEl){ try { silentEl.pause(); } catch (e) {} silentEl = null; }
+    const old = ctx; ctx = null; master = null;
+    if (old && old.close){ try { await old.close(); } catch (e) {} }
+    ensureCtx(); renderBoard(); preloadBoard(); renderAudioInfo();
+    if (reason) toast(reason);
+  } finally { rebuilding = false; }
+}
+function checkRoute(force){
+  if (!ctx || rebuilding || anyActive()) return false;
+  const hw = hardwareRate();
+  if (!force && hw && hw !== ctx.sampleRate){
+    const pair = hw + '/' + ctx.sampleRate;
+    if (pair === lastMismatch) return false; // ya se intentó: no repetir en bucle
+    lastMismatch = pair;
+  }
+  if (force || (hw && hw !== ctx.sampleRate)){ rebuildAudio(force ? 'Sonido reiniciado' : 'Salida de audio cambiada: preparando el sonido de nuevo'); return true; }
+  return false;
+}
+function renderAudioInfo(){
+  const el = $('#audioInfo'); if (!el) return;
+  el.textContent = ctx ? 'Sonido a ' + ctx.sampleRate.toLocaleString('es-ES') + ' Hz' : '';
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(() => checkRoute(false), 400); });
+window.addEventListener('focus', () => setTimeout(() => checkRoute(false), 400));
+setInterval(() => { if (document.visibilityState === 'visible') checkRoute(false); }, 10000);
 $('#startBtn').onclick = $('#startOverlay').onclick = () => {
-  ensureCtx(); requestWake(); primeAll();
+  ensureCtx(); if (!checkRoute(false)) {} requestWake(); primeAll(); renderAudioInfo();
   $('#startOverlay').classList.add('hide');
 };
 $('#tipClose').onclick = () => { $('#installTip').style.display = 'none'; try { localStorage.setItem('tipClosed', '1'); } catch (e) {} };
