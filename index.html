@@ -81,7 +81,20 @@ footer{position:fixed;left:0;right:0;bottom:0;z-index:10;background:#0f1117;bord
   padding:12px calc(var(--safe-r) + 20px) calc(var(--safe-b) + 12px) calc(var(--safe-l) + 20px);display:flex;gap:18px;align-items:center}
 #stopAll{flex:none;height:56px;padding:0 28px;border-radius:28px;background:linear-gradient(180deg,#ef6a61,#d84c44);font-size:16px;font-weight:800;letter-spacing:.6px;
   box-shadow:0 6px 18px rgba(229,87,79,.35)}
-#stopAll.cut{background:linear-gradient(180deg,#b8322b,#8f211b)}
+#fadeAll{flex:none;height:56px;padding:0 24px;border-radius:28px;background:linear-gradient(180deg,#f2c46d,#d9a441);color:#2a1d04;font-size:16px;font-weight:800;letter-spacing:.6px}
+#stopAll:active,#fadeAll:active{transform:scale(.96)}
+#wave{display:block;width:100%;height:120px;border-radius:12px;background:#121520;border:1px solid var(--line);touch-action:none;margin-bottom:4px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.seg button{padding:11px 6px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:15px;font-weight:600}
+.seg button.on{background:var(--accent);color:#1b1607;border-color:transparent}
+body.size-s #grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+body.size-s .pad{border-radius:16px;padding:9px 9px 11px;min-height:90px}
+body.size-s .pad .name{font-size:13px}
+body.size-s .pad .meta{font-size:11px}
+body.size-l #grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:16px}
+body.size-l .pad .name{font-size:18px}
+body.size-l .pad .pnote{font-size:13px}
+body.prog-full .pad .bar{top:0;height:auto;border-radius:0;background:rgba(255,255,255,.24);transition:width .12s linear}
 .vol{flex:1;max-width:420px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);letter-spacing:.3px}
 input[type=range]{width:100%;accent-color:var(--accent);height:30px}
 
@@ -153,6 +166,8 @@ main{padding-bottom:calc(var(--safe-b) + 110px)}
 #startOverlay p{margin:0;color:var(--muted);font-size:16px}
 #startOverlay .go{margin-top:8px;padding:16px 40px;border-radius:30px;background:var(--accent);color:#1b1607;font-size:18px;font-weight:800}
 #startOverlay.hide{display:none}
+#startOverlay .ver{margin-top:6px;font-size:13px;color:var(--muted)}
+#startOverlay .ver b{color:var(--accent)}
 /* Arrastrar */
 .pad.dragSrc{opacity:.25}
 .dragGhost{position:fixed;z-index:60;pointer-events:none;transform:scale(1.08);box-shadow:0 18px 40px rgba(0,0,0,.55)!important;opacity:.95}
@@ -183,6 +198,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
 </main>
 <footer>
   <button id="stopAll">■ PARAR</button>
+  <button id="fadeAll">↘ FADE</button>
   <div class="vol"><span>Volumen <b id="mvLabel">100%</b></span><input type="range" id="masterVol" min="0" max="100" step="1" value="100"></div>
 </footer>
 
@@ -232,11 +248,12 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   </div>
   <hr>
   <div class="row"><label>Inicio y final de la pista</label>
+    <canvas id="wave"></canvas>
     <div class="pos" id="pPos">0:00.0 / 0:00.0</div>
-    <button class="btn" id="pPreview">▶ Probar</button>
+    <div class="two"><button class="btn" id="pPreview">▶ Escuchar desde el inicio</button><button class="btn" id="pPreviewEnd">▶ Escuchar el final</button></div>
     <div class="timeRow" style="margin-top:8px"><input type="text" id="pStart" placeholder="Inicio 0:00.0" inputmode="decimal"><button class="btn small" id="pMarkStart">Marcar aquí</button></div>
     <div class="timeRow" style="margin-top:8px"><input type="text" id="pEnd" placeholder="Final (hasta el final)" inputmode="decimal"><button class="btn small" id="pMarkEnd">Marcar aquí</button></div>
-    <p class="note">Formato minutos:segundos, por ejemplo 0:12.5. Deja el final vacío para que suene hasta el final. Si marcas un final, la pista hará su fade out justo antes.</p>
+    <p class="note">Arrastra las asas doradas para marcar dónde empieza y dónde acaba la pista; la parte oscurecida no sonará. Para afinar, escribe el tiempo (por ejemplo 0:12.5) o pulsa «Marcar aquí» mientras escuchas. Si marcas un final, la pista hace su fade out justo antes. El archivo original no se toca.</p>
   </div>
   <hr>
   <p class="note">Para mover la pista: cierra esta ventana, mantén el dedo sobre ella un momento y arrástrala a su sitio.</p>
@@ -265,7 +282,11 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
 <!-- Ajustes -->
 <div class="sheet" id="menuSheet"><div class="box">
   <h2>Ajustes <button data-close>Cerrar</button></h2>
-  <label class="switch"><span>Mantener la pantalla encendida<small id="wakeInfo">Evita que el iPhone se bloquee solo</small></span><input type="checkbox" id="keepAwake"></label>
+  <div class="row"><label>Tamaño de los botones</label><div class="seg" id="sizeSeg"><button data-v="s">Pequeño</button><button data-v="m">Mediano</button><button data-v="l">Grande</button></div></div>
+  <div class="row"><label>Avance de la canción</label><div class="seg" id="progSeg"><button data-v="thin">Barra fina abajo</button><button data-v="full">Todo el botón</button></div></div>
+  <div class="row"><label>Duración del botón FADE</label><div class="stepper" id="fadeAllStep"><button data-d="-0.5" aria-label="Menos">−</button><span id="fadeAllV">3 s</span><button data-d="0.5" aria-label="Más">＋</button></div></div>
+  <hr>
+  <label class="switch"><span>Mantener la pantalla encendida<small id="wakeInfo">Evita que el iPad se bloquee solo</small></span><input type="checkbox" id="keepAwake"></label>
   <hr>
   <div class="row"><label>Copia de seguridad</label>
     <button class="btn" id="exportBtn">⬆︎ Exportar copia (todo)</button>
@@ -275,7 +296,8 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   </div>
   <hr>
   <p class="note" id="storageInfo"></p>
-  <p class="note"><b>Consejos para el show:</b> pon el iPhone en modo avión o «No molestar» para que no entren llamadas, y usa el <b>Acceso guiado</b> (Ajustes → Accesibilidad) para fijar la app. En este iPad, pon también el <b>bloqueo automático en «Nunca»</b>. El sonido se corta si bloqueas la pantalla o cambias de app.</p>
+  <p class="note">SenaBoard · versión <b class="appVer"></b></p>
+  <p class="note"><b>Consejos para el show:</b> pon el iPad en modo avión o «No molestar» para que no entren llamadas, y usa el <b>Acceso guiado</b> (Ajustes → Accesibilidad) para fijar la app. En este iPad, pon también el <b>bloqueo automático en «Nunca»</b>. El sonido se corta si bloqueas la pantalla o cambias de app.</p>
 </div></div>
 
 <!-- Cronómetro -->
@@ -295,11 +317,12 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <button class="btn" id="askCancel">Cancelar</button>
 </div></div>
 
-<div id="startOverlay"><img src="icon-512.png" alt=""><h1>SenaBoard</h1><p id="startInfo">Preparando…</p><button class="go" id="startBtn">Toca para empezar</button></div>
+<div id="startOverlay"><img src="icon-512.png" alt=""><h1>SenaBoard</h1><p id="startInfo">Preparando…</p><button class="go" id="startBtn">Toca para empezar</button><span class="ver">Versión <b class="appVer"></b></span></div>
 <div id="toast"></div>
 
 <script>
 'use strict';
+const APP_VERSION = '8';
 /* ================= Utilidades ================= */
 const $ = s => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -351,6 +374,9 @@ function defaultState(){
 }
 function migrate(){
   if (!state.timer) state.timer = { start: null, acc: 0 };
+  if (!state.padSize) state.padSize = 'm';
+  if (!state.progress) state.progress = 'thin';
+  if (state.fadeAllSec == null) state.fadeAllSec = 3;
   for (const b of state.boards){
     for (const id of b.pads){
       const pad = state.pads[id]; if (!pad) continue;
@@ -490,13 +516,13 @@ function setGain(p, target, dur){
 }
 const DUCK = 0.3; // volumen de fondo: 30 %
 const vol = p => p.pad.volume * (p.ducked ? DUCK : 1);
-function startPad(p, preview){
+function startPad(p, preview, from){
   const pad = p.pad; p.token++; p.after = null; p.ducked = false;
-  const st0 = pad.start || 0;
+  const st0 = from != null ? from : (pad.start || 0);
   if (Math.abs(p.el.currentTime - st0) > 0.02){ try { p.el.currentTime = st0; } catch (e) {} }
   const t = ctx.currentTime, param = p.g.gain;
   param.cancelScheduledValues(t);
-  if (pad.fadeIn > 0){ param.setValueAtTime(0, t); param.linearRampToValueAtTime(pad.volume, t + pad.fadeIn); }
+  if (pad.fadeIn > 0 && from == null){ param.setValueAtTime(0, t); param.linearRampToValueAtTime(pad.volume, t + pad.fadeIn); }
   else param.setValueAtTime(pad.volume, t);
   p.state = 'playing'; p.unlocked = true;
   const pr = p.el.play();
@@ -524,10 +550,10 @@ function hardStop(p, runAfter){
   cueToStart(p);
   if (after) after();
 }
-function playExclusive(p, preview){
+function playExclusive(p, preview, from){
   for (const q of players.values()) if (q !== p) q.after = null; // la acción manual manda
   if (board().exclusive){ for (const q of players.values()) if (q !== p){ if (q.state === 'playing') fadeStop(q); else if (q.state === 'paused') hardStop(q, false); } }
-  startPad(p, preview);
+  startPad(p, preview, from);
 }
 function boardOf(padId){ return state.boards.find(b => b.pads.includes(padId)); }
 function nextIdOf(b, padId){ const i = b.pads.indexOf(padId); return i >= 0 && i + 1 < b.pads.length ? b.pads[i + 1] : null; }
@@ -597,13 +623,15 @@ function onPadTap(pad){
 }
 function stopAll(){
   let any = false;
+  for (const p of players.values()){ p.after = null; if (p.state !== 'idle'){ hardStop(p, false); any = true; } }
+  return any;
+}
+function fadeAll(){
   for (const p of players.values()){
     p.after = null;
-    if (p.state === 'playing'){ fadeStop(p); any = true; }
-    else if (p.state === 'stopping' || p.state === 'paused'){ hardStop(p, false); any = true; }
+    if (p.state === 'playing') fadeStop(p, state.fadeAllSec);
+    else if (p.state === 'paused') hardStop(p, false);
   }
-  updateStopBtn();
-  return any;
 }
 /* ================= Cronómetro y reloj ================= */
 function timerElapsed(){ const t = state.timer; return t.acc + (t.start ? Date.now() - t.start : 0); }
@@ -661,7 +689,7 @@ function updateWakeUI(){
   $('#wakeDot').classList.toggle('on', !!wakeLock);
   $('#wakeDot').classList.toggle('na', !('wakeLock' in navigator));
   $('#wakeInfo').textContent = !('wakeLock' in navigator) ? 'Tu iPad no lo permite desde aquí: pon Ajustes → Pantalla y brillo → Bloqueo automático → Nunca'
-    : wakeLock ? 'Activo: el punto verde de arriba lo indica' : 'Evita que el iPhone se bloquee solo';
+    : wakeLock ? 'Activo: el punto verde de arriba lo indica' : 'Evita que el iPad se bloquee solo';
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && state) saveNow(); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { requestWake(); if (ctx && ctx.state !== 'running') ctx.resume().catch(()=>{}); } });
@@ -729,14 +757,7 @@ function drawProgress(p, t, end){
   time.textContent = '-' + fmt(Math.max(0, end - t));
 }
 function markMissing(id){ const el = padEls.get(id); if (el) el.classList.add('missing'); }
-function updateStopBtn(){
-  let playing = false, stopping = false;
-  for (const p of players.values()){ if (p.state === 'playing') playing = true; if (p.state === 'stopping') stopping = true; }
-  const b = $('#stopAll');
-  b.classList.toggle('cut', stopping && !playing);
-  b.textContent = stopping && !playing ? '✕ CORTAR' : '■ PARAR';
-}
-
+function updateStopBtn(){}
 
 /* ================= Arrastrar para ordenar (modo Editar) ================= */
 let drag = null, dragJustEnded = false;
@@ -913,7 +934,7 @@ function openPadEditor(id){
     b.onclick = () => { pad.color = c; sw.querySelectorAll('.sw').forEach(x => x.classList.toggle('sel', x === b)); changed(); };
     sw.appendChild(b);
   }
-  updateEditorPos(); openSheet('padSheet');
+  updateEditorPos(); openSheet('padSheet'); loadWave();
 }
 let edPad = null;
 const editing = () => edPad;
@@ -936,11 +957,11 @@ function renderActions(){
   $('#pAddAct').hidden = pad.actions.length >= 8;
 }
 $('#pAddAct').onclick = () => { const pad = editing(); pad.actions.push(pad.actions.length === 1 ? 'fadeOut' : 'fadeNext'); renderActions(); changed(); };
-function changed(){ const pad = editing(); if (!pad || !state.pads[pad.id]) return; const p = players.get(pad.id); if (p){ p.pad = pad; applyLoop(p); if (p.state === 'playing') setGain(p, vol(p), 0.05); } renderPadState(pad.id); save(); }
+function changed(){ const pad = editing(); if (!pad || !state.pads[pad.id]) return; const p = players.get(pad.id); if (p){ p.pad = pad; applyLoop(p); if (p.state === 'idle') cueToStart(p); if (p.state === 'playing') setGain(p, vol(p), 0.05); } renderPadState(pad.id); save(); }
 $('#pName').oninput = $('#pName').onchange = e => { const v = e.target.value.trim(); if (v){ editing().name = v; changed(); } };
 $('#pVol').oninput = e => { editing().volume = e.target.value / 100; $('#pVolL').textContent = e.target.value + '%'; changed(); };
 function renderFades(){ const pad = editing(); $('#pFinV').textContent = pad.fadeIn + ' s'; $('#pFoutV').textContent = pad.fadeOut + ' s'; }
-document.querySelectorAll('.stepper button').forEach(b => b.addEventListener('click', () => {
+document.querySelectorAll('#padSheet .stepper button').forEach(b => b.addEventListener('click', () => {
   const pad = editing(); if (!pad) return; const f = b.dataset.f;
   pad[f] = clamp(Math.round((pad[f] + parseFloat(b.dataset.d)) * 2) / 2, 0, 30);
   renderFades(); changed();
@@ -960,27 +981,112 @@ $('#pNotes').oninput = e => { editing().notes = e.target.value; changed(); };
 $('#pLoop').onchange = e => { editing().loop = e.target.checked; $('#pOnEndNote').hidden = !e.target.checked; changed(); };
 function setStart(v){ const pad = editing(); const d = pad.duration || Infinity;
   if (v == null) pad.start = 0; else if (isNaN(v) || v < 0 || v >= d){ toast('Inicio no válido'); } else { pad.start = v; if (pad.end > 0 && pad.end <= v) pad.end = null; }
-  $('#pStart').value = pad.start > 0 ? fmt(pad.start, true) : ''; $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : ''; changed(); }
+  $('#pStart').value = pad.start > 0 ? fmt(pad.start, true) : ''; $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : ''; changed(); drawWave(); }
 function setEnd(v){ const pad = editing(); const d = pad.duration || Infinity;
   if (v == null || v >= d) pad.end = null; else if (isNaN(v) || v <= (pad.start || 0)){ toast('El final debe ir después del inicio'); } else pad.end = v;
-  $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : ''; changed(); }
+  $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : ''; changed(); drawWave(); }
 $('#pStart').onchange = e => { if (editing()) setStart(parseTime(e.target.value)); };
 $('#pEnd').onchange = e => { if (editing()) setEnd(parseTime(e.target.value)); };
 $('#pMarkStart').onclick = () => { const p = players.get(editing().id); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setStart(p.el.currentTime); };
 $('#pMarkEnd').onclick = () => { const p = players.get(editing().id); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setEnd(p.el.currentTime); };
-$('#pPreview').onclick = async () => {
+async function preview(fromEnd){
   const pad = editing(); ensureCtx();
   let p; try { p = await getPlayer(pad); } catch (e) { return toast('No encuentro el audio'); }
-  if (p.state !== 'idle') hardStop(p); else playExclusive(p, true);
-  updateEditorPos();
-};
+  if (p.state !== 'idle'){ hardStop(p); return updateEditorPos(); }
+  let from = null;
+  if (fromEnd){ const d = pad.duration || 0; const end = pad.end > 0 ? pad.end : d; from = Math.max(pad.start || 0, end - 5); }
+  playExclusive(p, true, from); updateEditorPos();
+}
+$('#pPreview').onclick = () => preview(false);
+$('#pPreviewEnd').onclick = () => preview(true);
+let lastWaveDraw = 0;
 function updateEditorPos(){
   const pad = editing(); if (!pad) return;
   const p = players.get(pad.id);
-  const t = p && p.state !== 'idle' ? p.el.currentTime : (pad.start || 0);
+  const on = p && p.state !== 'idle';
+  const t = on ? p.el.currentTime : (pad.start || 0);
   $('#pPos').textContent = fmt(t, true) + ' / ' + fmt(pad.duration || 0, true);
-  $('#pPreview').textContent = p && p.state !== 'idle' ? '■ Parar prueba' : '▶ Probar';
+  $('#pPreview').textContent = on ? '■ Parar' : '▶ Escuchar desde el inicio';
+  $('#pPreviewEnd').textContent = on ? '■ Parar' : '▶ Escuchar el final';
+  const now = performance.now(); if (now - lastWaveDraw > 90){ lastWaveDraw = now; drawWave(); }
 }
+/* ---------- Forma de onda ---------- */
+const WF_N = 500;
+let peaksBusy = null;
+async function computePeaks(pad){
+  ensureCtx();
+  const blob = await getAudio(pad.audioId); if (!blob) throw new Error('sin audio');
+  const ab = await new Response(blob).arrayBuffer();
+  const buf = await new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej));
+  const chs = []; for (let c = 0; c < Math.min(2, buf.numberOfChannels); c++) chs.push(buf.getChannelData(c));
+  const len = buf.length, step = Math.max(1, Math.floor(len / WF_N)); const raw = []; let max = 0;
+  for (let i = 0; i < WF_N; i++){
+    const a = i * step, b = Math.min(len, a + step), stride = Math.max(1, Math.floor((b - a) / 300)); let m = 0;
+    for (const ch of chs) for (let j = a; j < b; j += stride){ const v = Math.abs(ch[j]); if (v > m) m = v; }
+    raw.push(m); if (m > max) max = m;
+  }
+  pad.peaks = raw.map(v => Math.round(v / (max || 1) * 100));
+  if (!pad.duration) pad.duration = buf.duration;
+  save();
+}
+function drawWave(){
+  const pad = editing(), cv = $('#wave'); if (!pad || !cv || !cv.clientWidth) return;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){ cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const d = pad.duration || 1, sx = (pad.start || 0) / d * w, ex = (pad.end > 0 ? pad.end : d) / d * w;
+  const pk = pad.peaks;
+  if (pk){
+    const bw = w / pk.length;
+    for (let i = 0; i < pk.length; i++){
+      const x = i * bw, v = Math.max(1, pk[i] / 100 * (h / 2 - 8));
+      g.fillStyle = (x + bw >= sx && x <= ex) ? pad.color : 'rgba(255,255,255,.22)';
+      g.fillRect(x, h / 2 - v, Math.max(1, bw - .4), v * 2);
+    }
+  } else {
+    g.fillStyle = 'rgba(255,255,255,.5)'; g.font = '14px -apple-system, sans-serif'; g.textAlign = 'center';
+    g.fillText(peaksBusy ? 'Calculando la forma de onda…' : 'Sin forma de onda', w / 2, h / 2 + 5);
+  }
+  g.fillStyle = 'rgba(8,9,14,.62)'; g.fillRect(0, 0, sx, h); g.fillRect(ex, 0, w - ex, h);
+  for (const x of [sx, ex]){
+    g.fillStyle = '#f2c46d'; g.fillRect(x - 1.5, 0, 3, h);
+    const gx = Math.min(Math.max(x - 8, 0), w - 16);
+    g.beginPath(); if (g.roundRect) g.roundRect(gx, h / 2 - 18, 16, 36, 6); else g.rect(gx, h / 2 - 18, 16, 36); g.fill();
+    g.fillStyle = 'rgba(42,29,4,.6)'; g.fillRect(gx + 5, h / 2 - 8, 2, 16); g.fillRect(gx + 9, h / 2 - 8, 2, 16);
+  }
+  const p = players.get(pad.id);
+  if (p && p.state !== 'idle'){ const px = p.el.currentTime / d * w; g.fillStyle = '#fff'; g.fillRect(px - 1, 0, 2, h); }
+}
+function loadWave(){
+  const pad = editing(); if (!pad) return;
+  requestAnimationFrame(drawWave);
+  if (pad.peaks || peaksBusy) return;
+  peaksBusy = computePeaks(pad).catch(() => toast('No se pudo dibujar la forma de onda')).then(() => { peaksBusy = null; drawWave(); });
+  drawWave();
+}
+(function(){
+  const cv = $('#wave'); let which = null;
+  const move = e => {
+    const pad = editing(); if (!pad || !pad.duration) return;
+    const r = cv.getBoundingClientRect(); const t = Math.round(clamp((e.clientX - r.left) / r.width, 0, 1) * pad.duration * 10) / 10;
+    if (which === 'start'){ const lim = (pad.end > 0 ? pad.end : pad.duration) - 0.5; pad.start = clamp(t, 0, Math.max(0, lim)); }
+    else { const v = clamp(t, (pad.start || 0) + 0.5, pad.duration); pad.end = v >= pad.duration - 0.05 ? null : v; }
+    $('#pStart').value = pad.start > 0 ? fmt(pad.start, true) : ''; $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : '';
+    $('#pPos').textContent = fmt(which === 'start' ? (pad.start || 0) : (pad.end || pad.duration), true) + ' / ' + fmt(pad.duration, true);
+    drawWave();
+  };
+  cv.addEventListener('pointerdown', e => {
+    const pad = editing(); if (!pad || !pad.duration) return;
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, d = pad.duration;
+    const sx = (pad.start || 0) / d * r.width, ex = (pad.end > 0 ? pad.end : d) / d * r.width;
+    which = Math.abs(x - sx) <= Math.abs(x - ex) ? 'start' : 'end';
+    try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    e.preventDefault(); move(e);
+  });
+  cv.addEventListener('pointermove', e => { if (which) move(e); });
+  const up = () => { if (!which) return; which = null; changed(); };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+})();
 $('#pDelete').onclick = async () => {
   const pad = editing();
   if (!await ask('¿Eliminar «' + pad.name + '»?', 'Se borrará de este tablero.', 'Eliminar', true)) return;
@@ -1055,6 +1161,7 @@ $('#keepAwake').onchange = e => { state.keepAwake = e.target.checked; save(); if
 $('#editBtn').onclick = () => { editMode = !editMode; document.body.classList.toggle('edit', editMode); $('#editBtn').classList.toggle('on', editMode); $('#editBtn').textContent = editMode ? 'Hecho' : 'Editar'; renderBoard(); };
 $('#masterVol').oninput = e => { state.masterVolume = e.target.value / 100; $('#mvLabel').textContent = e.target.value + '%'; if (master) master.gain.setTargetAtTime(state.masterVolume, ctx.currentTime, 0.02); save(); };
 $('#stopAll').onclick = () => { ensureCtx(); stopAll(); };
+$('#fadeAll').onclick = () => { ensureCtx(); fadeAll(); };
 $('#startBtn').onclick = $('#startOverlay').onclick = () => {
   ensureCtx(); requestWake(); primeAll();
   $('#startOverlay').classList.add('hide');
@@ -1117,8 +1224,19 @@ $('#restoreIn').onchange = async e => {
 function applyState(){
   $('#masterVol').value = Math.round(state.masterVolume * 100); $('#mvLabel').textContent = Math.round(state.masterVolume * 100) + '%';
   if (master) master.gain.value = state.masterVolume;
-  renderBoard(); preloadBoard(); updateWakeUI(); renderClock();
+  applyPrefs(); renderBoard(); preloadBoard(); updateWakeUI(); renderClock();
 }
+function applyPrefs(){
+  document.body.classList.remove('size-s', 'size-m', 'size-l'); document.body.classList.add('size-' + state.padSize);
+  document.body.classList.toggle('prog-full', state.progress === 'full');
+  document.querySelectorAll('#sizeSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === state.padSize));
+  document.querySelectorAll('#progSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === state.progress));
+  $('#fadeAllV').textContent = state.fadeAllSec + ' s';
+}
+document.querySelectorAll('#sizeSeg button').forEach(b => b.onclick = () => { state.padSize = b.dataset.v; save(); applyPrefs(); });
+document.querySelectorAll('#progSeg button').forEach(b => b.onclick = () => { state.progress = b.dataset.v; save(); applyPrefs(); });
+document.querySelectorAll('#fadeAllStep button').forEach(b => b.onclick = () => { state.fadeAllSec = clamp(Math.round((state.fadeAllSec + parseFloat(b.dataset.d)) * 2) / 2, 0.5, 20); save(); applyPrefs(); });
+document.querySelectorAll('.appVer').forEach(e => { e.textContent = APP_VERSION; });
 (async function init(){
   try { db = await openDB(); state = await idb('meta', 'readonly', s => s.get('state')); }
   catch (e) { toast('Error abriendo la base de datos: ' + e.message); }
@@ -1133,7 +1251,7 @@ function applyState(){
   requestWake();
 })();
 // Acceso para pruebas
-window.__sb = { get state(){ return state; }, players, buildBackup, restoreBackup, stopAll };
+window.__sb = { get state(){ return state; }, players, buildBackup, restoreBackup, stopAll, fadeAll };
 </script>
 </body>
 </html>
