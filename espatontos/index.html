@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Espatontos">
+<meta name="theme-color" content="#F4F4F7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<title>Espatontos</title>
+<style>
+:root{
+  --bg:#F4F4F7;--card:#FFFFFF;--text:#1C1C1E;--sec:#62626B;--sep:#E3E3E8;--field:#E9E9EE;--track:#ECECF1;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(20,20,40,.06);--lift:0 14px 34px rgba(20,20,40,.18);
+  --bar:rgba(250,250,252,.88);--sheet:#F4F4F7;--dim:rgba(0,0,0,.32);
+  --warnBg:#FFF1E6;--warnText:#9A4A12;--badBg:#FDECEC;--badText:#B3261E;--tipBg:#EBEBF0;--tipText:#4A4A52;
+  --good:#2F9E62;--accent:#4B5BDB;--onAccent:#FFFFFF;
+  --st:env(safe-area-inset-top);--sb:env(safe-area-inset-bottom);
+}
+[data-theme=dark]{
+  --bg:#0E0E11;--card:#1B1B20;--text:#F3F3F6;--sec:#A3A3AE;--sep:#2C2C33;--field:#24242A;--track:#2C2C33;
+  --shadow:none;--lift:0 14px 34px rgba(0,0,0,.6);--bar:rgba(22,22,26,.86);--sheet:#16161A;--dim:rgba(0,0,0,.55);
+  --warnBg:rgba(245,180,138,.16);--warnText:#F7C3A0;--badBg:rgba(255,107,107,.16);--badText:#FF9C9C;--tipBg:#26262D;--tipText:#C4C4CE;
+  --good:#6FD39C;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select{font:inherit;font-size:16px;color:var(--text);-webkit-user-select:text;user-select:text}
+button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;text-align:inherit}
+svg{display:block}
+#views{position:fixed;inset:0;bottom:calc(64px + var(--sb))}
+.view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;padding:calc(var(--st) + 12px) 0 40px}
+.view.on{display:block}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+.hdr{display:flex;justify-content:space-between;align-items:center;min-height:44px;padding:0 4px}
+.hdr .l{font-size:15px;color:var(--sec)}
+h1{font-size:34px;font-weight:800;letter-spacing:-.8px;padding:0 4px;margin-bottom:12px}
+.ibtn{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.ibtn.fill{background:var(--accent);color:var(--onAccent)}
+.pill{height:34px;padding:0 14px;border-radius:17px;background:var(--accent);color:var(--onAccent);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pill.ghost{background:var(--card);color:var(--text);box-shadow:inset 0 0 0 1px var(--sep)}
+.link{color:var(--accent);font-weight:500}
+.card{background:var(--card);border-radius:18px;box-shadow:var(--shadow)}
+.sum{padding:18px 18px 14px;margin-bottom:16px}
+.big{font-size:40px;font-weight:800;letter-spacing:-1.2px;line-height:1}
+.big small{font-size:17px;font-weight:600;color:var(--sec);letter-spacing:0;margin-left:4px}
+.prog{height:6px;border-radius:3px;background:var(--track);margin-top:12px;overflow:hidden}
+.prog i{display:block;height:6px;border-radius:3px;background:var(--accent);transition:width .3s}
+.prog i.over{background:var(--badText)}
+.curvebox{margin-top:14px}
+.ends{display:flex;justify-content:space-between;font-size:11px;color:var(--sec);margin-top:4px}
+.warns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.w{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:4px 12px;border-radius:15px;font-size:13px;font-weight:600;text-align:left}
+.w.warn{background:var(--warnBg);color:var(--warnText)}.w.bad{background:var(--badBg);color:var(--badText)}.w.tip{background:var(--tipBg);color:var(--tipText)}
+.w.ok{background:transparent;color:var(--good);padding-left:0}
+.tplchip{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--accent);min-height:32px}
+.sec-t{font-size:13px;font-weight:600;color:var(--sec);text-transform:uppercase;letter-spacing:.6px;padding:0 4px;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:baseline}
+.sec-t span{text-transform:none;letter-spacing:0;font-weight:500}
+.dl{position:relative}
+.row{position:relative;transition:transform .18s ease}
+.row.drag{z-index:5;transition:none}
+.row.drag .num{box-shadow:var(--lift)}
+.num{display:flex;align-items:center;gap:12px;padding:12px 6px 12px 14px;background:var(--card);border-radius:16px;box-shadow:var(--shadow);width:100%}
+.num .ix{width:24px;font-size:15px;font-weight:700;color:var(--sec);text-align:center;flex:none}
+.num .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.nm{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sec);flex-wrap:wrap}
+.emo{padding:2px 8px;border-radius:8px;color:#1C1C1E;font-weight:600;font-size:12px;white-space:nowrap}
+.dots{letter-spacing:1.5px;color:var(--text);font-size:11px}
+.flash{color:var(--accent);font-weight:700}
+.hd{width:44px;height:44px;display:flex;align-items:center;justify-content:center;touch-action:none;color:var(--sec);flex:none}
+.gap{display:flex;align-items:center;gap:10px;width:100%;min-height:30px;padding:2px 0 2px 26px}
+.gap i{width:1.5px;align-self:stretch;background:var(--sep);min-height:26px}
+.gap span{font-size:12.5px;color:var(--accent);font-weight:500}
+.gap span.t{color:var(--sec);font-style:italic;font-weight:400}
+.addrow{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:16px;border:1.5px dashed var(--accent);color:var(--accent);font-weight:600;width:100%;margin-top:12px;font-size:15px}
+.empty{text-align:center;color:var(--sec);padding:40px 20px;font-size:15px;line-height:22px}
+.empty b{display:block;color:var(--text);font-size:18px;margin-bottom:6px}
+.split{display:block}
+.side{display:none}
+@media (min-width:860px){
+  .split{display:flex;gap:24px;max-width:1100px;margin:0 auto;padding:0 24px}
+  .split .wrap{flex:1;max-width:none;padding:0}
+  .side{display:block;width:320px;flex:none}
+  .side .card{padding:12px;margin-top:8px}
+}
+.qa{display:flex;align-items:center;gap:10px;width:100%;padding:10px 8px;border-radius:12px}
+.qa+.qa{border-top:1px solid var(--sep)}
+.qa .d{width:10px;height:10px;border-radius:5px;flex:none}
+.qa .t{flex:1;min-width:0}
+.qa .t b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qa .t small{font-size:12px;color:var(--sec)}
+.qa .plus{color:var(--accent);font-size:22px;font-weight:400;width:28px;text-align:center}
+.search{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;background:var(--field);color:var(--sec);margin-bottom:12px}
+.search input{flex:1;border:0;background:transparent;outline:none;min-width:0}
+.chips{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:32px;padding:0 14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1px var(--sep);font-size:14px;font-weight:500;white-space:nowrap}
+.chip.on{background:var(--text);color:var(--bg);box-shadow:none;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:980px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.rc{padding:14px;display:flex;flex-direction:column;gap:10px;min-height:132px;text-align:left;width:100%}
+.rc .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.rc .top span:last-child{font-size:12.5px;color:var(--sec);font-weight:500}
+.rc .ttl{font-size:15.5px;font-weight:600;line-height:20px;flex:1}
+.rc .bot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sec);gap:6px}
+.rc .bot span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.group{background:var(--card);border-radius:14px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 14px;border-bottom:1px solid var(--sep);text-align:left}
+.li:last-child{border-bottom:0}
+.li .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li .tx b{font-size:16px;font-weight:400}
+.li .tx small{font-size:12.5px;color:var(--sec)}
+.chk{flex:none;width:24px;height:24px;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 2px var(--sec);transition:background .2s}
+.chk.on{background:var(--good);box-shadow:none}
+.badge{padding:3px 9px;border-radius:9px;background:var(--warnBg);color:var(--warnText);font-size:12px;font-weight:600;white-space:nowrap}
+.ring{position:relative;width:64px;height:64px;flex:none}
+.ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.sc{padding:16px;display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;position:relative}
+.sc .n{font-size:18px;font-weight:700}
+.sc .m{font-size:13px;color:var(--sec)}
+.sc.cur{box-shadow:inset 0 0 0 2px var(--accent),var(--shadow)}
+.sc .more{position:absolute;top:8px;right:8px}
+/* tab bar */
+#tabs{position:fixed;left:0;right:0;bottom:0;height:calc(64px + var(--sb));padding:6px 8px var(--sb);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--bar);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--sep);z-index:20}
+#tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--sec);font-size:10.5px;font-weight:500}
+#tabs button.on{color:var(--accent);font-weight:600}
+/* sheet */
+#dim{position:fixed;inset:0;background:var(--dim);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
+#dim.on{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-height:calc(100% - var(--st) - 24px);background:var(--sheet);border-radius:22px 22px 0 0;transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);z-index:41;display:flex;flex-direction:column;max-width:720px;margin:0 auto}
+#sheet.on{transform:none}
+#sheet .grab{display:flex;justify-content:center;padding-top:8px;flex:none}
+#sheet .grab i{width:38px;height:5px;border-radius:3px;background:var(--sep)}
+.sh{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:4px 16px 6px;min-height:48px;flex:none}
+.sh .t{font-size:16px;font-weight:600;text-align:center}
+.sh .a{min-height:44px;color:var(--accent);font-size:16px}
+.sh .a.r{justify-self:end;font-weight:600}
+#sbody{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px calc(28px + var(--sb));flex:1}
+.f{display:flex;flex-direction:column;gap:20px}
+.fl{font-size:13px;font-weight:600;color:var(--sec);text-transform:uppercase;letter-spacing:.6px;padding-left:4px;margin-bottom:8px;display:flex;justify-content:space-between}
+.fl span{text-transform:none;letter-spacing:0;font-weight:500}
+.fg{background:var(--card);border-radius:14px;overflow:hidden}
+.fr{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:50px;padding:6px 8px 6px 14px;border-bottom:1px solid var(--sep)}
+.fr:last-child{border-bottom:0}
+.fr>span{font-size:16px}
+.fr input[type=text],.fr input[type=number],.fr select{border:0;background:transparent;outline:none;flex:1;min-width:0}
+.fr input.name{font-size:17px;font-weight:600}
+.step{display:flex;align-items:center;gap:4px}
+.step button{width:36px;height:36px;border-radius:10px;background:var(--field);font-size:20px;text-align:center}
+.step b{min-width:58px;text-align:center;font-size:16px}
+.wrapchips{display:flex;flex-wrap:wrap;gap:8px}
+.ec{height:36px;padding:0 14px;border-radius:18px;display:inline-flex;align-items:center;gap:7px;font-size:14.5px;font-weight:600;background:var(--card);box-shadow:inset 0 0 0 1px var(--sep)}
+.ec i{width:10px;height:10px;border-radius:5px}
+.ec.on{box-shadow:none;color:#1C1C1E}
+.tc{height:34px;padding:0 13px;border-radius:17px;font-size:14px;font-weight:600;background:var(--card);box-shadow:inset 0 0 0 1px var(--sep)}
+.tc.on{background:var(--accent);color:var(--onAccent);box-shadow:none}
+.pots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.pots button{height:44px;border-radius:12px;background:var(--field);color:var(--sec);font-size:16px;font-weight:700;text-align:center}
+.pots button.on{background:var(--accent);color:var(--onAccent)}
+.seg{display:grid;gap:4px;padding:3px;border-radius:11px;background:var(--field)}
+.seg button{height:34px;border-radius:8px;font-size:13.5px;font-weight:600;text-align:center;padding:0 4px}
+.seg button.on{background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.tg{position:relative;width:51px;height:31px;border-radius:16px;background:var(--track);flex:none;transition:background .2s}
+.tg i{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:14px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:left .2s}
+.tg.on{background:var(--good)}.tg.on i{left:22px}
+.mat{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-bottom:1px solid var(--sep)}
+.mat:last-child{border-bottom:0}
+.mat .r1{display:flex;gap:8px;align-items:center}
+.mat .r1 input{flex:1;min-width:0;border:0;background:var(--field);border-radius:10px;height:38px;padding:0 10px;outline:none}
+.mat .r2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--sec)}
+.mat .r2 .seg{flex:1;min-width:200px}
+.mat .r2 input{width:64px;border:0;background:var(--field);border-radius:8px;height:32px;padding:0 8px;outline:none}
+.x{width:32px;height:32px;border-radius:16px;background:var(--field);color:var(--sec);font-size:18px;text-align:center;flex:none}
+textarea{width:100%;min-height:90px;border:0;border-radius:14px;background:var(--card);padding:12px 14px;outline:none;resize:vertical}
+.danger{color:var(--badText);font-weight:600;text-align:center;width:100%;min-height:50px;background:var(--card);border-radius:14px}
+.act{display:flex;flex-direction:column;gap:10px}
+.act button{min-height:52px;border-radius:14px;background:var(--card);font-size:16px;font-weight:500;text-align:center}
+.act button.d{color:var(--badText)}
+.pal{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;padding:12px 14px}
+.pal button{aspect-ratio:1;border-radius:50%}
+.pal button.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--text)}
+.accs{display:flex;gap:12px;padding:12px 14px;flex-wrap:wrap}
+.accs button{width:34px;height:34px;border-radius:17px}
+.accs button.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--text)}
+.wi{background:var(--card);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.wi .wt{display:flex;gap:8px;align-items:flex-start;font-weight:600;font-size:15px}
+.wi p{font-size:14px;color:var(--sec);line-height:20px}
+.wi .mute{align-self:flex-start;font-size:13.5px;color:var(--accent);font-weight:600;min-height:32px}
+.tpl{background:var(--card);border-radius:14px;padding:14px;display:flex;gap:14px;align-items:center;text-align:left;width:100%}
+.tpl.on{box-shadow:inset 0 0 0 2px var(--accent)}
+.tpl .tt{flex:1}
+.tpl .tt b{font-size:16px;display:block}
+.tpl .tt small{font-size:12.5px;color:var(--sec);display:block;margin-top:3px;line-height:17px}
+#toast{position:fixed;left:50%;bottom:calc(80px + var(--sb));transform:translate(-50%,20px);background:#2A2A30;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;display:flex;gap:14px;align-items:center;font-size:14.5px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{color:#A8B2FF;font-weight:700;padding:6px 8px}
+.note{font-size:13px;color:var(--sec);line-height:19px;padding:6px 4px 0}
+</style>
+</head>
+<body>
+<div id="views">
+  <section class="view" id="v-rep"></section>
+  <section class="view" id="v-mon"></section>
+  <section class="view" id="v-mat"></section>
+  <section class="view" id="v-sho"></section>
+</div>
+<nav id="tabs">
+  <button data-a="tab" data-t="rep"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>Repertorio</button>
+  <button data-a="tab" data-t="mon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-1 4-8 7-8s3 6 6 6 3-7 5-9"/><circle cx="10" cy="9" r="1.6" fill="currentColor"/><circle cx="16" cy="15" r="1.6" fill="currentColor"/></svg>Montar</button>
+  <button data-a="tab" data-t="mat"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="7.5" width="17" height="12" rx="3"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 12.5h17"/></svg>Material</button>
+  <button data-a="tab" data-t="sho"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v8a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2z"/><path d="M12 9.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z" fill="currentColor" stroke="none"/></svg>Shows</button>
+</nav>
+<div id="dim" data-a="closeSheet"></div>
+<div id="sheet"><div class="grab"><i></i></div><div class="sh" id="shead"></div><div id="sbody"></div></div>
+<div id="toast"><span id="ttext"></span><button id="tundo">Deshacer</button></div>
+<input type="file" id="file" accept=".json,application/json" style="display:none">
+
+<script>
+'use strict';
+/* ============ utilidades ============ */
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.prototype.slice.call((r||document).querySelectorAll(s));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const fmt=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const mins=s=>Math.round((s||0)/60);
+const dots=p=>'●'.repeat(p)+'○'.repeat(5-p);
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* ============ catálogos ============ */
+const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
+const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
+const TIPOS=[['Con objetos',['Aparición','Desaparición','Transformación','Transposición','Penetración','Restauración','Multiplicación']],['Leyes físicas',['Levitación','Animación','Invulnerabilidad','Anomalía física','Simpatía']],['Mente',['Predicción','Lectura de mente','Adivinación','Telequinesis','Influencia','Coincidencia imposible']],['Otros',['Localización','Escapismo','Destreza y juego','Magia del espectador','Comedia']]];
+const REVEAL=['Predicción','Coincidencia imposible','Lectura de mente','Adivinación'];
+const WHERE={maleta:'Maleta',bolsillo:'Bolsillo',mesa:'Mesa'};
+const RESET={inmediato:'Inmediato','menos1':'Menos de 1 min',esconder:'Necesita esconderse'};
+const SETS=[['A','Set A','Tu set principal para cada grupo'],['B','Set B','Para grupos que repiten o ya te han visto'],['X','Set extendido','Para los grupos más entregados']];
+const SLOTS=['Gancho','Conexión','Cierre'];
+
+const lerp=(pts,t)=>{for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(t<=b[0])return a[1]+(b[1]-a[1])*((t-a[0])/(b[0]-a[0]||1))}return pts[pts.length-1][1]};
+const TPL={
+  crescendo:{n:'Crescendo constante',by:'Darwin Ortiz',d:'El show no para de crecer. Apertura y cierre son tus números más fuertes y la potencia nunca cae de golpe.',best:'Close-up, salón y bolos cortos',ideal:t=>2.6+2.4*t},
+  tresactos:{n:'Tres actos',by:'Dariel Fitzkee',d:'Tres bloques: presentar, complicar y llevarlo todo a un clímax final. Cada acto termina más arriba de como empieza.',best:'Escenario de 45–90 minutos',ideal:t=>lerp([[0,2.8],[.32,3.7],[.34,3.2],[.65,4.2],[.67,3.8],[1,5]],t)},
+  freytag:{n:'Pirámide de Freytag',by:'aplicada por Will Given',d:'Una montaña: el gran momento llega hacia el 60–70 % del show y después se acelera hacia un final decidido.',best:'Shows con un número estrella',ideal:t=>lerp([[0,2.6],[.65,5],[1,4]],t)},
+  heroe:{n:'Viaje del héroe',by:'escuela McBride',d:'Una historia: llamada, una prueba en el centro (riesgo o tensión) y un final de transformación.',best:'Shows temáticos o teatrales',ideal:t=>lerp([[0,3],[.3,4],[.55,2.2],[.8,4],[1,5]],t)},
+  kisho:{n:'Kishōtenketsu',by:'adaptación',d:'Desarrollo tranquilo y un giro final que da sentido a todo: predicción, coincidencia o revelación.',best:'Mentalismo y grandes revelaciones',ideal:t=>t<.78?3:lerp([[.78,3],[1,5]],t)},
+  coctel:{n:'Magia de cóctel',by:'formato',d:'Mini-sets de 5–10 minutos por grupo: gancho, conexión y cierre. Números muy potentes y directos.',best:'Bodas, cócteles y eventos de pie',ideal:null},
+  libre:{n:'Libre',by:'sin plantilla',d:'Solo las reglas generales del asistente, sin forma de curva ideal.',best:'Cuando quieres total libertad',ideal:null}
+};
+const RULES=[
+  ['open','Presentación en los primeros segundos','La apertura es un flash corto marcado como número de presentación.'],
+  ['emo3','Tres emociones iguales seguidas','Avisa si tres números seguidos transmiten la misma emoción.'],
+  ['tipo2','Mismo tipo de efecto seguido','Avisa si dos números seguidos comparten tipo de efecto.'],
+  ['weak2','Dos números flojos seguidos','Potencia 1–2 en dos números consecutivos.'],
+  ['flat','Curva plana','Tres números seguidos con la misma potencia.'],
+  ['vols','Voluntarios seguidos','Dos números seguidos con gente subiendo al escenario.'],
+  ['time','Duración frente al objetivo','Compara la duración total con el objetivo del show.'],
+  ['close','Cierre fuerte','El último número es el más fuerte del show.'],
+  ['tpl','Reglas de la plantilla','Las reglas propias de cada plantilla de dramaturgia.'],
+  ['coctel','Reglas de cóctel','Duración, potencia y condiciones de los mini-sets.']
+];
+
+/* ============ datos ============ */
+const KEY='espatontos-v1';
+function defaults(){
+  return {v:1,nums:[],shows:[],cur:null,
+    emos:[{id:'asombro',n:'Asombro',c:'#8DBDEB'},{id:'risa',n:'Risa',c:'#F2D27A'},{id:'misterio',n:'Misterio',c:'#B39BE6'},{id:'ternura',n:'Ternura',c:'#F2B1CB'},{id:'tension',n:'Tensión',c:'#F5B48A'},{id:'emocion',n:'Emoción',c:'#F29B8D'},{id:'complicidad',n:'Complicidad',c:'#95D9BD'}],
+    tiposPropios:[],
+    set:{appearance:'auto',accent:'indigo',universal:true,openMax:90,off:{}}};
+}
+function N(o){return Object.assign({id:uid(),name:'',dur:300,emo:'asombro',pot:3,tipos:[],vols:0,sube:false,rodeado:false,mesa:false,musica:false,pres:false,reset:'inmediato',limpio:true,sujetar:false,mat:[],notes:''},o)}
+function M(name,where,cons,stock){return {id:uid(),name,where:where||'maleta',cons:!!cons,stock:stock==null?'':stock}}
+function seed(){
+  const d=defaults();
+  const n=[
+    N({name:'Flash de presentación',dur:75,emo:'asombro',pot:4,tipos:['Aparición'],rodeado:true,musica:true,pres:true,mat:[M('Pañuelo de seda','bolsillo')]}),
+    N({name:'Billete en el limón',dur:360,emo:'asombro',pot:4,tipos:['Desaparición','Transposición'],vols:1,mesa:true,reset:'esconder',limpio:false,sujetar:true,mat:[M('Limones','maleta',true,2),M('Rotulador grueso','bolsillo')]}),
+    N({name:'Cuerdas imposibles',dur:300,emo:'risa',pot:3,tipos:['Restauración'],vols:1,sube:true,musica:true,reset:'menos1',mat:[M('Cuerdas y tijeras','maleta')]}),
+    N({name:'El voluntario mudo',dur:420,emo:'complicidad',pot:3,tipos:['Magia del espectador','Comedia'],vols:1,sube:true,mat:[M('Copa y pañuelo','mesa')]}),
+    N({name:'Monedas a través de la mesa',dur:240,emo:'risa',pot:2,tipos:['Penetración'],mesa:true,mat:[M('Monedas preparadas','bolsillo')]}),
+    N({name:'Lectura de mente',dur:480,emo:'misterio',pot:5,tipos:['Lectura de mente','Predicción'],vols:2,sube:true,musica:true,mat:[M('Pizarra pequeña','maleta'),M('Rotulador grueso','bolsillo')]}),
+    N({name:'La carta del recuerdo',dur:360,emo:'ternura',pot:4,tipos:['Predicción'],vols:1,mat:[M('Baraja roja','bolsillo')]}),
+    N({name:'Predicción final',dur:360,emo:'emocion',pot:4,tipos:['Predicción'],vols:1,sube:true,mat:[M('Sobres sellados','maleta',true,3)]}),
+    N({name:'Anillo en la llave',dur:150,emo:'asombro',pot:5,tipos:['Transposición'],rodeado:true,mat:[M('Llavero preparado','bolsillo')]}),
+    N({name:'Carta en la boca',dur:120,emo:'asombro',pot:5,tipos:['Localización'],rodeado:true,mat:[M('Baraja azul','bolsillo')]}),
+    N({name:'Billete que cambia',dur:90,emo:'asombro',pot:4,tipos:['Transformación'],rodeado:true,mat:[M('Billetes preparados','bolsillo')]}),
+    N({name:'Dos mentes',dur:180,emo:'complicidad',pot:4,tipos:['Coincidencia imposible'],rodeado:true,mat:[M('Dos barajas','bolsillo')]})
+  ];
+  n.forEach(x=>x.sample=true); d.nums=n;
+  const it=i=>({nid:n[i].id,trans:''});
+  const s1={id:uid(),name:'Gala empresa',tpl:'crescendo',target:45,items:[0,1,2,3,4,5,6,7].map(it),sets:{A:[],B:[],X:[]},muted:[],checks:{},sample:true};
+  s1.items[2].trans='«Y hablando de cosas que se rompen…»';
+  const s2={id:uid(),name:'Boda · cóctel',tpl:'coctel',target:90,items:[],sets:{A:[9,8,11].map(it),B:[10,6].map(it),X:[]},muted:[],checks:{},sample:true};
+  d.shows=[s1,s2]; d.cur=s1.id;
+  return d;
+}
+let D;
+function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);const d=defaults();o.set=Object.assign(d.set,o.set||{});return Object.assign(d,o)}}catch(e){}return null}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast('No se ha podido guardar')}}
+D=load()||seed();
+
+const num=id=>D.nums.find(x=>x.id===id);
+const emoOf=id=>D.emos.find(e=>e.id===id)||{n:'Sin emoción',c:'#B8BEC9'};
+const curShow=()=>D.shows.find(s=>s.id===D.cur)||D.shows[0]||null;
+const listOf=(s,k)=>k==='main'?s.items:s.sets[k];
+const resolve=arr=>arr.map(it=>{const n=num(it.nid);return n?Object.assign({},n,{trans:it.trans}):null}).filter(Boolean);
+const totalDur=arr=>arr.reduce((a,n)=>a+(+n.dur||0),0);
+
+/* ============ asistente (reglas) ============ */
+function rulesFor(show){
+  const W=[];const off=D.set.off;const on=k=>!off[k];
+  const add=(id,sev,t,why,k)=>W.push({id,key:id+':'+(k==null?'':k),sev,t,why});
+  if(show.tpl==='coctel'){ if(on('coctel'))cocktailRules(show,add); return finish(W,show); }
+  const L=resolve(show.items),n=L.length; if(!n)return [];
+  const em=x=>emoOf(x.emo).n;
+  if(on('open')&&D.set.universal){
+    const f=L[0];
+    if(f.dur>D.set.openMax)add('open','warn',`La apertura dura ${fmt(f.dur)}`,`Tu flash de presentación debería durar como máximo ${fmt(D.set.openMax)}, para que en los primeros segundos el público sepa quién eres.`,'d');
+    if(!f.pres)add('open','warn','La apertura no es de presentación',`«${f.name}» no está marcado como número de presentación. Abre con un flash que te dé a conocer en los primeros 30 segundos.`,'p');
+    if(!D.nums.some(x=>x.pres))add('open','tip','No tienes números de presentación','Marca en tu repertorio algún flash corto como «Número de presentación» para abrir tus shows.','r');
+  }
+  if(on('emo3')){let i=0;while(i<n){let j=i;while(j+1<n&&L[j+1].emo===L[i].emo)j++;if(j-i>=2)add('emo3','warn',`${j-i+1} de ${em(L[i]).toLowerCase()} seguidos`,`Los números ${i+1} a ${j+1} transmiten la misma emoción. Intercala otra para que el público no se acostumbre.`,i);i=j+1}}
+  if(on('tipo2'))for(let i=0;i<n-1;i++){const c=L[i].tipos.filter(t=>L[i+1].tipos.indexOf(t)>=0);if(c.length)add('tipo2','warn',`Dos «${c[0]}» seguidas`,`«${L[i].name}» y «${L[i+1].name}» comparten tipo de efecto: el segundo pierde fuerza. Sepáralos.`,i)}
+  if(on('weak2'))for(let i=0;i<n-1;i++)if(L[i].pot<=2&&L[i+1].pot<=2)add('weak2','warn','Dos números flojos seguidos',`«${L[i].name}» y «${L[i+1].name}» tienen potencia baja. Mete algo fuerte entre ellos.`,i);
+  if(on('flat')&&show.tpl!=='kisho')for(let i=0;i<n-2;i++)if(L[i].pot===L[i+1].pot&&L[i+1].pot===L[i+2].pot){add('flat','tip','Curva plana',`Los números ${i+1} a ${i+3} tienen la misma potencia. Un cambio de ritmo ayuda a mantener la atención.`,i);break}
+  if(on('vols'))for(let i=0;i<n-1;i++)if(L[i].sube&&L[i+1].sube)add('vols','warn','Voluntarios seguidos',`«${L[i].name}» y «${L[i+1].name}» suben gente al escenario. El ritmo se para: reparte los voluntarios.`,i);
+  if(on('time')&&show.target){const t=totalDur(L)/60,g=show.target;
+    if(t>g*1.1)add('time','bad',`${Math.round(t-g)} min por encima del objetivo`,`El show dura ${Math.round(t)} min y el objetivo es ${g}. Pasa algún número a reserva o elige versiones más cortas.`);
+    else if(t<g*.85)add('time','tip',`Faltan ${Math.round(g-t)} min`,`El show dura ${Math.round(t)} min y el objetivo es ${g}. Añade algún número.`);}
+  const maxP=Math.max.apply(null,L.map(x=>x.pot)),last=L[n-1];
+  if(on('close')&&n>1&&['crescendo','tresactos','heroe','libre'].indexOf(show.tpl)>=0&&last.pot<maxP){const best=L.find(x=>x.pot===maxP);add('close','warn','El cierre no es el más fuerte',`Cierras con «${last.name}» (potencia ${last.pot}). Prueba a terminar con «${best.name}».`)}
+  if(on('tpl'))tplRules(show,L,add);
+  return finish(W,show);
+}
+function tplRules(show,L,add){
+  const n=L.length,t=show.tpl;
+  if(t==='crescendo'){
+    const s=L[0].pres?1:0;
+    for(let i=s;i<n-1;i++)if(L[i].pot-L[i+1].pot>1)add('tpl','warn','Bajón brusco',`Entre «${L[i].name}» y «${L[i+1].name}» la potencia cae ${L[i].pot-L[i+1].pot} puntos. En crescendo la energía no debería caer de golpe.`,'d'+i);
+    if(L[s]&&L[s].pot<4&&n>2)add('tpl','tip','Apertura floja',`Tras la presentación, «${L[s].name}» debería ser de los fuertes (potencia 4–5).`,'o');
+  }
+  if(t==='tresactos'&&n>=3){
+    const a=[[0,Math.round(n/3)],[Math.round(n/3),Math.round(2*n/3)],[Math.round(2*n/3),n]];
+    a.forEach((r,k)=>{const seg=L.slice(r[0],r[1]);if(seg.length>1&&seg[seg.length-1].pot<seg[0].pot)add('tpl','warn',`El acto ${k+1} termina a la baja`,`Cada acto debería terminar más arriba de como empieza. El acto ${k+1} empieza en potencia ${seg[0].pot} y acaba en ${seg[seg.length-1].pot}.`,'a'+k)});
+  }
+  if(t==='freytag'&&n>=3){
+    const mx=Math.max.apply(null,L.map(x=>x.pot));let p=-1;L.forEach((x,i)=>{if(x.pot===mx)p=i});
+    const pos=p/(n-1);
+    if(pos<.45)add('tpl','warn','El clímax llega pronto',`Tu número más fuerte está en la posición ${p+1} de ${n}. En esta plantilla el gran momento va hacia el 60–70 % del show.`,'p');
+    if(n-1-p>2)add('tpl','warn',`Tras el clímax quedan ${n-1-p} números`,'Después del punto de no retorno conviene acelerar hacia un final decidido, con pocos números.','a');
+    L.slice(p+1).forEach((x,i)=>{if(x.dur>360)add('tpl','tip','Número largo tras el clímax',`«${x.name}» dura ${fmt(x.dur)}. Tras el clímax el ritmo debería acelerar.`,'l'+i)});
+  }
+  if(t==='heroe'&&n>=3){
+    const mid=L.slice(Math.floor(n/3),Math.ceil(2*n/3));
+    if(!mid.some(x=>x.pot<=2||norm(emoOf(x.emo).n)==='tension'))add('tpl','warn','Falta la prueba','En el centro del show debería haber un momento de riesgo, tensión o aparente fallo: el héroe tiene que caer antes de renacer.','t');
+    if(['emocion','ternura','asombro'].indexOf(norm(emoOf(L[n-1].emo).n))<0)add('tpl','tip','Cierre sin transformación','El final de un viaje del héroe funciona mejor con emoción, ternura o asombro que solo con risa.','c');
+  }
+  if(t==='kisho'&&n>=2){
+    const end=L.slice(-2);
+    if(!end.some(x=>x.tipos.some(k=>REVEAL.indexOf(k)>=0)))add('tpl','warn','Falta el giro final','El penúltimo o el último número debería ser una predicción, coincidencia o revelación que dé sentido a todo lo anterior.','g');
+  }
+}
+function cocktailRules(show,add){
+  const A=resolve(show.sets.A),B=resolve(show.sets.B),X=resolve(show.sets.X);
+  [['A',A],['B',B],['X',X]].forEach(([k,L])=>{
+    const nm=k==='X'?'set extendido':'set '+k;
+    if(!L.length){if(k==='A')add('coctel','tip','El set A está vacío','Monta tu set principal: gancho, conexión y cierre.','eA');return}
+    const d=totalDur(L);
+    if(k!=='X'&&L.length>3)add('coctel','tip',`El ${nm} tiene ${L.length} números`,'En cóctel lo habitual son 2–3 números por grupo.','c'+k);
+    if(k!=='X'&&d>600)add('coctel','warn',`El ${nm} dura ${fmt(d)}`,'Un mini-set de cóctel debería durar entre 5 y 10 minutos por grupo.','d'+k);
+    const sf=k==='A'?'':' ('+nm+')';
+    L.forEach((x,i)=>{
+      if(x.dur>180)add('coctel','warn',`«${x.name}» dura ${fmt(x.dur)}${sf}`,'En cóctel cada número debería durar 3 minutos como máximo: no hay tiempo para rodeos.','l'+k+i);
+      if(x.pot<4)add('coctel','warn',`«${x.name}» es de potencia ${x.pot}${sf}`,'En cóctel tienen que ser números rompedores, de potencia 4 o 5.','p'+k+i);
+      if(!x.rodeado)add('coctel','warn',`«${x.name}» no aguanta rodeado${sf}`,'En cóctel el público suele estar alrededor tuyo.','r'+k+i);
+      if(x.reset==='esconder')add('coctel','warn',`«${x.name}» necesita esconderse${sf}`,'Entre grupos no hay tiempo de preparar: busca números de reset inmediato.','s'+k+i);
+      if(!x.limpio)add('coctel','tip',`«${x.name}» no termina limpio`,'Lo ideal es poder irte al siguiente grupo nada más acabar.','c'+k+i);
+      if(x.sujetar)add('coctel','tip',`«${x.name}» pide sujetar cosas`,'La gente suele tener una copa en la mano.','h'+k+i);
+      if(x.mat.some(m=>m.where==='maleta'))add('coctel','tip',`«${x.name}» lleva material de maleta`,'En cóctel conviene que todo quepa en los bolsillos.','m'+k+i);
+    });
+    if(L[0].dur>120)add('coctel','tip',`El gancho del ${nm} es largo`,'El primer número debe ser rápido y visual: sirve de termómetro para saber si el grupo quiere más.','g'+k);
+    if(D.set.universal&&!D.set.off.open&&k==='A'&&!L[0].pres)add('coctel','tip','El gancho no es de presentación','Tu primer número para cada grupo es tu carta de presentación: márcalo como número de presentación.','pA');
+  });
+  if(B.length){const rep=B.filter(x=>A.some(y=>y.id===x.id));if(rep.length)add('coctel','warn','El set B repite números del A',`«${rep[0].name}» está en los dos sets. El B es para quien ya te ha visto.`,'rep')}
+}
+function finish(W,show){const m=show.muted||[];const order={bad:0,warn:1,tip:2};return W.filter(w=>m.indexOf(w.key)<0).sort((a,b)=>order[a.sev]-order[b.sev])}
+
+/* ============ curva ============ */
+function curveSVG(L,w,h,tpl,small){
+  const pad=small?4:10,n=L.length;
+  const X=i=>n<2?w/2:pad+i*((w-2*pad)/(n-1)),Y=p=>h-(small?4:8)-((p-1)/4)*(h-(small?10:22));
+  let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">`;
+  if(!small)s+=`<line x1="0" y1="${h-2}" x2="${w}" y2="${h-2}" stroke="var(--sep)"/>`;
+  const T=TPL[tpl];
+  if(T&&T.ideal&&!small){let d='';for(let k=0;k<=40;k++){const t=k/40;d+=(k?'L':'M')+(pad+t*(w-2*pad)).toFixed(1)+' '+Y(T.ideal(t)).toFixed(1)}s+=`<path d="${d}" fill="none" stroke="var(--sec)" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 5"/>`}
+  if(n){
+    const P=L.map((x,i)=>({x:X(i),y:Y(x.pot)}));let d='M'+P[0].x+' '+P[0].y;
+    for(let i=0;i<P.length-1;i++){const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(P.length-1,i+2)];d+=` C${(p1.x+(p2.x-p0.x)/6).toFixed(1)} ${(p1.y+(p2.y-p0.y)/6).toFixed(1)} ${(p2.x-(p3.x-p1.x)/6).toFixed(1)} ${(p2.y-(p3.y-p1.y)/6).toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`}
+    if(n>1)s+=`<path d="${d} L${P[n-1].x} ${h-2} L${P[0].x} ${h-2}Z" fill="var(--accent)" fill-opacity=".08"/>`;
+    s+=`<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="${small?2:2.5}" stroke-linecap="round"/>`;
+    if(!small)P.forEach((p,i)=>{s+=`<circle cx="${p.x}" cy="${p.y}" r="7" fill="${emoOf(L[i].emo).c}" stroke="var(--card)" stroke-width="3"/>`;if(L[i].pres&&i===0)s+=`<path d="M${p.x} ${p.y-17} q0 5 5 5 q-5 0 -5 5 q0 -5 -5 -5 q5 0 5 -5z" fill="var(--accent)"/>`});
+  }
+  return s+'</svg>';
+}
+
+/* ============ tema ============ */
+const mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+function applyTheme(){
+  const a=D.set.appearance,dark=a==='dark'||(a==='auto'&&mq&&mq.matches);
+  document.documentElement.dataset.theme=dark?'dark':'light';
+  const ac=ACCENTS.find(x=>x.id===D.set.accent)||ACCENTS[0];
+  document.documentElement.style.setProperty('--accent',dark?ac.d:ac.l);
+  document.documentElement.style.setProperty('--onAccent',dark&&(ac.id==='grafito'||ac.id==='oro')?'#111':'#fff');
+  const m=$('meta[name=theme-color]');if(m)m.setAttribute('content',dark?'#0E0E11':'#F4F4F7');
+}
+if(mq&&mq.addEventListener)mq.addEventListener('change',applyTheme);else if(mq&&mq.addListener)mq.addListener(applyTheme);
+
+/* ============ vistas ============ */
+let tab='mon',repQ='',repF='todos';
+const ICON={
+  gear:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 2.5v11M2.5 8h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  handle:'<svg width="18" height="18" viewBox="0 0 18 18"><path d="M4 6h10M4 9h10M4 12h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  warn:'<svg width="14" height="14" viewBox="0 0 16 16" style="flex:none"><path d="M8 2 14.5 13.5h-13z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6.5v3.2M8 11.6v.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  check:'<svg width="13" height="13" viewBox="0 0 14 14"><path d="M3 7.3 5.8 10 11 4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  chev:'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  search:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="7" cy="7" r="4.6"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg>',
+  more:'<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><circle cx="4" cy="10" r="1.8"/><circle cx="10" cy="10" r="1.8"/><circle cx="16" cy="10" r="1.8"/></svg>'
+};
+const hdr=(left,right)=>`<div class="hdr"><div class="l">${left||''}</div><div style="display:flex;gap:8px;align-items:center">${right||''}<button class="ibtn" data-a="settings" aria-label="Ajustes">${ICON.gear}</button></div></div>`;
+
+function render(){
+  applyTheme();
+  $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+tab));
+  ({rep:renderRep,mon:renderMon,mat:renderMat,sho:renderSho})[tab]();
+}
+function keepScroll(el,html){const y=el.scrollTop;el.innerHTML=html;el.scrollTop=y}
+
+/* ---- Repertorio ---- */
+function repMatch(x){
+  if(repF==='pres'&&!x.pres)return false;
+  if(repF==='coctel'&&!(x.rodeado&&x.dur<=180&&x.pot>=4))return false;
+  if(repF==='rodeado'&&!x.rodeado)return false;
+  if(repF==='sinmesa'&&x.mesa)return false;
+  if(repF.indexOf('e:')===0&&x.emo!==repF.slice(2))return false;
+  if(!repQ)return true;
+  const q=norm(repQ);
+  return [x.name,emoOf(x.emo).n,x.tipos.join(' '),x.mat.map(m=>m.name).join(' '),x.notes].some(t=>norm(t).indexOf(q)>=0);
+}
+function renderRep(){
+  const el=$('#v-rep'),L=D.nums.filter(repMatch);
+  const F=[['todos','Todos'],['pres','Presentación'],['coctel','Apto cóctel'],['rodeado','Rodeado'],['sinmesa','Sin mesa']].concat(D.emos.map(e=>['e:'+e.id,e.n]));
+  keepScroll(el,`<div class="wrap">${hdr(D.nums.length+' números',`<button class="ibtn fill" data-a="newNum" aria-label="Nuevo número">${ICON.plus}</button>`)}
+  <h1>Repertorio</h1>
+  <label class="search">${ICON.search}<input type="search" placeholder="Buscar número, material o tipo" value="${esc(repQ)}" data-in="repQ" aria-label="Buscar"></label>
+  <div class="chips">${F.map(f=>`<button class="chip${repF===f[0]?' on':''}" data-a="repF" data-f="${f[0]}">${esc(f[1])}</button>`).join('')}</div>
+  ${L.length?`<div class="grid">${L.map(x=>{const e=emoOf(x.emo);return `<button class="card rc" data-a="editNum" data-id="${x.id}">
+    <div class="top"><span class="emo" style="background:${e.c}">${esc(e.n)}</span><span>${fmt(x.dur)}</span></div>
+    <div class="ttl">${x.pres?'<span class="flash">✦ </span>':''}${esc(x.name||'Sin nombre')}</div>
+    <div class="bot"><span>${esc(x.tipos[0]||'Sin tipo')}${x.tipos.length>1?' +'+(x.tipos.length-1):''}</span><span class="dots">${dots(x.pot)}</span></div></button>`}).join('')}</div>`
+  :`<div class="empty"><b>${D.nums.length?'Nada coincide':'Tu repertorio está vacío'}</b>${D.nums.length?'Prueba con otra búsqueda o filtro.':'Crea la ficha de tu primer número con el botón +.'}</div>`}
+  </div>`);
+}
+
+/* ---- Montar ---- */
+function numRow(x,i,listKey,len,slot){
+  const e=emoOf(x.emo);
+  const gap=i<len-1?`<button class="gap" data-a="trans" data-l="${listKey}" data-i="${i}"><i></i>${x.trans?`<span class="t">${esc(x.trans)}</span>`:'<span>+ transición</span>'}</button>`:'';
+  return `<div class="row" data-i="${i}"><div class="num">
+    <button class="ix" data-a="numAct" data-l="${listKey}" data-i="${i}" style="all:unset;width:24px;font-size:15px;font-weight:700;color:var(--sec);text-align:center;flex:none;cursor:pointer">${i+1}</button>
+    <button class="mid" data-a="numAct" data-l="${listKey}" data-i="${i}" style="text-align:left">
+      <span class="nm">${x.pres&&i===0?'<span class="flash">✦ </span>':''}${esc(x.name)}</span>
+      <span class="meta"><span class="emo" style="background:${e.c}">${esc(e.n)}</span><span>${fmt(x.dur)}</span><span class="dots">${dots(x.pot)}</span>${slot?'<span style="color:var(--accent);font-weight:600">'+slot+'</span>':''}${x.sube?'<span>· voluntario</span>':''}</span>
+    </button>
+    <div class="hd" aria-label="Arrastrar para ordenar">${ICON.handle}</div></div>${gap}</div>`;
+}
+function warnsHTML(W){
+  if(!W.length)return `<div class="warns"><span class="w ok">✓ Sin avisos del asistente</span></div>`;
+  const U=[];W.forEach(w=>{const u=U.find(x=>x.t===w.t);if(u)u.c++;else U.push({t:w.t,sev:w.sev,c:1})});
+  const vis=U.slice(0,3),rest=W.length-vis.reduce((a,u)=>a+u.c,0);
+  return `<div class="warns">${vis.map(w=>`<button class="w ${w.sev}" data-a="warns">${w.sev==='tip'?'':ICON.warn}${esc(w.t)}${w.c>1?' ×'+w.c:''}</button>`).join('')}${rest>0?`<button class="w tip" data-a="warns">+${rest} más</button>`:''}</div>`;
+}
+function sideHTML(s){
+  const used={};(s.tpl==='coctel'?s.sets.A.concat(s.sets.B,s.sets.X):s.items).forEach(it=>used[it.nid]=1);
+  return `<div class="side"><div class="sec-t" style="margin-top:96px">Repertorio <span>toca para añadir</span></div><div class="card">${D.nums.map(x=>`<button class="qa" data-a="quickAdd" data-id="${x.id}"><i class="d" style="background:${emoOf(x.emo).c}"></i><span class="t"><b>${esc(x.name)}</b><small>${fmt(x.dur)} · ${dots(x.pot)}</small></span><span class="plus">${used[x.id]?'✓':'+'}</span></button>`).join('')||'<div class="empty">Sin números</div>'}</div></div>`;
+}
+function renderMon(){
+  const el=$('#v-mon'),s=curShow();
+  if(!s){keepScroll(el,`<div class="wrap">${hdr('')}<h1>Montar</h1><div class="empty"><b>Aún no tienes shows</b>Crea tu primer show y empieza a colocar tus números.<br><br><button class="pill" data-a="newShow">${ICON.plus} Nuevo show</button></div></div>`);return}
+  const W=rulesFor(s);const T=TPL[s.tpl];
+  let body='';
+  if(s.tpl==='coctel'){
+    const all=resolve(s.sets.A);const d=totalDur(all);
+    body=`<div class="card sum"><div style="display:flex;justify-content:space-between;align-items:flex-end"><div class="big">${fmt(d)}<small>por grupo</small></div><div style="text-align:right;font-size:13px;line-height:18px;color:var(--sec)"><div style="color:var(--text);font-weight:600">Set A · ${all.length} números</div><div>Ideal 5–10 min</div></div></div>
+      <div class="prog"><i class="${d>600?'over':''}" style="width:${Math.min(100,d/600*100)}%"></i></div>${warnsHTML(W)}</div>`;
+    SETS.forEach(([k,n,desc])=>{const L=resolve(s.sets[k]);
+      body+=`<div class="sec-t">${n} <span>${L.length?fmt(totalDur(L)):desc}</span></div><div class="dl" data-l="${k}">${L.map((x,i)=>numRow(x,i,k,L.length,k!=='X'&&L.length<=3?SLOTS[L.length===2&&i===1?2:i]:'')).join('')}</div>
+      <button class="addrow" data-a="addNums" data-l="${k}">${ICON.plus} Añadir al ${n.toLowerCase()}</button>`});
+  }else{
+    const L=resolve(s.items),d=totalDur(L),g=s.target||0;
+    body=`<div class="card sum"><div style="display:flex;justify-content:space-between;align-items:flex-end"><div class="big">${mins(d)}<small>min</small></div><div style="text-align:right;font-size:13px;line-height:18px;color:var(--sec)"><div style="color:var(--text);font-weight:600">${L.length} números</div><div>${g?'Objetivo '+g+' min':'Sin objetivo'}</div></div></div>
+      ${g?`<div class="prog"><i class="${d/60>g*1.1?'over':''}" style="width:${Math.min(100,d/60/g*100)}%"></i></div>`:''}
+      <div class="curvebox" id="curve"></div><div class="ends"><span>Apertura</span>${T.ideal?'<span>- - - curva ideal</span>':''}<span>Cierre</span></div>${warnsHTML(W)}</div>
+      <div class="dl" data-l="main">${L.map((x,i)=>numRow(x,i,'main',L.length)).join('')}</div>
+      ${L.length?'':'<div class="empty" style="padding:20px"><b>Show vacío</b>Añade números de tu repertorio.</div>'}
+      <button class="addrow" data-a="addNums" data-l="main">${ICON.plus} Añadir número</button>`;
+  }
+  keepScroll(el,`<div class="split"><div class="wrap">${hdr(`<button class="tplchip" data-a="showMenu" style="color:var(--accent);font-weight:500;font-size:15px">${esc(s.name)} ${ICON.chev}</button>`,`<button class="pill" data-a="tab" data-t="mat">Material</button>`)}
+    <h1>Montar</h1><button class="tplchip" data-a="pickTpl" style="margin:-8px 4px 10px">Plantilla: ${esc(T.n)} ${ICON.chev}</button>${body}</div>${sideHTML(s)}</div>`);
+  const cv=$('#curve');if(cv){const w=Math.max(200,cv.clientWidth);cv.innerHTML=curveSVG(resolve(s.items),w,110,s.tpl)}
+  $$('.dl',el).forEach(l=>enableDrag(l,(from,to)=>{const arr=listOf(s,l.dataset.l);arr.splice(to,0,arr.splice(from,1)[0]);save();render()}));
+}
+function enableDrag(list,onDrop){
+  list.addEventListener('pointerdown',e=>{
+    const h=e.target.closest('.hd');if(!h||e.button>0)return;
+    const row=h.closest('.row'),rows=$$('.row',list),from=rows.indexOf(row);if(from<0)return;
+    e.preventDefault();try{h.setPointerCapture(e.pointerId)}catch(_){}
+    const rects=rows.map(r=>r.getBoundingClientRect()),H=rects[from].height,y0=e.clientY;let to=from;
+    row.classList.add('drag');
+    const move=ev=>{const dy=ev.clientY-y0;row.style.transform=`translateY(${dy}px) scale(1.02)`;
+      const c=rects[from].top+H/2+dy;to=0;rows.forEach((r,i)=>{if(i!==from&&c>rects[i].top+rects[i].height/2)to++});
+      rows.forEach((r,i)=>{if(i===from)return;let sh=0;if(from<to&&i>from&&i<=to)sh=-H;if(from>to&&i>=to&&i<from)sh=H;r.style.transform=sh?`translateY(${sh}px)`:''})};
+    const up=()=>{h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',up);h.removeEventListener('pointercancel',up);rows.forEach(r=>r.style.transform='');row.classList.remove('drag');if(to!==from)onDrop(from,to)};
+    h.addEventListener('pointermove',move);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
+  });
+}
+
+/* ---- Material ---- */
+function matList(s){
+  const nums=s.tpl==='coctel'?resolve(s.sets.A.concat(s.sets.B,s.sets.X)):resolve(s.items);
+  const map={},seen={};
+  nums.forEach(x=>{if(seen[x.id])return;seen[x.id]=1;x.mat.forEach(m=>{if(!m.name.trim())return;const k=norm(m.name);
+    if(!map[k])map[k]={k,name:m.name.trim(),where:m.where,cons:m.cons,stock:m.stock,para:[]};
+    const o=map[k];o.para.push(x.name);if(m.cons)o.cons=true;if(m.stock!==''&&m.stock!=null)o.stock=m.stock})});
+  return Object.keys(map).map(k=>map[k]);
+}
+function renderMat(){
+  const el=$('#v-mat'),s=curShow();
+  if(!s){keepScroll(el,`<div class="wrap">${hdr('')}<h1>Material</h1><div class="empty"><b>Sin show</b>Crea un show para ver su lista de material.</div></div>`);return}
+  const L=matList(s),ch=s.checks||{};const done=L.filter(m=>ch[m.k]).length,tot=L.length;
+  const circ=2*Math.PI*27,fr=tot?done/tot:0;
+  let groups='';
+  Object.keys(WHERE).forEach(w=>{const g=L.filter(m=>m.where===w);if(!g.length)return;
+    groups+=`<div class="sec-t">${WHERE[w]} <span>${g.filter(m=>ch[m.k]).length} de ${g.length}</span></div><div class="group">${g.map(m=>{const on=!!ch[m.k];
+      const low=m.cons?(m.stock!==''&&m.stock!=null&&+m.stock<=3?`<span class="badge">Quedan ${m.stock}</span>`:'<span class="badge">Consumible</span>'):'';
+      return `<button class="li" data-a="check" data-k="${esc(m.k)}"><span class="chk${on?' on':''}">${on?ICON.check:''}</span><span class="tx"><b style="${on?'color:var(--sec);text-decoration:line-through':''}">${esc(m.name)}</b><small>${esc(m.para.join(' · '))}</small></span>${low}</button>`}).join('')}</div>`});
+  keepScroll(el,`<div class="wrap">${hdr(esc(s.name)+' · '+(s.tpl==='coctel'?'cóctel':resolve(s.items).length+' números'),tot?'<button class="link" data-a="resetChecks" style="min-height:44px">Reiniciar</button>':'')}
+   <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;margin-bottom:4px"><h1 style="padding:0;margin:0">Material</h1>
+   ${tot?`<div class="ring"><svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="${done} de ${tot} preparados"><circle cx="32" cy="32" r="27" fill="none" stroke="var(--track)" stroke-width="6"/><circle cx="32" cy="32" r="27" fill="none" stroke="${done===tot?'var(--good)':'var(--accent)'}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(circ*fr).toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .35s"/></svg><b>${done}/${tot}</b></div>`:''}</div>
+   ${tot?groups:'<div class="empty"><b>Nada que preparar</b>Los números de este show no tienen material apuntado en sus fichas.</div>'}</div>`);
+}
+
+/* ---- Shows ---- */
+function renderSho(){
+  const el=$('#v-sho');
+  keepScroll(el,`<div class="wrap">${hdr(D.shows.length+' shows',`<button class="ibtn fill" data-a="newShow" aria-label="Nuevo show">${ICON.plus}</button>`)}<h1>Shows</h1>
+  ${D.shows.length?`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${D.shows.map(s=>{const L=s.tpl==='coctel'?resolve(s.sets.A):resolve(s.items);
+    return `<div class="card sc${s.id===D.cur?' cur':''}"><button data-a="openShow" data-id="${s.id}" style="text-align:left;display:flex;flex-direction:column;gap:8px">
+    <span class="n">${esc(s.name)}</span><span class="m">${esc(TPL[s.tpl].n)} · ${s.tpl==='coctel'?'set A '+fmt(totalDur(L)):mins(totalDur(L))+' min · '+L.length+' números'}</span>
+    <span style="color:var(--accent)">${curveSVG(L,220,44,s.tpl,true)}</span></button><button class="ibtn more" data-a="showMenu" data-id="${s.id}" aria-label="Opciones" style="color:var(--sec)">${ICON.more}</button></div>`}).join('')}</div>`
+  :`<div class="empty"><b>Sin shows</b>Crea tu primer show con el botón +.</div>`}</div>`);
+}
+
+/* ============ hoja inferior ============ */
+let SH=null;
+function openSheet(o){SH=o;$('#dim').classList.add('on');$('#sheet').classList.add('on');drawSheet(true)}
+function drawSheet(reset){if(!SH)return;const b=$('#sbody'),y=reset?0:b.scrollTop;
+  $('#shead').innerHTML=`<button class="a" data-a="${SH.cancelA||'closeSheet'}">${SH.left||'Cerrar'}</button><div class="t">${esc(SH.title||'')}</div>${SH.right?`<button class="a r" data-a="${SH.rightA}">${SH.right}</button>`:'<span></span>'}`;
+  b.innerHTML=SH.body();b.scrollTop=y}
+function closeSheet(){$('#dim').classList.remove('on');$('#sheet').classList.remove('on');SH=null;render()}
+
+/* ---- ficha del número ---- */
+let F=null,FisNew=false,Fsnap='';
+function editNum(id){
+  const x=id?num(id):null;FisNew=!x;F=x?clone(x):N({emo:(D.emos[0]||{}).id});Fsnap=JSON.stringify(F);
+  openSheet({title:FisNew?'Nueva ficha':'Ficha',left:'Cancelar',right:'Guardar',rightA:'saveNum',body:fichaHTML});
+}
+const tg=(on,a,extra)=>`<button class="tg${on?' on':''}" data-a="${a}" ${extra||''} role="switch" aria-checked="${on}"><i></i></button>`;
+function fichaHTML(){
+  const allT=TIPOS.concat(D.tiposPropios.length?[['Tus tipos',D.tiposPropios]]:[]);
+  const potL=['Suave','Correcta','Buena','Muy fuerte','Demoledora'];
+  return `<div class="f">
+   <div class="fg"><div class="fr"><input type="text" class="name" placeholder="Nombre del número" value="${esc(F.name)}" data-in="F.name" aria-label="Nombre"></div>
+     <div class="fr"><span>Duración</span><div class="step"><button data-a="fdur" data-d="-15" aria-label="Menos">−</button><b>${fmt(F.dur)}</b><button data-a="fdur" data-d="15" aria-label="Más">+</button></div></div></div>
+   <div><div class="fl">Emoción</div><div class="wrapchips">${D.emos.map(e=>`<button class="ec${F.emo===e.id?' on':''}" style="${F.emo===e.id?'background:'+e.c:''}" data-a="femo" data-id="${e.id}"><i style="background:${e.c}"></i>${esc(e.n)}</button>`).join('')}</div></div>
+   <div><div class="fl">Potencia <span>${potL[F.pot-1]}</span></div><div class="pots">${[1,2,3,4,5].map(p=>`<button class="${p<=F.pot?'on':''}" data-a="fpot" data-p="${p}">${p}</button>`).join('')}</div></div>
+   <div><div class="fl">Tipo de efecto <span>${F.tipos.length===1?'1 elegido':F.tipos.length+' elegidos'}</span></div>
+     ${allT.map(([g,l])=>`<div style="font-size:12.5px;font-weight:600;color:var(--sec);margin:10px 4px 8px">${esc(g)}</div><div class="wrapchips">${l.map(t=>`<button class="tc${F.tipos.indexOf(t)>=0?' on':''}" data-a="ftipo" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>`).join('')}</div>
+   <div><div class="fl">Público</div><div class="fg">
+     <div class="fr"><span>Voluntarios</span><div class="step"><button data-a="fvol" data-d="-1">−</button><b>${F.vols}</b><button data-a="fvol" data-d="1">+</button></div></div>
+     <div class="fr"><span>Suben al escenario</span>${tg(F.sube,'fbool','data-k="sube"')}</div>
+     <div class="fr"><span>Número de presentación</span>${tg(F.pres,'fbool','data-k="pres"')}</div></div>
+     <div class="note">Los números de presentación son flashes cortos que te dan a conocer en los primeros segundos.</div></div>
+   <div><div class="fl">Condiciones</div><div class="fg">
+     <div class="fr"><span>Aguanta público rodeando</span>${tg(F.rodeado,'fbool','data-k="rodeado"')}</div>
+     <div class="fr"><span>Necesita mesa</span>${tg(F.mesa,'fbool','data-k="mesa"')}</div>
+     <div class="fr"><span>Necesita música</span>${tg(F.musica,'fbool','data-k="musica"')}</div>
+     <div class="fr"><span>Termina limpio</span>${tg(F.limpio,'fbool','data-k="limpio"')}</div>
+     <div class="fr"><span>Pide sujetar cosas</span>${tg(F.sujetar,'fbool','data-k="sujetar"')}</div></div></div>
+   <div><div class="fl">Reset</div><div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${Object.keys(RESET).map(k=>`<button class="${F.reset===k?'on':''}" data-a="freset" data-k="${k}">${RESET[k]}</button>`).join('')}</div></div>
+   <div><div class="fl">Material</div><div class="fg">${F.mat.map((m,i)=>`<div class="mat"><div class="r1"><input type="text" placeholder="Objeto" value="${esc(m.name)}" data-in="F.mat" data-i="${i}" aria-label="Objeto"><button class="x" data-a="fmatdel" data-i="${i}" aria-label="Quitar">×</button></div>
+     <div class="r2"><div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${Object.keys(WHERE).map(w=>`<button class="${m.where===w?'on':''}" data-a="fmatw" data-i="${i}" data-w="${w}">${WHERE[w]}</button>`).join('')}</div>
+     <label style="display:flex;align-items:center;gap:8px">${tg(m.cons,'fmatc','data-i="'+i+'"')} Consumible</label>${m.cons?`<label style="display:flex;align-items:center;gap:6px">Quedan <input type="number" inputmode="numeric" value="${esc(m.stock)}" data-in="F.stock" data-i="${i}" aria-label="Unidades"></label>`:''}</div></div>`).join('')}
+     <button class="li" data-a="fmatadd" style="color:var(--accent);font-weight:500">+ Añadir material</button></div></div>
+   <div><div class="fl">Notas</div><textarea placeholder="Apuntes, texto de presentación, variantes…" data-in="F.notes">${esc(F.notes)}</textarea></div>
+   ${FisNew?'':'<button class="danger" data-a="delNum">Eliminar número</button>'}
+  </div>`;
+}
+
+/* ---- acciones ---- */
+let undoT=0;
+function toast(t,undo){const el=$('#toast');$('#ttext').textContent=t;$('#tundo').style.display=undo?'':'none';$('#tundo').onclick=()=>{undo();el.classList.remove('on')};el.classList.add('on');clearTimeout(undoT);undoT=setTimeout(()=>el.classList.remove('on'),undo?5000:2200)}
+function withUndo(msg,fn){const snap=JSON.stringify(D);fn();save();render();toast(msg,()=>{D=JSON.parse(snap);save();render()})}
+
+let PICK=null;
+const A={
+  tab:el=>{tab=el.dataset.t;if(SH)closeSheet();else render();$('#v-'+tab).scrollTop=0},
+  settings:()=>openSettings(),
+  closeSheet:()=>closeSheet(),
+  repF:el=>{repF=el.dataset.f;render()},
+  newNum:()=>editNum(null),
+  editNum:el=>editNum(el.dataset.id),
+  fdur:el=>{F.dur=Math.max(15,F.dur+ +el.dataset.d);drawSheet()},
+  fvol:el=>{F.vols=Math.max(0,Math.min(20,F.vols+ +el.dataset.d));drawSheet()},
+  femo:el=>{F.emo=el.dataset.id;drawSheet()},
+  fpot:el=>{F.pot=+el.dataset.p;drawSheet()},
+  ftipo:el=>{const t=el.dataset.t,i=F.tipos.indexOf(t);if(i>=0)F.tipos.splice(i,1);else F.tipos.push(t);drawSheet()},
+  fbool:el=>{F[el.dataset.k]=!F[el.dataset.k];drawSheet()},
+  freset:el=>{F.reset=el.dataset.k;drawSheet()},
+  fmatadd:()=>{F.mat.push(M('','maleta'));drawSheet();const ins=$$('[data-in="F.mat"]');if(ins.length)ins[ins.length-1].focus()},
+  fmatdel:el=>{F.mat.splice(+el.dataset.i,1);drawSheet()},
+  fmatw:el=>{F.mat[+el.dataset.i].where=el.dataset.w;drawSheet()},
+  fmatc:el=>{const m=F.mat[+el.dataset.i];m.cons=!m.cons;drawSheet()},
+  saveNum:()=>{F.name=F.name.trim()||'Sin nombre';F.mat=F.mat.filter(m=>m.name.trim());const i=D.nums.findIndex(x=>x.id===F.id);
+    if(i>=0){delete F.sample;D.nums[i]=F}else D.nums.unshift(F);
+    const after=PICK;save();closeSheet();if(after)after(F.id)},
+  delNum:()=>{const id=F.id;closeSheet();withUndo('Número eliminado',()=>{D.nums=D.nums.filter(x=>x.id!==id);D.shows.forEach(s=>{s.items=s.items.filter(it=>it.nid!==id);['A','B','X'].forEach(k=>s.sets[k]=s.sets[k].filter(it=>it.nid!==id))})})},
+  /* montar */
+  addNums:el=>openPicker(el.dataset.l),
+  pickNum:el=>{const s=curShow();listOf(s,PICKL).push({nid:el.dataset.id,trans:''});save();drawSheet();render()},
+  pickNew:()=>{const k=PICKL;closeSheet();PICK=id=>{PICK=null;const s=curShow();if(s){listOf(s,k).push({nid:id,trans:''});save();render()}};editNum(null)},
+  quickAdd:el=>{const s=curShow();listOf(s,s.tpl==='coctel'?'A':'main').push({nid:el.dataset.id,trans:''});save();render()},
+  numAct:el=>numActions(el.dataset.l,+el.dataset.i),
+  trans:el=>editTrans(el.dataset.l,+el.dataset.i),
+  warns:()=>openWarns(),
+  mute:el=>{const s=curShow();s.muted=s.muted||[];s.muted.push(el.dataset.k);save();render();drawSheet();if(!rulesFor(s).length)closeSheet()},
+  unmute:()=>{const s=curShow();s.muted=[];save();render();drawSheet()},
+  pickTpl:()=>openTpl(),
+  setTpl:el=>{const s=curShow(),t=el.dataset.t;if(t===s.tpl){closeSheet();return}
+    if(t==='coctel'&&!s.sets.A.length&&s.items.length){s.sets.A=s.items.slice(0,3)}
+    if(s.tpl==='coctel'&&!s.items.length){s.items=s.sets.A.concat(s.sets.B,s.sets.X)}
+    s.tpl=t;save();closeSheet()},
+  /* shows */
+  openShow:el=>{D.cur=el.dataset.id;save();tab='mon';render();$('#v-mon').scrollTop=0},
+  newShow:()=>showForm(null),
+  showMenu:el=>showMenu(el.dataset.id||D.cur),
+  check:el=>{const s=curShow();s.checks=s.checks||{};s.checks[el.dataset.k]=!s.checks[el.dataset.k];save();render()},
+  resetChecks:()=>withUndo('Lista reiniciada',()=>{curShow().checks={}})
+};
+const IN={
+  repQ:el=>{repQ=el.value;const pos=el.selectionStart;renderRep();const n=$('[data-in=repQ]');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}},
+  'F.name':el=>{F.name=el.value},'F.notes':el=>{F.notes=el.value},
+  'F.mat':el=>{F.mat[+el.dataset.i].name=el.value},'F.stock':el=>{F.mat[+el.dataset.i].stock=el.value}
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;const f=A[el.dataset.a]||S[el.dataset.a];if(f){e.preventDefault();f(el,e)}});
+document.addEventListener('input',e=>{const el=e.target.closest('[data-in]');if(el&&(IN[el.dataset.in]||SI[el.dataset.in]))(IN[el.dataset.in]||SI[el.dataset.in])(el)});
+
+/* ---- selector de números ---- */
+let PICKL='main',PQ='';
+function openPicker(k){PICKL=k;PQ='';const s=curShow();
+  openSheet({title:k==='main'?'Añadir números':'Añadir al '+(SETS.find(x=>x[0]===k)||['','set'])[1].toLowerCase(),left:'Listo',body:()=>{
+    const used={};listOf(s,PICKL).forEach(it=>used[it.nid]=(used[it.nid]||0)+1);
+    const L=D.nums.filter(x=>!PQ||norm(x.name+' '+x.tipos.join(' ')).indexOf(norm(PQ))>=0);
+    return `<label class="search">${ICON.search}<input type="search" placeholder="Buscar" value="${esc(PQ)}" data-in="PQ" aria-label="Buscar"></label>
+      <div class="group">${L.map(x=>`<button class="li" data-a="pickNum" data-id="${x.id}"><i style="width:10px;height:10px;border-radius:5px;background:${emoOf(x.emo).c};flex:none"></i><span class="tx"><b>${esc(x.name)}</b><small>${fmt(x.dur)} · ${dots(x.pot)}${x.rodeado?' · rodeado':''}</small></span><span style="color:var(--accent);font-size:${used[x.id]?15:22}px;font-weight:600">${used[x.id]?'✓ Añadido':'+'}</span></button>`).join('')}
+      <button class="li" data-a="pickNew" style="color:var(--accent);font-weight:500">+ Crear número nuevo</button></div>`}});
+}
+const SI={PQ:el=>{PQ=el.value;const p=el.selectionStart;drawSheet();const n=$('[data-in=PQ]');n.focus();try{n.setSelectionRange(p,p)}catch(e){}},
+  'T.text':el=>{TT=el.value},'SF.name':el=>{SF.name=el.value},'SF.target':el=>{SF.target=el.value},'emo.name':el=>{const e=D.emos.find(x=>x.id===EED);if(e){e.n=el.value;save()}},'tipo.new':el=>{NT=el.value},'open.max':()=>{}};
+
+/* ---- acciones de un número del show ---- */
+function numActions(k,i){
+  const s=curShow(),arr=listOf(s,k),it=arr[i],x=num(it.nid);
+  const moves=s.tpl==='coctel'?SETS.filter(z=>z[0]!==k).map(z=>`<button data-a="moveSet" data-to="${z[0]}">Mover al ${z[1].toLowerCase()}</button>`).join(''):'';
+  openSheet({title:x.name,body:()=>`<div class="act"><button data-a="editFromShow">Editar ficha</button>${i<arr.length-1?'<button data-a="transFromAct">'+(it.trans?'Editar transición':'Añadir transición')+'</button>':''}${moves}<button class="d" data-a="removeFromShow">Quitar del show</button></div>`});
+  S.editFromShow=()=>{closeSheet();editNum(x.id)};
+  S.transFromAct=()=>editTrans(k,i);
+  S.moveSet=el=>{arr.splice(i,1);s.sets[el.dataset.to].push(it);save();closeSheet()};
+  S.removeFromShow=()=>{closeSheet();withUndo('Quitado del show',()=>{listOf(curShow(),k).splice(i,1)})};
+}
+const S={};
+let TT='';
+function editTrans(k,i){
+  const s=curShow(),arr=listOf(s,k),a=num(arr[i].nid),b=num((arr[i+1]||{}).nid)||{name:''};TT=arr[i].trans||'';
+  openSheet({title:'Transición',left:'Cancelar',right:'Guardar',rightA:'saveTrans',body:()=>`<div class="note" style="padding:0 4px 10px">De <b>${esc(a.name)}</b> a <b>${esc(b.name)}</b>: la frase puente, el chiste o el cambio de música.</div><textarea data-in="T.text" placeholder="«Y hablando de…»">${esc(TT)}</textarea>`});
+  S.saveTrans=()=>{arr[i].trans=TT.trim();save();closeSheet()};
+}
+
+/* ---- avisos ---- */
+function openWarns(){
+  openSheet({title:'Asistente',body:()=>{const s=curShow(),W=rulesFor(s);
+    return `<div class="f" style="gap:10px">${W.length?W.map(w=>`<div class="wi"><div class="wt"><span class="w ${w.sev}" style="padding:2px 8px;min-height:0">${w.sev==='bad'?'Importante':w.sev==='warn'?'Revisa':'Sugerencia'}</span><span>${esc(w.t)}</span></div><p>${esc(w.why)}</p><button class="mute" data-a="mute" data-k="${esc(w.key)}">Lo hago a propósito · ocultar en este show</button></div>`).join(''):'<div class="empty"><b>Todo en orden</b>El asistente no ve nada que revisar.</div>'}
+    ${(s.muted||[]).length?`<button class="link" data-a="unmute" style="min-height:44px">Mostrar ${s.muted.length} avisos ocultos</button>`:''}
+    <div class="note">Plantilla: ${esc(TPL[s.tpl].n)}. Puedes activar o desactivar reglas en Ajustes → Asistente.</div></div>`}});
+}
+function openTpl(){
+  openSheet({title:'Plantilla de dramaturgia',body:()=>{const s=curShow();return `<div class="f" style="gap:10px">${Object.keys(TPL).map(k=>{const t=TPL[k];
+    return `<button class="tpl${s.tpl===k?' on':''}" data-a="setTpl" data-t="${k}"><span style="color:var(--accent)">${t.ideal?curveSVG([1,2,3,4,5,6].map(i=>({pot:Math.round(t.ideal((i-1)/5)),emo:''})),64,34,k,true):'<svg width="64" height="34" viewBox="0 0 64 34"><text x="32" y="22" text-anchor="middle" font-size="12" fill="currentColor">'+(k==='coctel'?'A · B · X':'libre')+'</text></svg>'}</span>
+      <span class="tt"><b>${esc(t.n)}</b><small>${esc(t.by)} · ${esc(t.best)}</small><small>${esc(t.d)}</small></span></button>`}).join('')}</div>`}});
+}
+
+/* ---- formularios de show ---- */
+let SF=null;
+function showForm(id){
+  const s=id?D.shows.find(x=>x.id===id):null;SF=s?{id:s.id,name:s.name,tpl:s.tpl,target:s.target}:{id:null,name:'',tpl:'crescendo',target:45};
+  openSheet({title:s?'Ajustes del show':'Nuevo show',left:'Cancelar',right:s?'Guardar':'Crear',rightA:'saveShow',body:()=>`<div class="f">
+    <div class="fg"><div class="fr"><input type="text" class="name" placeholder="Nombre (p. ej. Gala empresa)" value="${esc(SF.name)}" data-in="SF.name" aria-label="Nombre del show"></div>
+    <div class="fr"><span>Duración objetivo</span><label style="display:flex;align-items:center;gap:6px"><input type="number" inputmode="numeric" value="${esc(SF.target)}" data-in="SF.target" style="width:70px;text-align:right;border:0;background:var(--field);border-radius:8px;height:34px;padding:0 8px;outline:none" aria-label="Minutos"> min</label></div></div>
+    <div><div class="fl">Plantilla</div><div class="f" style="gap:8px">${Object.keys(TPL).map(k=>`<button class="tpl${SF.tpl===k?' on':''}" data-a="sfTpl" data-t="${k}" style="padding:12px 14px"><span class="tt"><b>${esc(TPL[k].n)}</b><small>${esc(TPL[k].best)}</small></span></button>`).join('')}</div></div></div>`});
+}
+S.sfTpl=el=>{SF.tpl=el.dataset.t;if(SF.tpl==='coctel'&&(!SF.target||SF.target==45))SF.target=90;drawSheet()};
+S.saveShow=()=>{const name=(SF.name||'').trim()||'Show sin nombre',target=Math.max(0,parseInt(SF.target,10)||0);
+  if(SF.id){const s=D.shows.find(x=>x.id===SF.id);D.cur=s.id;s.name=name;s.target=target;if(s.tpl!==SF.tpl)A.setTpl({dataset:{t:SF.tpl}});else{save();closeSheet()}}
+  else{const s={id:uid(),name,tpl:SF.tpl,target,items:[],sets:{A:[],B:[],X:[]},muted:[],checks:{}};D.shows.unshift(s);D.cur=s.id;save();tab='mon';closeSheet()}};
+function showMenu(id){
+  const s=D.shows.find(x=>x.id===id);if(!s)return;
+  openSheet({title:s.name,body:()=>`<div class="act"><button data-a="smEdit">Nombre, objetivo y plantilla</button><button data-a="smDup">Duplicar</button>${D.shows.length>1?'<button data-a="smSwitch">Cambiar de show</button>':''}<button class="d" data-a="smDel">Eliminar show</button></div>`});
+  S.smEdit=()=>showForm(id);
+  S.smDup=()=>{const c=clone(s);c.id=uid();c.name=s.name+' (copia)';delete c.sample;c.checks={};D.shows.unshift(c);D.cur=c.id;save();closeSheet()};
+  S.smSwitch=()=>{tab='sho';closeSheet()};
+  S.smDel=()=>{closeSheet();withUndo('Show eliminado',()=>{D.shows=D.shows.filter(x=>x.id!==id);if(D.cur===id)D.cur=D.shows[0]?D.shows[0].id:null})};
+}
+
+/* ---- ajustes ---- */
+let EED=null,NT='';
+function openSettings(){EED=null;NT='';openSheet({title:'Ajustes',left:'Listo',body:settingsHTML})}
+function settingsHTML(){
+  const st=D.set,hasSample=D.nums.some(x=>x.sample)||D.shows.some(x=>x.sample);
+  return `<div class="f">
+   <div><div class="fl">Apariencia</div><div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[['auto','Automático'],['light','Claro'],['dark','Oscuro']].map(([k,n])=>`<button class="${st.appearance===k?'on':''}" data-a="setAp" data-k="${k}">${n}</button>`).join('')}</div>
+     <div class="fg" style="margin-top:10px"><div class="fr"><span>Color de acento</span><span style="color:var(--sec);font-size:14px">${esc((ACCENTS.find(a=>a.id===st.accent)||ACCENTS[0]).n)}</span></div><div class="accs">${ACCENTS.map(a=>`<button class="${st.accent===a.id?'on':''}" style="background:${document.documentElement.dataset.theme==='dark'?a.d:a.l}" data-a="setAc" data-k="${a.id}" aria-label="${a.n}"></button>`).join('')}</div></div></div>
+   <div><div class="fl">Emociones <span>toca para editar</span></div><div class="fg">${D.emos.map(e=>`<button class="li" data-a="emoEd" data-id="${e.id}"><i style="width:22px;height:22px;border-radius:11px;background:${e.c};flex:none"></i><span class="tx"><b>${esc(e.n)}</b></span><small style="color:var(--sec)">${(c=>c===1?'1 número':c+' números')(D.nums.filter(x=>x.emo===e.id).length)}</small></button>
+     ${EED===e.id?`<div style="padding:4px 14px 10px;border-bottom:1px solid var(--sep)"><input type="text" value="${esc(e.n)}" data-in="emo.name" aria-label="Nombre de la emoción" style="width:100%;border:0;background:var(--field);border-radius:10px;height:40px;padding:0 12px;outline:none;font-weight:600"><div class="pal" style="padding:12px 0">${PALETTE.map(([c,n])=>`<button class="${e.c===c?'on':''}" style="background:${c}" data-a="emoCol" data-c="${c}" aria-label="${n}"></button>`).join('')}</div>${D.emos.length>1?'<button class="link" data-a="emoDel" style="color:var(--badText);min-height:36px">Eliminar emoción</button>':''}</div>`:''}`).join('')}
+     <button class="li" data-a="emoAdd" style="color:var(--accent);font-weight:500">+ Nueva emoción</button></div></div>
+   <div><div class="fl">Tus tipos de efecto</div><div class="fg"><div style="padding:12px 14px" class="wrapchips">${D.tiposPropios.map(t=>`<button class="tc" data-a="tipoDel" data-t="${esc(t)}">${esc(t)} ×</button>`).join('')||'<span style="color:var(--sec);font-size:14px">Aún no has creado ninguno.</span>'}</div>
+     <div class="fr"><input type="text" placeholder="Nuevo tipo" value="${esc(NT)}" data-in="tipo.new" aria-label="Nuevo tipo"><button class="link" data-a="tipoAdd" style="min-height:40px;padding:0 6px">Añadir</button></div></div></div>
+   <div><div class="fl">Asistente</div><div class="fg">
+     <div class="fr"><span>Presentación en los primeros segundos</span>${tg(st.universal,'setUni')}</div>
+     <div class="fr"><span>Duración máxima del flash</span><div class="step"><button data-a="setOpen" data-d="-15">−</button><b>${fmt(st.openMax)}</b><button data-a="setOpen" data-d="15">+</button></div></div>
+     ${RULES.filter(r=>r[0]!=='open').map(r=>`<div class="fr"><span style="font-size:15px">${esc(r[1])}<br><small style="color:var(--sec);font-size:12.5px">${esc(r[2])}</small></span>${tg(!st.off[r[0]],'setRule','data-k="'+r[0]+'"')}</div>`).join('')}</div></div>
+   <div><div class="fl">Copia de seguridad</div><div class="act">
+     <button data-a="exportData">Exportar copia</button><button data-a="importData">Importar copia</button>
+     ${hasSample?'<button class="d" data-a="delSample">Borrar datos de ejemplo</button>':''}</div>
+     <div class="note">La copia es un archivo con todos tus números, shows y ajustes. Guárdalo en Google Drive o mándaselo a quien quieras: al importarlo puedes reemplazarlo todo o añadir sus números a los tuyos.</div></div>
+   <div class="note" style="text-align:center;padding:10px 0 0">Espatontos · Monta tu show · v1</div>
+  </div>`;
+}
+Object.assign(S,{
+  setAp:el=>{D.set.appearance=el.dataset.k;save();applyTheme();drawSheet()},
+  setAc:el=>{D.set.accent=el.dataset.k;save();applyTheme();drawSheet()},
+  emoEd:el=>{EED=EED===el.dataset.id?null:el.dataset.id;drawSheet()},
+  emoCol:el=>{const e=D.emos.find(x=>x.id===EED);e.c=el.dataset.c;save();drawSheet()},
+  emoAdd:()=>{const used=D.emos.map(e=>e.c);const c=(PALETTE.find(p=>used.indexOf(p[0])<0)||PALETTE[0])[0];const e={id:uid(),n:'Nueva emoción',c};D.emos.push(e);EED=e.id;save();drawSheet()},
+  emoDel:()=>{const id=EED,rest=D.emos.filter(e=>e.id!==id);D.nums.forEach(x=>{if(x.emo===id)x.emo=rest[0].id});D.emos=rest;EED=null;save();drawSheet();toast('Emoción eliminada')},
+  tipoAdd:()=>{const t=NT.trim();if(t&&D.tiposPropios.indexOf(t)<0&&!TIPOS.some(g=>g[1].indexOf(t)>=0)){D.tiposPropios.push(t);save()}NT='';drawSheet()},
+  tipoDel:el=>{const t=el.dataset.t;D.tiposPropios=D.tiposPropios.filter(x=>x!==t);save();drawSheet()},
+  setUni:()=>{D.set.universal=!D.set.universal;save();drawSheet()},
+  setOpen:el=>{D.set.openMax=Math.max(30,Math.min(300,D.set.openMax+ +el.dataset.d));save();drawSheet()},
+  setRule:el=>{const k=el.dataset.k;if(D.set.off[k])delete D.set.off[k];else D.set.off[k]=true;save();drawSheet()},
+  exportData:()=>exportData(),
+  importData:()=>{$('#file').value='';$('#file').click()},
+  delSample:()=>{closeSheet();withUndo('Datos de ejemplo borrados',()=>{const ids={};D.nums.forEach(x=>{if(x.sample)ids[x.id]=1});D.nums=D.nums.filter(x=>!x.sample);D.shows=D.shows.filter(s=>!s.sample);D.shows.forEach(s=>{s.items=s.items.filter(it=>!ids[it.nid]);['A','B','X'].forEach(k=>s.sets[k]=s.sets[k].filter(it=>!ids[it.nid]))});if(!D.shows.some(s=>s.id===D.cur))D.cur=D.shows[0]?D.shows[0].id:null})}
+});
+function exportData(){
+  const d=new Date(),name=`espatontos-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
+  const blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'});
+  try{const file=new File([blob],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'Copia de Espatontos'}).catch(()=>{});return}}catch(e){}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('Copia descargada');
+}
+$('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(err){toast('El archivo no es una copia válida');return}
+    if(!o||!Array.isArray(o.nums)||!Array.isArray(o.shows)){toast('El archivo no es una copia de Espatontos');return}
+    openSheet({title:'Importar copia',body:()=>`<div class="note" style="padding:0 4px 12px">La copia tiene ${o.nums.length} números y ${o.shows.length} shows.</div><div class="act"><button data-a="impMerge">Añadir a lo que ya tengo</button><button class="d" data-a="impReplace">Reemplazar todo</button></div>`});
+    S.impMerge=()=>{const ids={};D.nums.forEach(x=>ids[x.id]=1);o.nums.forEach(x=>{if(!ids[x.id])D.nums.push(N(x))});const sids={};D.shows.forEach(s=>sids[s.id]=1);o.shows.forEach(s=>{if(!sids[s.id])D.shows.push(Object.assign({items:[],sets:{A:[],B:[],X:[]},muted:[],checks:{}},s))});
+      (o.emos||[]).forEach(e=>{if(!D.emos.some(x=>x.id===e.id))D.emos.push(e)});(o.tiposPropios||[]).forEach(t=>{if(D.tiposPropios.indexOf(t)<0)D.tiposPropios.push(t)});save();closeSheet();toast('Copia añadida')};
+    S.impReplace=()=>{closeSheet();withUndo('Copia restaurada',()=>{const d=defaults();o.set=Object.assign(d.set,o.set||{});D=Object.assign(d,o)})};
+  };r.readAsText(f)});
+
+/* ============ arranque ============ */
+addEventListener('resize',()=>{if(tab==='mon')render()});
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
