@@ -69,6 +69,8 @@ main{padding:18px calc(var(--safe-r) + 20px) calc(var(--safe-b) + 110px) calc(va
 .pad.stopping{box-shadow:0 0 0 3px var(--accent), 0 8px 20px rgba(0,0,0,.3);animation:breathe .6s infinite alternate}
 @keyframes breathe{to{opacity:.6}}
 .pad.missing{opacity:.4}
+.pad.loading{opacity:.55}
+.pad.loading .time::after{content:' · preparando'}
 body.edit .pad{animation:none}
 body.edit .pad::after{content:"✎";position:absolute;top:8px;right:9px;width:24px;height:24px;border-radius:12px;background:rgba(0,0,0,.25);
   font-size:13px;display:flex;align-items:center;justify-content:center}
@@ -329,7 +331,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
 
 <script>
 'use strict';
-const APP_VERSION = '9';
+const APP_VERSION = '10';
 /* ================= Utilidades ================= */
 const $ = s => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -433,6 +435,91 @@ function ensureCtx(){
   unmuteIOS();
   return ctx;
 }
+/* ================= Motor de audio en memoria (sin tirones) =================
+   Cada canción se descomprime UNA vez al abrir la app y se guarda en memoria
+   como PCM de 16 bits (la mitad de memoria que el formato normal).
+   Al sonar, se envía al altavoz en trozos de pocos segundos encadenados con
+   precisión de muestra en el reloj de audio: arranque instantáneo, sin cortes
+   y bucles perfectos. Imita la interfaz de <audio> para que el resto de la app
+   no cambie. Si una pista no se puede preparar, se usa <audio> como reserva. */
+const SEG = 4, FIRST_SEG = 1, AHEAD = 2.5, LEAD = 0.015;
+const PCM_BUDGET = 480 * 1048576; // ~45 min de música estéreo en memoria
+let pcmBytes = 0;
+const pcmActive = new Set();
+class PcmTrack {
+  constructor(out, pcm){ this.out = out; this.pcm = pcm; this.sr = pcm.sr; this.paused = true; this.loop = false; this.loopStart = 0; this.loopEnd = null;
+    this._t = 0; this.segs = []; this.nextPos = 0; this.schedEnd = 0; this.ending = false; this.ev = {}; }
+  addEventListener(n, f){ (this.ev[n] = this.ev[n] || []).push(f); }
+  _emit(n){ (this.ev[n] || []).forEach(f => { try { f(); } catch (e) { console.error(e); } }); }
+  setAttribute(){} removeAttribute(){} load(){}
+  get duration(){ return this.pcm ? this.pcm.length / this.sr : NaN; }
+  get currentTime(){ return this.paused ? this._t : this._posAt(ctx.currentTime); }
+  set currentTime(v){ v = clamp(v || 0, 0, this.duration); if (this.paused){ this._t = v; return; } this._stopSources(); this._begin(v); }
+  play(){
+    if (!this.pcm) return Promise.reject(new Error('sin audio'));
+    if (this.paused){
+      this.paused = false; pcmActive.add(this);
+      let from = this._t; if (from >= this.duration - 0.01) from = this.loop ? this._ls() : 0;
+      this._begin(from);
+    }
+    return Promise.resolve();
+  }
+  pause(){ if (this.paused) return; this._t = this.currentTime; this._stopSources(); this.paused = true; pcmActive.delete(this); }
+  _ls(){ return this.loopStart > 0 ? this.loopStart : 0; }
+  _le(){ return (this.loopEnd > 0 && this.loopEnd <= this.duration) ? this.loopEnd : this.duration; }
+  _begin(pos){ this.segs = []; this.ending = false; this.nextPos = pos; this.schedEnd = ctx.currentTime + LEAD; this._fill(); }
+  _fill(){
+    const now = ctx.currentTime;
+    let guard = 0;
+    while (!this.ending && this.schedEnd - now < AHEAD && guard++ < 30){
+      let limit = this.loop ? this._le() : this.duration;
+      if (this.nextPos >= limit - 1 / this.sr){
+        if (this.loop){ this.nextPos = this._ls(); limit = this._le(); if (limit - this.nextPos < 0.05){ this.ending = true; break; } }
+        else { this.ending = true; break; }
+      }
+      const len = Math.min(this.segs.length ? SEG : FIRST_SEG, limit - this.nextPos);
+      const f0 = Math.floor(this.nextPos * this.sr);
+      const n = Math.max(1, Math.min(Math.round(len * this.sr), this.pcm.length - f0));
+      const chs = this.pcm.ch, buf = ctx.createBuffer(chs.length, n, this.sr);
+      for (let c = 0; c < chs.length; c++){ const src = chs[c], dst = buf.getChannelData(c); for (let i = 0; i < n; i++) dst[i] = src[f0 + i] * 3.0517578125e-5; }
+      const s = ctx.createBufferSource(); s.buffer = buf; s.connect(this.out); s.start(this.schedEnd);
+      const d = n / this.sr;
+      this.segs.push({ src: s, t0: this.schedEnd, t1: this.schedEnd + d, p0: f0 / this.sr });
+      this.schedEnd += d; this.nextPos = (f0 + n) / this.sr;
+    }
+    while (this.segs.length > 1 && this.segs[0].t1 < now - 0.5){ const x = this.segs.shift(); try { x.src.disconnect(); } catch (e) {} }
+    if (this.ending && now >= this.schedEnd){ this._stopSources(); this._t = this.duration; this.paused = true; pcmActive.delete(this); this._emit('ended'); }
+  }
+  _posAt(t){
+    const sg = this.segs; if (!sg.length) return this._t;
+    if (t < sg[0].t0) return sg[0].p0;
+    for (const x of sg) if (t < x.t1) return x.p0 + (t - x.t0);
+    const l = sg[sg.length - 1]; return Math.min(this.duration, l.p0 + (l.t1 - l.t0));
+  }
+  _stopSources(){ for (const x of this.segs){ try { x.src.stop(); } catch (e) {} try { x.src.disconnect(); } catch (e) {} } this.segs = []; this.ending = false; }
+}
+setInterval(() => { if (ctx) for (const t of [...pcmActive]) t._fill(); }, 120);
+// Descomprime de una en una (para no llenar la memoria de golpe)
+let decodeChain = Promise.resolve();
+function decodePcm(blob){
+  const job = decodeChain.then(async () => {
+    const ab = await new Response(blob).arrayBuffer();
+    const abuf = await new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej));
+    const nc = Math.min(2, abuf.numberOfChannels), bytes = abuf.length * nc * 2;
+    if (pcmBytes + bytes > PCM_BUDGET) throw new Error('sin memoria');
+    const ch = [];
+    for (let c = 0; c < nc; c++){
+      const f = abuf.getChannelData(c), a = new Int16Array(f.length);
+      for (let i = 0; i < f.length; i++){ let v = f[i]; v = v < -1 ? -1 : v > 1 ? 1 : v; a[i] = v < 0 ? v * 32768 : v * 32767; }
+      ch.push(a);
+    }
+    pcmBytes += bytes;
+    await new Promise(r => setTimeout(r, 30)); // respiro para la interfaz
+    return { sr: abuf.sampleRate, length: abuf.length, ch, bytes };
+  });
+  decodeChain = job.catch(() => {});
+  return job;
+}
 const players = new Map(); // padId -> player
 const pending = new Map();
 function getPlayer(pad){
@@ -442,13 +529,16 @@ function getPlayer(pad){
     ensureCtx();
     const blob = await getAudio(pad.audioId);
     if (!blob) throw new Error('Falta el audio');
-    const url = URL.createObjectURL(blob);
-    const el = new Audio();
-    el.setAttribute('playsinline', ''); el.preload = 'auto'; el.src = url;
-    const src = ctx.createMediaElementSource(el);
-    const g = ctx.createGain(); g.gain.value = 0;
-    src.connect(g); g.connect(master);
-    const p = { pad, el, g, src, url, state: 'idle', token: 0, after: null, unlocked: false };
+    const g = ctx.createGain(); g.gain.value = 0; g.connect(master);
+    let el, src = null, url = null, mode = 'pcm';
+    try { el = new PcmTrack(g, await decodePcm(blob)); }
+    catch (e) {
+      mode = 'media';
+      url = URL.createObjectURL(blob);
+      el = new Audio(); el.setAttribute('playsinline', ''); el.preload = 'auto'; el.src = url;
+      src = ctx.createMediaElementSource(el); src.connect(g);
+    }
+    const p = { pad, el, g, src, url, mode, state: 'idle', token: 0, after: null, unlocked: mode === 'pcm' };
     applyLoop(p);
     el.addEventListener('ended', () => {
       if (p.state === 'idle') return;
@@ -461,22 +551,31 @@ function getPlayer(pad){
       if (isFinite(el.duration) && Math.abs((p.pad.duration || 0) - el.duration) > 0.05){ p.pad.duration = el.duration; save(); renderPadState(p.pad.id); }
     });
     players.set(pad.id, p); pending.delete(pad.id);
+    if (mode === 'pcm'){ el._emit('loadedmetadata'); if (!pad.peaks) pad.peaks = peaksFromPcm(el.pcm), save(); }
+    cueToStart(p);
+    renderPadState(pad.id);
     return p;
   })();
   pr.catch(() => pending.delete(pad.id));
   pending.set(pad.id, pr);
   return pr;
 }
-// iOS solo deja reproducir un audio si antes se tocó la pantalla para él.
-// Al primer toque "desbloqueamos" todas las pistas (en silencio) para que
-// las acciones automáticas (lanzar la siguiente al terminar) funcionen.
+function peaksFromPcm(pcm){
+  const N = 500, len = pcm.length, step = Math.max(1, Math.floor(len / N)), raw = []; let max = 0;
+  for (let i = 0; i < N; i++){
+    const a = i * step, b = Math.min(len, a + step), stride = Math.max(1, Math.floor((b - a) / 300)); let m = 0;
+    for (const ch of pcm.ch) for (let j = a; j < b; j += stride){ const v = Math.abs(ch[j]); if (v > m) m = v; }
+    raw.push(m); if (m > max) max = m;
+  }
+  return raw.map(v => Math.round(v / (max || 1) * 100));
+}
+// Solo para pistas de reserva (<audio>): iOS exige un toque para poder lanzarlas solas
 function unlockPlayer(p){
-  if (!p || p.unlocked || p.state !== 'idle') return;
+  if (!p || p.mode === 'pcm' || p.unlocked || p.state !== 'idle') return;
   p.unlocked = true;
   const pr = p.el.play();
   if (pr) pr.then(() => { if (p.state === 'idle') p.el.pause(); }).catch(() => { p.unlocked = false; });
 }
-// Prepara (en silencio) solo las pistas que se lanzarán solas al terminar ésta
 function unlockChain(padId){
   let id = padId;
   for (let n = 0; n < 8; n++){
@@ -485,21 +584,25 @@ function unlockChain(padId){
     unlockPlayer(players.get(id));
   }
 }
-function applyLoop(p){ p.el.loop = !!(p.pad.loop && !(p.pad.start > 0) && !(p.pad.end > 0)); }
+function applyLoop(p){
+  if (p.mode === 'pcm'){ p.el.loop = !!p.pad.loop; p.el.loopStart = p.pad.start || 0; p.el.loopEnd = p.pad.end > 0 ? p.pad.end : null; }
+  else p.el.loop = !!(p.pad.loop && !(p.pad.start > 0) && !(p.pad.end > 0));
+}
 function disposePlayer(id){
   const p = players.get(id); if (!p) return;
-  try { p.el.pause(); p.src.disconnect(); p.g.disconnect(); p.el.removeAttribute('src'); p.el.load(); } catch (e) {}
-  URL.revokeObjectURL(p.url); players.delete(id);
+  try { p.el.pause(); if (p.src) p.src.disconnect(); p.g.disconnect(); p.el.removeAttribute('src'); p.el.load(); } catch (e) {}
+  if (p.url) URL.revokeObjectURL(p.url);
+  if (p.mode === 'pcm' && p.el.pcm){ pcmBytes -= p.el.pcm.bytes; p.el.pcm = null; }
+  players.delete(id);
 }
-// Coloca la pista en su punto de inicio para que arranque sin tener que buscar
+// Coloca la pista en su punto de inicio
 function cueToStart(p){
   const st = p.pad.start || 0;
   if (Math.abs(p.el.currentTime - st) > 0.02){ try { p.el.currentTime = st; } catch (e) {} }
 }
-// iOS no carga de verdad una canción hasta que suena: la hacemos sonar en
-// silencio un instante (fuera del show) y la dejamos lista en su inicio.
+// Solo para pistas de reserva: hacerlas sonar en silencio un instante para que carguen
 function primePlayer(p){
-  if (!p || p.primed || p.state !== 'idle') return;
+  if (!p || p.mode === 'pcm' || p.primed || p.state !== 'idle') return;
   p.primed = true; p.unlocked = true;
   const pr = p.el.play();
   const done = () => { if (p.state === 'idle'){ p.el.pause(); cueToStart(p); } };
@@ -507,12 +610,15 @@ function primePlayer(p){
   else setTimeout(done, 350);
 }
 function primeAll(){ if (!ctx) return; for (const p of players.values()) primePlayer(p); }
-let readyCount = 0;
 function preloadBoard(){
   const b = board();
   for (const [id, p] of players){ if (!b.pads.includes(id) && p.state === 'idle') disposePlayer(id); }
-  const jobs = b.pads.map(id => { const pad = state.pads[id]; return pad ? getPlayer(pad).catch(() => markMissing(id)) : null; });
-  Promise.all(jobs).then(() => { const n = b.pads.length; const el = $('#startInfo'); if (el) el.textContent = n + (n === 1 ? ' pista lista' : ' pistas listas'); });
+  const ids = b.pads.filter(id => state.pads[id]);
+  let done = 0;
+  const info = () => { const el = $('#startInfo'); if (!el) return; const n = ids.length;
+    el.textContent = done < n ? 'Preparando pistas… ' + done + ' de ' + n : n + (n === 1 ? ' pista lista' : ' pistas listas'); };
+  info();
+  ids.forEach(id => getPlayer(state.pads[id]).catch(() => markMissing(id)).then(() => { done++; info(); renderPadState(id); }));
 }
 function setGain(p, target, dur){
   const param = p.g.gain, t = ctx.currentTime;
@@ -669,7 +775,7 @@ function tick(){
     const hasEnd = pad.end > 0 && pad.end < dur;
     const end = hasEnd ? pad.end : dur;
     if (hasEnd){
-      if (pad.loop){ if (t >= end){ try { el.currentTime = pad.start || 0; } catch (e) {} } }
+      if (pad.loop){ if (p.mode !== 'pcm' && t >= end){ try { el.currentTime = pad.start || 0; } catch (e) {} } }
       else if (p.state === 'playing' && pad.fadeOut > 0 && t >= end - pad.fadeOut) fadeStop(p, Math.max(0.05, end - t), () => finished(p));
       else if (p.state === 'playing' && t >= end) hardStop(p, false), finished(p);
       else if (p.state === 'stopping' && t >= end) hardStop(p, true);
@@ -731,6 +837,7 @@ function renderPadState(id){
   el.classList.toggle('playing', !!p && p.state === 'playing');
   el.classList.toggle('stopping', !!p && p.state === 'stopping');
   el.classList.toggle('paused', !!p && p.state === 'paused');
+  el.classList.toggle('loading', !p && pending.has(id));
   el.querySelector('.name').textContent = pad.name;
   el.querySelector('.pnote').textContent = pad.notes || '';
   el.classList.toggle('hasNote', !!pad.notes);
@@ -1022,6 +1129,7 @@ const WF_N = 500;
 let peaksBusy = null;
 async function computePeaks(pad){
   ensureCtx();
+  const pl = players.get(pad.id); if (pl && pl.mode === 'pcm' && pl.el.pcm){ pad.peaks = peaksFromPcm(pl.el.pcm); save(); return; }
   const blob = await getAudio(pad.audioId); if (!blob) throw new Error('sin audio');
   const ab = await new Response(blob).arrayBuffer();
   const buf = await new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej));
@@ -1161,6 +1269,8 @@ $('#menuBtn').onclick = async () => {
   const n = Object.keys(state.pads).length;
   let s = n + ' pistas en ' + state.boards.length + (state.boards.length === 1 ? ' tablero.' : ' tableros.');
   try { const e = await navigator.storage.estimate(); s += ' Espacio usado: ' + (e.usage / 1048576).toFixed(0) + ' MB.'; } catch (e) {}
+  s += ' Sonido preparado en memoria: ' + Math.round(pcmBytes / 1048576) + ' MB.';
+  const res = [...players.values()].filter(p => p.mode === 'media').length; if (res) s += ' ' + res + ' pista(s) en modo de reserva.';
   $('#storageInfo').textContent = s;
   openSheet('menuSheet');
 };
