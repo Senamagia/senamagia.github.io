@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SenaBoard">
+<meta name="theme-color" content="#0f1117">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-512.png">
+<title>SenaBoard</title>
+<style>
+:root{
+  --bg:#0f1117; --bg2:#151926; --panel:#1a1e2a; --panel2:#232838; --line:rgba(255,255,255,.07);
+  --text:#eef0f6; --muted:#8f96aa; --accent:#f2c46d; --danger:#e5574f;
+  --safe-t:env(safe-area-inset-top); --safe-b:env(safe-area-inset-bottom);
+  --safe-l:env(safe-area-inset-left); --safe-r:env(safe-area-inset-right);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;color:var(--text);
+  background:radial-gradient(1200px 700px at 50% -10%, #1c2234 0%, var(--bg) 60%) fixed, var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
+input,select{font:inherit;color:var(--text)}
+input[type=text],input[type=number],select{-webkit-user-select:text;user-select:text;background:var(--panel2);
+  border:1px solid var(--line);border-radius:12px;padding:11px 14px;width:100%;font-size:17px;outline:none}
+input[type=text]:focus,input[type=number]:focus{border-color:rgba(242,196,109,.6)}
+
+/* Cabecera */
+header{position:sticky;top:0;z-index:10;background:rgba(15,17,23,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  padding:calc(var(--safe-t) + 10px) calc(var(--safe-r) + 20px) 10px calc(var(--safe-l) + 20px);
+  display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+#boardBtn{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;font-size:22px;font-weight:700;letter-spacing:-.3px;text-align:left;padding:6px 2px}
+#boardBtn span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#boardBtn .brand{width:34px;height:10px;flex:none;align-self:center}
+#boardBtn span.c{color:var(--muted);font-size:13px;font-weight:500}
+.hbtn{height:40px;min-width:44px;padding:0 16px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--line);
+  font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;color:#dfe3ee}
+.hbtn.on{background:var(--accent);color:#1b1607;border-color:transparent}
+#wakeDot{width:8px;height:8px;border-radius:50%;background:#3a3f4f;flex:none}
+#wakeDot.on{background:#5fd39a;box-shadow:0 0 10px rgba(95,211,154,.8)}
+#wakeDot.na{display:none}
+
+#installTip{display:none;margin:14px 20px 0;padding:14px 16px;border-radius:14px;background:rgba(242,196,109,.1);border:1px solid rgba(242,196,109,.25);color:#f5dca8;font-size:14px;line-height:1.45}
+#installTip button{float:right;font-weight:700;padding:0 0 0 10px}
+
+/* Rejilla */
+main{padding:18px calc(var(--safe-r) + 20px) calc(var(--safe-b) + 110px) calc(var(--safe-l) + 20px)}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:14px}
+.pad{position:relative;overflow:hidden;aspect-ratio:1/1;min-height:110px;border-radius:20px;
+  background:linear-gradient(155deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 55%), var(--c,#555);
+  padding:12px 12px 14px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;
+  box-shadow:0 6px 16px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.18);
+  transition:transform .08s ease, box-shadow .2s ease, filter .2s ease}
+.pad:active{transform:scale(.96);filter:brightness(1.08)}
+.pad .bar{position:absolute;left:0;bottom:0;height:5px;width:0;background:rgba(255,255,255,.9);border-radius:0 3px 3px 0;pointer-events:none}
+.pad .shade{position:absolute;inset:0;background:rgba(255,255,255,.12);opacity:0;transition:opacity .2s;pointer-events:none}
+.pad .name{position:relative;font-size:15px;font-weight:650;line-height:1.2;word-break:break-word;color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.25);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.pad .meta{position:relative;display:flex;flex-wrap:wrap;row-gap:3px;justify-content:space-between;align-items:flex-end;gap:4px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums}
+.pad .tags{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+.pad .tag{background:rgba(0,0,0,.2);border-radius:6px;padding:1px 5px;font-size:11px}
+.pad.playing{box-shadow:0 0 0 3px rgba(255,255,255,.95), 0 8px 26px var(--c);}
+.pad.playing .shade{opacity:1}
+.pad.stopping{box-shadow:0 0 0 3px var(--accent), 0 8px 20px rgba(0,0,0,.3);animation:breathe .6s infinite alternate}
+@keyframes breathe{to{filter:brightness(.75)}}
+.pad.missing{opacity:.4}
+body.edit .pad{animation:none}
+body.edit .pad::after{content:"✎";position:absolute;top:8px;right:9px;width:24px;height:24px;border-radius:12px;background:rgba(0,0,0,.25);
+  font-size:13px;display:flex;align-items:center;justify-content:center}
+.addTile{aspect-ratio:1/1;min-height:110px;border-radius:20px;border:1.5px dashed rgba(255,255,255,.18);color:var(--muted);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+.addTile b{font-size:28px;line-height:1;font-weight:400}
+#empty{color:var(--muted);text-align:center;padding:60px 20px;line-height:1.6;font-size:16px}
+
+/* Barra inferior */
+footer{position:fixed;left:0;right:0;bottom:0;z-index:10;background:rgba(15,17,23,.86);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line);
+  padding:12px calc(var(--safe-r) + 20px) calc(var(--safe-b) + 12px) calc(var(--safe-l) + 20px);display:flex;gap:18px;align-items:center}
+#stopAll{flex:none;height:56px;padding:0 28px;border-radius:28px;background:linear-gradient(180deg,#ef6a61,#d84c44);font-size:16px;font-weight:800;letter-spacing:.6px;
+  box-shadow:0 6px 18px rgba(229,87,79,.35)}
+#stopAll.cut{background:linear-gradient(180deg,#b8322b,#8f211b)}
+.vol{flex:1;max-width:420px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);letter-spacing:.3px}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+
+/* Hojas modales */
+.sheet{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;background:rgba(5,6,10,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.sheet.open{display:flex}
+.sheet .box{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:24px 24px 0 0;
+  padding:18px calc(var(--safe-r) + 20px) calc(var(--safe-b) + 22px) calc(var(--safe-l) + 20px);-webkit-overflow-scrolling:touch;box-shadow:0 -10px 40px rgba(0,0,0,.4)}
+@media (min-width:640px){
+  .sheet{align-items:center}
+  .sheet .box{border-radius:24px;max-height:86vh;padding:20px 24px 24px}
+}
+.sheet h2{margin:2px 0 14px;font-size:19px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.sheet h2 button{font-size:15px;color:var(--accent);font-weight:700;padding:6px}
+.row{margin:16px 0}
+.row label:not(.switch){display:block;font-size:12px;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;padding:13px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);font-size:15.5px;font-weight:600;text-align:center;margin:6px 0}
+.btn.primary{background:var(--accent);color:#1b1607;border-color:transparent}
+.btn.danger{background:rgba(229,87,79,.12);color:#f19790;border-color:rgba(229,87,79,.25)}
+.btn.small{padding:10px 12px;font-size:14px;margin:0}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;margin:8px 0;font-size:15.5px}
+.switch small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.switch input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:38px;height:38px;border-radius:12px;border:3px solid transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.sw.sel{border-color:#fff}
+.timeRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.pos{font-variant-numeric:tabular-nums;font-size:26px;font-weight:700;text-align:center;margin:6px 0;letter-spacing:-.3px}
+.blist button{display:flex;justify-content:space-between;width:100%;padding:13px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);margin:6px 0;font-size:16px;text-align:left}
+.blist button.cur{border-color:var(--accent)}
+.blist small{color:var(--muted)}
+.note{color:var(--muted);font-size:13.5px;line-height:1.5}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+#toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 96px);transform:translateX(-50%);z-index:80;background:rgba(238,240,246,.96);color:#14161d;
+  padding:10px 18px;border-radius:20px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#toast.show{opacity:1}
+/* Reloj y cronómetro */
+.clockBox{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);min-width:86px;line-height:1.1}
+.clockBox small{font-size:9.5px;letter-spacing:1.2px;color:var(--muted);font-weight:700}
+.clockBox b{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+#showTimer.running b{color:#7fe0ad}
+#showTimer.paused b{color:var(--accent)}
+@media (max-width:600px){ .clockBox{min-width:0;padding:3px 8px} .clockBox b{font-size:15px} }
+
+/* Pie, notas y pasos */
+main{padding-bottom:calc(var(--safe-b) + 110px)}
+.vol{flex:1;max-width:420px}
+.pad .top{position:relative;display:flex;flex-direction:column;gap:5px;min-height:0}
+.pad.hasNote .name{-webkit-line-clamp:2}
+.pad .pnote{font-family:"Georgia","Times New Roman",ui-serif,serif;font-style:italic;font-size:11.5px;line-height:1.25;color:rgba(255,255,255,.92);
+  background:rgba(0,0,0,.2);border-radius:8px;padding:4px 7px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pad .pnote:empty{display:none}
+.pad .nextAct{max-width:100%;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.92);color:#1a1d26;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:700;white-space:nowrap}
+.pad.paused{box-shadow:0 0 0 3px rgba(242,196,109,.95), 0 8px 20px rgba(0,0,0,.3)}
+.pad.paused .shade{opacity:1;background:rgba(0,0,0,.25)}
+.actRow{display:grid;grid-template-columns:78px 1fr 44px;gap:8px;align-items:center;margin:6px 0}
+.actRow .n{font-size:13px;color:var(--muted);font-weight:600}
+.actRow .fixed{padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px dashed var(--line);font-size:16px;color:#cfd4e2}
+.actRow .del{height:44px;border-radius:12px;background:rgba(229,87,79,.12);color:#f19790;font-size:18px}
+/* Arrastrar */
+.pad.dragSrc{opacity:.25}
+.dragGhost{position:fixed;z-index:60;pointer-events:none;transform:scale(1.08);box-shadow:0 18px 40px rgba(0,0,0,.55)!important;opacity:.95}
+body.edit .pad.lifting{transform:scale(1.05)}
+
+select,textarea{-webkit-appearance:none;appearance:none;width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:16px;color:var(--text);font-family:inherit}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:36px}
+textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1.4}
+#recTime{font-size:44px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;margin:10px 0}
+.recDot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--danger);margin-right:8px;animation:breathe .6s infinite alternate}
+</style>
+</head>
+<body>
+<header>
+  <button id="boardBtn" aria-label="Tableros"><svg class="brand" viewBox="180 395 664 190" aria-hidden="true"><g fill="#f2c46d"><path id="mh" d="M512 526 C 540 498, 598 490, 650 506 C 700 522, 742 524, 776 500 C 806 478, 814 446, 798 428 C 788 417, 770 420, 771 436 C 764 410, 800 398, 820 420 C 846 450, 832 500, 790 530 C 744 560, 664 574, 604 570 C 562 567, 530 556, 512 546 Z"/><use href="#mh" transform="translate(1024 0) scale(-1 1)"/></g></svg><span class="n" id="boardName">…</span><span class="c">▾</span></button>
+  <button id="showTimer" class="clockBox" aria-label="Cronómetro del show"><small>SHOW</small><b id="timerVal">0:00:00</b></button>
+  <div class="clockBox"><small>HORA</small><b id="clockVal">--:--:--</b></div>
+  <span id="wakeDot" title="Pantalla encendida"></span>
+  <button class="hbtn" id="addBtn" aria-label="Añadir">＋</button>
+  <button class="hbtn" id="editBtn">Editar</button>
+  <button class="hbtn" id="menuBtn" aria-label="Ajustes">⚙︎</button>
+</header>
+<div id="installTip"><button id="tipClose">✕</button>Para instalarla: en Safari toca <b>Compartir</b> (el cuadrado con la flecha ↑) y luego <b>«Añadir a pantalla de inicio»</b>.</div>
+<main>
+  <div id="grid"></div>
+  <div id="empty" hidden>Este tablero está vacío.<br>Toca <b>＋</b> para añadir canciones.</div>
+</main>
+<footer>
+  <button id="stopAll">■ PARAR</button>
+  <div class="vol"><span>Volumen <b id="mvLabel">100%</b></span><input type="range" id="masterVol" min="0" max="100" step="1" value="100"></div>
+</footer>
+
+<!-- Añadir -->
+<div class="sheet" id="addSheet"><div class="box">
+  <h2>Añadir sonidos <button data-close>Cerrar</button></h2>
+  <button class="btn primary" id="importBtn">📁 Importar canciones (Archivos)</button>
+  <button class="btn" id="recBtn">🎙 Grabar con el micrófono</button>
+  <p class="note">Las canciones que te manden por AirDrop, WhatsApp o email: guárdalas primero en la app <b>Archivos</b> del iPad («Guardar en Archivos») y luego impórtalas aquí. Puedes elegir varias a la vez.</p>
+  <input type="file" id="fileIn" multiple accept="audio/*,.mp3,.m4a,.wav,.aac,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4" hidden>
+</div></div>
+
+<!-- Grabar -->
+<div class="sheet" id="recSheet"><div class="box">
+  <h2>Grabar <button data-close id="recClose">Cancelar</button></h2>
+  <div id="recTime">0:00</div>
+  <button class="btn primary" id="recToggle">● Empezar a grabar</button>
+  <p class="note">La grabación se añadirá como un botón nuevo en este tablero.</p>
+</div></div>
+
+<!-- Editar pista -->
+<div class="sheet" id="padSheet"><div class="box">
+  <h2><span>Editar pista</span><button data-close>Listo</button></h2>
+  <div class="row"><label>Nombre</label><input type="text" id="pName" maxlength="60"></div>
+  <div class="row"><label>Color</label><div class="swatches" id="pColors"></div></div>
+  <div class="row"><label>Volumen <b id="pVolL"></b></label><input type="range" id="pVol" min="0" max="150" step="1"></div>
+  <div class="row two">
+    <div><label>Fade in (seg)</label><input type="number" id="pFin" min="0" max="30" step="0.5" inputmode="decimal"></div>
+    <div><label>Fade out (seg)</label><input type="number" id="pFout" min="0" max="30" step="0.5" inputmode="decimal"></div>
+  </div>
+  <label class="switch"><span>Repetir en bucle<small>Vuelve a empezar al terminar</small></span><input type="checkbox" id="pLoop"></label>
+  <hr>
+  <div class="row"><label>Qué hace cada toque (en orden)</label>
+    <div id="pActions"></div>
+    <button class="btn small" id="pAddAct" style="margin-top:8px;width:100%">＋ Añadir paso</button>
+    <p class="note">El 1.er toque reproduce la pista. Cada toque siguiente hace el paso siguiente de la lista. Si llegas al final y la pista sigue sonando, vuelve a empezar desde el 2.º paso. Cuando la pista se para, se reinicia la lista.</p>
+  </div>
+  <div class="row"><label>Cuando termine</label>
+    <select id="pOnEnd">
+      <option value="none">No hacer nada</option>
+      <option value="next">Lanzar la siguiente automáticamente</option>
+    </select>
+    <p class="note" id="pOnEndNote" hidden>Con «Repetir en bucle» activado la pista no termina nunca, así que esta opción no se usa.</p>
+  </div>
+  <div class="row"><label>Notas (salen en pequeño en el botón)</label>
+    <textarea id="pNotes" rows="3" maxlength="300" placeholder="Ej.: pulsar cuando el voluntario enseñe la carta"></textarea>
+  </div>
+  <hr>
+  <div class="row"><label>Inicio y final de la pista</label>
+    <div class="pos" id="pPos">0:00.0 / 0:00.0</div>
+    <button class="btn" id="pPreview">▶ Probar</button>
+    <div class="timeRow" style="margin-top:8px"><input type="text" id="pStart" placeholder="Inicio 0:00.0" inputmode="decimal"><button class="btn small" id="pMarkStart">Marcar aquí</button></div>
+    <div class="timeRow" style="margin-top:8px"><input type="text" id="pEnd" placeholder="Final (hasta el final)" inputmode="decimal"><button class="btn small" id="pMarkEnd">Marcar aquí</button></div>
+    <p class="note">Formato minutos:segundos, por ejemplo 0:12.5. Deja el final vacío para que suene hasta el final. Si marcas un final, la pista hará su fade out justo antes.</p>
+  </div>
+  <hr>
+  <p class="note">Para mover la pista: cierra esta ventana, mantén el dedo sobre ella un momento y arrástrala a su sitio.</p>
+  <button class="btn" id="pCopy">Copiar a otro tablero…</button>
+  <button class="btn danger" id="pDelete">Eliminar pista</button>
+</div></div>
+
+<!-- Tableros -->
+<div class="sheet" id="boardSheet"><div class="box">
+  <h2>Tableros <button data-close>Cerrar</button></h2>
+  <div class="blist" id="boardList"></div>
+  <button class="btn primary" id="newBoard">＋ Nuevo tablero</button>
+  <hr>
+  <div class="row"><label>Tablero actual</label><input type="text" id="bName" maxlength="40"></div>
+  <label class="switch"><span>Una pista cada vez<small>Al tocar otra, la anterior hace fade out</small></span><input type="checkbox" id="bExclusive"></label>
+  <button class="btn" id="dupBoard">Duplicar tablero</button>
+  <button class="btn danger" id="delBoard">Eliminar tablero</button>
+</div></div>
+
+<!-- Elegir tablero destino -->
+<div class="sheet" id="pickSheet"><div class="box">
+  <h2>Copiar a… <button data-close>Cancelar</button></h2>
+  <div class="blist" id="pickList"></div>
+</div></div>
+
+<!-- Ajustes -->
+<div class="sheet" id="menuSheet"><div class="box">
+  <h2>Ajustes <button data-close>Cerrar</button></h2>
+  <label class="switch"><span>Mantener la pantalla encendida<small id="wakeInfo">Evita que el iPhone se bloquee solo</small></span><input type="checkbox" id="keepAwake"></label>
+  <hr>
+  <div class="row"><label>Copia de seguridad</label>
+    <button class="btn" id="exportBtn">⬆︎ Exportar copia (todo)</button>
+    <button class="btn" id="restoreBtn">⬇︎ Restaurar copia</button>
+    <input type="file" id="restoreIn" hidden>
+    <p class="note">La copia incluye todos los tableros y canciones. Guárdala en Archivos o iCloud Drive.</p>
+  </div>
+  <hr>
+  <p class="note" id="storageInfo"></p>
+  <p class="note"><b>Consejos para el show:</b> pon el iPhone en modo avión o «No molestar» para que no entren llamadas, y usa el <b>Acceso guiado</b> (Ajustes → Accesibilidad) para fijar la app. En este iPad, pon también el <b>bloqueo automático en «Nunca»</b>. El sonido se corta si bloqueas la pantalla o cambias de app.</p>
+</div></div>
+
+<!-- Cronómetro -->
+<div class="sheet" id="timerSheet"><div class="box">
+  <h2>Cronómetro del show <button data-close>Cerrar</button></h2>
+  <div class="pos" id="timerBig">0:00:00</div>
+  <button class="btn primary" id="timerToggle">▶ Iniciar</button>
+  <button class="btn danger" id="timerReset">Reiniciar a 0:00:00</button>
+  <p class="note">Si está a cero, el cronómetro arranca solo con el primer sonido del show.</p>
+</div></div>
+
+<!-- Confirmación / compartir -->
+<div class="sheet" id="askSheet"><div class="box">
+  <h2 id="askTitle">¿Seguro?</h2>
+  <p class="note" id="askMsg"></p>
+  <button class="btn primary" id="askOk">Aceptar</button>
+  <button class="btn" id="askCancel">Cancelar</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ================= Utilidades ================= */
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const COLORS = ['#c9605a','#cf8152','#c9a556','#5f9e78','#4b9a98','#5a86c6','#7568be','#b5638f','#6c7287','#94709f'];
+const OLD_COLORS = ['#e5484d','#f76b15','#e2a336','#30a46c','#12a594','#0090ff','#6e56cf','#d6409f','#5b5b6b','#8e4ec6'];
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+function fmt(t, dec){
+  if (!isFinite(t) || t < 0) t = 0;
+  const m = Math.floor(t / 60), s = t - m * 60;
+  if (dec) return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1);
+  return m + ':' + String(Math.floor(s)).padStart(2, '0');
+}
+function parseTime(str){
+  str = String(str || '').trim().replace(',', '.');
+  if (!str) return null;
+  const parts = str.split(':');
+  let t = 0;
+  for (const p of parts){ const n = parseFloat(p); if (isNaN(n)) return NaN; t = t * 60 + n; }
+  return t;
+}
+let toastT;
+function toast(msg){ const el = $('#toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2600); }
+
+/* ================= Base de datos (IndexedDB) ================= */
+let db;
+function openDB(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('soundboard', 1);
+    r.onupgradeneeded = () => { const d = r.result; d.createObjectStore('meta'); d.createObjectStore('audio'); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+function idb(store, mode, fn){
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, mode); const req = fn(tx.objectStore(store)); let out;
+    if (req) req.onsuccess = () => { out = req.result; };
+    tx.oncomplete = () => res(out); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+  });
+}
+const getAudio = id => idb('audio', 'readonly', s => s.get(id));
+const putAudio = (id, blob) => idb('audio', 'readwrite', s => s.put(blob, id));
+const delAudio = id => idb('audio', 'readwrite', s => s.delete(id));
+
+/* ================= Estado ================= */
+let state;
+function defaultState(){
+  const b = { id: uid(), name: 'Mi show', exclusive: true, pads: [] };
+  return { v: 2, boards: [b], pads: {}, current: b.id, masterVolume: 1, keepAwake: true, colorIdx: 0, timer: { start: null, acc: 0 } };
+}
+function migrate(){
+  if (!state.timer) state.timer = { start: null, acc: 0 };
+  for (const b of state.boards){
+    for (const id of b.pads){
+      const pad = state.pads[id]; if (!pad) continue;
+      const i = OLD_COLORS.indexOf(pad.color); if (i >= 0) pad.color = COLORS[i];
+      if (!Array.isArray(pad.actions)){
+        const second = { fadeNext: 'fadeNext', stopNext: 'stopNext', restart: 'restart' }[pad.onTap] || (b.restart ? 'restart' : 'fadeOut');
+        pad.actions = ['play', second];
+      }
+      delete pad.onTap;
+      if (!pad.onEnd) pad.onEnd = 'none';
+      if (pad.notes == null) pad.notes = '';
+    }
+    delete b.restart;
+  }
+}
+let saveT;
+function save(){ clearTimeout(saveT); saveT = setTimeout(() => idb('meta', 'readwrite', s => s.put(state, 'state')).catch(e => toast('Error al guardar: ' + e.message)), 250); }
+const board = () => state.boards.find(b => b.id === state.current) || state.boards[0];
+
+/* ================= Motor de audio ================= */
+let ctx, master;
+function setSession(type){ try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (e) {} }
+setSession('playback'); // suena aunque el interruptor de silencio esté activado (iOS 16.4+)
+// En iPadOS 15 no existe audioSession: un audio silencioso en bucle hace lo mismo
+let silentEl = null;
+function silentWavUrl(){
+  const sr = 8000, n = sr / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+function unmuteIOS(){
+  if (navigator.audioSession || (silentEl && !silentEl.paused)) return;
+  if (!silentEl){ silentEl = document.createElement('audio'); silentEl.setAttribute('x-webkit-airplay', 'deny'); silentEl.setAttribute('playsinline', ''); silentEl.loop = true; silentEl.src = silentWavUrl(); }
+  silentEl.play().catch(() => {});
+}
+function ensureCtx(){
+  if (!ctx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC({ latencyHint: 'interactive' });
+    master = ctx.createGain(); master.gain.value = state.masterVolume; master.connect(ctx.destination);
+  }
+  if (ctx.state !== 'running') ctx.resume().catch(() => {});
+  unmuteIOS();
+  return ctx;
+}
+const players = new Map(); // padId -> player
+const pending = new Map();
+function getPlayer(pad){
+  if (players.has(pad.id)) return Promise.resolve(players.get(pad.id));
+  if (pending.has(pad.id)) return pending.get(pad.id);
+  const pr = (async () => {
+    ensureCtx();
+    const blob = await getAudio(pad.audioId);
+    if (!blob) throw new Error('Falta el audio');
+    const url = URL.createObjectURL(blob);
+    const el = new Audio();
+    el.setAttribute('playsinline', ''); el.preload = 'auto'; el.src = url;
+    const src = ctx.createMediaElementSource(el);
+    const g = ctx.createGain(); g.gain.value = 0;
+    src.connect(g); g.connect(master);
+    const p = { pad, el, g, src, url, state: 'idle', token: 0, after: null, unlocked: false };
+    applyLoop(p);
+    el.addEventListener('ended', () => {
+      if (p.state === 'idle') return;
+      if (p.pad.loop){ try { el.currentTime = p.pad.start || 0; } catch (e) {} el.play().catch(() => {}); return; }
+      const wasStopping = p.state === 'stopping';
+      p.after = null; p.state = 'idle'; p.step = 0; renderPadState(p.pad.id);
+      if (!wasStopping) finished(p);
+    });
+    el.addEventListener('loadedmetadata', () => {
+      if (isFinite(el.duration) && Math.abs((p.pad.duration || 0) - el.duration) > 0.05){ p.pad.duration = el.duration; save(); renderPadState(p.pad.id); }
+    });
+    players.set(pad.id, p); pending.delete(pad.id);
+    return p;
+  })();
+  pr.catch(() => pending.delete(pad.id));
+  pending.set(pad.id, pr);
+  return pr;
+}
+// iOS solo deja reproducir un audio si antes se tocó la pantalla para él.
+// Al primer toque "desbloqueamos" todas las pistas (en silencio) para que
+// las acciones automáticas (lanzar la siguiente al terminar) funcionen.
+function unlockAll(){
+  if (!ctx) return;
+  for (const p of players.values()){
+    if (p.unlocked || p.state !== 'idle') continue;
+    p.unlocked = true;
+    const pr = p.el.play();
+    if (pr) pr.then(() => { if (p.state === 'idle') p.el.pause(); }).catch(() => { p.unlocked = false; });
+  }
+}
+function applyLoop(p){ p.el.loop = !!(p.pad.loop && !(p.pad.start > 0) && !(p.pad.end > 0)); }
+function disposePlayer(id){
+  const p = players.get(id); if (!p) return;
+  try { p.el.pause(); p.src.disconnect(); p.g.disconnect(); p.el.removeAttribute('src'); p.el.load(); } catch (e) {}
+  URL.revokeObjectURL(p.url); players.delete(id);
+}
+function preloadBoard(){
+  const b = board();
+  for (const [id, p] of players){ if (!b.pads.includes(id) && p.state === 'idle') disposePlayer(id); }
+  for (const id of b.pads){ const pad = state.pads[id]; if (pad) getPlayer(pad).catch(() => markMissing(id)); }
+}
+function setGain(p, target, dur){
+  const param = p.g.gain, t = ctx.currentTime;
+  const cur = param.value;
+  if (param.cancelAndHoldAtTime) param.cancelAndHoldAtTime(t); else param.cancelScheduledValues(t);
+  param.setValueAtTime(cur, t);
+  if (dur > 0) param.linearRampToValueAtTime(target, t + dur); else param.setValueAtTime(target, t);
+}
+const DUCK = 0.3; // volumen de fondo: 30 %
+const vol = p => p.pad.volume * (p.ducked ? DUCK : 1);
+function startPad(p, preview){
+  const pad = p.pad; p.token++; p.after = null; p.ducked = false;
+  try { p.el.currentTime = pad.start || 0; } catch (e) {}
+  const t = ctx.currentTime, param = p.g.gain;
+  param.cancelScheduledValues(t);
+  if (pad.fadeIn > 0){ param.setValueAtTime(0, t); param.linearRampToValueAtTime(pad.volume, t + pad.fadeIn); }
+  else param.setValueAtTime(pad.volume, t);
+  p.state = 'playing'; p.unlocked = true;
+  const pr = p.el.play();
+  if (pr) pr.catch(err => { if (p.state === 'playing'){ p.state = 'idle'; renderPadState(pad.id); toast('No se pudo reproducir. Toca otra vez.'); } });
+  p.step = 1;
+  if (!preview) autoStartTimer();
+  renderPadState(pad.id); ensureTick();
+}
+// after: qué hacer cuando termine de apagarse (p. ej. lanzar la siguiente)
+function fadeStop(p, dur, after){
+  if (p.state === 'idle') return;
+  if (dur == null) dur = p.pad.fadeOut;
+  p.after = after || null;
+  if (!(dur > 0)) return hardStop(p, true);
+  const tok = ++p.token;
+  p.state = 'stopping'; setGain(p, 0, dur);
+  setTimeout(() => { if (p.token === tok) hardStop(p, true); }, dur * 1000 + 40);
+  renderPadState(p.pad.id); ensureTick();
+}
+function hardStop(p, runAfter){
+  const after = runAfter ? p.after : null; p.after = null;
+  p.token++; p.el.pause();
+  if (ctx){ const t = ctx.currentTime; p.g.gain.cancelScheduledValues(t); p.g.gain.setValueAtTime(0, t); }
+  p.state = 'idle'; p.step = 0; p.ducked = false; renderPadState(p.pad.id);
+  if (after) after();
+}
+function playExclusive(p, preview){
+  for (const q of players.values()) if (q !== p) q.after = null; // la acción manual manda
+  if (board().exclusive){ for (const q of players.values()) if (q !== p){ if (q.state === 'playing') fadeStop(q); else if (q.state === 'paused') hardStop(q, false); } }
+  startPad(p, preview);
+}
+function boardOf(padId){ return state.boards.find(b => b.pads.includes(padId)); }
+function nextIdOf(b, padId){ const i = b.pads.indexOf(padId); return i >= 0 && i + 1 < b.pads.length ? b.pads[i + 1] : null; }
+function launch(padId){
+  const pad = state.pads[padId]; if (!pad) return;
+  const p = players.get(padId);
+  if (p) return playExclusive(p);
+  getPlayer(pad).then(playExclusive).catch(() => { markMissing(padId); toast('No encuentro el audio de «' + pad.name + '»'); });
+}
+function launchNextOf(padId){
+  const b = boardOf(padId); const n = b && nextIdOf(b, padId);
+  if (n) launch(n); else toast('No hay más pistas después de esta');
+}
+// La pista ha llegado a su final (o a su punto final marcado)
+function finished(p){ if (p.pad.onEnd === 'next' && !p.pad.loop) launchNextOf(p.pad.id); }
+const ACTIONS = {
+  play: 'Reproducir', fadeOut: 'Fade out (parar)', stop: 'Parar en seco',
+  fadeNext: 'Fade out y lanzar la siguiente', stopNext: 'Parar en seco y lanzar la siguiente',
+  pause: 'Pausar', resume: 'Reanudar', duckDown: 'Bajar a volumen de fondo', duckUp: 'Volver al volumen normal',
+  restart: 'Volver a empezar desde el inicio'
+};
+const SHORT = { play: '▶', fadeOut: '↘ Fade', stop: '■ Stop', fadeNext: '↘⏭ Fade+sig.', stopNext: '■⏭ Stop+sig.',
+  pause: '❚❚ Pausa', resume: '▶ Seguir', duckDown: '🔉 Bajar', duckUp: '🔊 Subir', restart: '↺ Reiniciar' };
+// Qué paso toca en el próximo toque (mientras la pista está activa)
+function nextStepIndex(p){
+  const n = p.pad.actions.length;
+  if (n < 2) return 0;
+  return p.step < n ? p.step : 1;
+}
+function pausePad(p){
+  if (p.state !== 'playing') return;
+  const tok = ++p.token; p.state = 'paused'; setGain(p, 0, 0.12);
+  setTimeout(() => { if (p.token === tok) p.el.pause(); }, 140);
+  renderPadState(p.pad.id);
+}
+function resumePad(p){
+  if (p.state !== 'paused') return;
+  p.token++; p.state = 'playing';
+  const pr = p.el.play(); if (pr) pr.catch(() => {});
+  setGain(p, vol(p), 0.15); renderPadState(p.pad.id); ensureTick();
+}
+function runAction(p, a){
+  const paused = p.state === 'paused';
+  switch (a){
+    case 'play': case 'restart': return playExclusive(p);
+    case 'pause': return pausePad(p);
+    case 'resume': return resumePad(p);
+    case 'fadeOut': return paused ? hardStop(p, false) : fadeStop(p);
+    case 'stop': return hardStop(p, false);
+    case 'fadeNext': paused ? hardStop(p, false) : fadeStop(p); return launchNextOf(p.pad.id);
+    case 'stopNext': hardStop(p, false); return launchNextOf(p.pad.id);
+    case 'duckDown': p.ducked = true; if (!paused) setGain(p, vol(p), 1); return renderPadState(p.pad.id);
+    case 'duckUp': p.ducked = false; if (!paused) setGain(p, vol(p), 1); return renderPadState(p.pad.id);
+  }
+}
+function onPadTap(pad){
+  if (editMode) return openPadEditor(pad.id);
+  ensureCtx(); requestWake(); unlockAll();
+  const p = players.get(pad.id);
+  if (!p) return launch(pad.id);
+  if (p.state === 'idle') return playExclusive(p);
+  if (p.state === 'stopping') return hardStop(p, false); // tocar durante un fade: corta
+  const i = nextStepIndex(p);
+  p.step = i + 1;
+  runAction(p, pad.actions[i]);
+  renderPadState(pad.id);
+}
+function stopAll(){
+  let any = false;
+  for (const p of players.values()){
+    p.after = null;
+    if (p.state === 'playing'){ fadeStop(p); any = true; }
+    else if (p.state === 'stopping' || p.state === 'paused'){ hardStop(p, false); any = true; }
+  }
+  updateStopBtn();
+  return any;
+}
+/* ================= Cronómetro y reloj ================= */
+function timerElapsed(){ const t = state.timer; return t.acc + (t.start ? Date.now() - t.start : 0); }
+function autoStartTimer(){ const t = state.timer; if (!t.start && !t.acc){ t.start = Date.now(); save(); renderClock(); } }
+function fmtHMS(ms){ const s = Math.floor(ms / 1000); return Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+function renderClock(){
+  if (!state) return;
+  const d = new Date();
+  $('#clockVal').textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
+  const v = fmtHMS(timerElapsed());
+  $('#timerVal').textContent = v; $('#timerBig').textContent = v;
+  const run = !!state.timer.start;
+  $('#showTimer').classList.toggle('running', run);
+  $('#showTimer').classList.toggle('paused', !run && state.timer.acc > 0);
+  $('#timerToggle').textContent = run ? '❚❚ Pausar' : (state.timer.acc > 0 ? '▶ Reanudar' : '▶ Iniciar');
+}
+setInterval(renderClock, 250);
+// Bucle de seguimiento: progreso, final marcado, bucles con recorte
+let ticking = false;
+function ensureTick(){ if (!ticking){ ticking = true; requestAnimationFrame(tick); } }
+function tick(){
+  let any = false;
+  for (const p of players.values()){
+    if (p.state === 'idle') continue;
+    any = true;
+    const pad = p.pad, el = p.el, t = el.currentTime;
+    const dur = isFinite(el.duration) ? el.duration : (pad.duration || 0);
+    const hasEnd = pad.end > 0 && pad.end < dur;
+    const end = hasEnd ? pad.end : dur;
+    if (hasEnd){
+      if (pad.loop){ if (t >= end){ try { el.currentTime = pad.start || 0; } catch (e) {} } }
+      else if (p.state === 'playing' && pad.fadeOut > 0 && t >= end - pad.fadeOut) fadeStop(p, Math.max(0.05, end - t), () => finished(p));
+      else if (p.state === 'playing' && t >= end) hardStop(p, false), finished(p);
+      else if (p.state === 'stopping' && t >= end) hardStop(p, true);
+    }
+    drawProgress(p, t, end);
+  }
+  if (editingId) updateEditorPos();
+  updateStopBtn();
+  if (any) requestAnimationFrame(tick); else { ticking = false; for (const p of players.values()) drawProgress(p, 0, 0); }
+}
+
+/* ================= Pantalla encendida ================= */
+let wakeLock = null;
+async function requestWake(){
+  if (!state.keepAwake || !('wakeLock' in navigator) || wakeLock || document.visibilityState !== 'visible') return updateWakeUI();
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; updateWakeUI(); });
+  } catch (e) { wakeLock = null; }
+  updateWakeUI();
+}
+function releaseWake(){ if (wakeLock){ wakeLock.release().catch(() => {}); wakeLock = null; } updateWakeUI(); }
+function updateWakeUI(){
+  $('#wakeDot').classList.toggle('on', !!wakeLock);
+  $('#wakeDot').classList.toggle('na', !('wakeLock' in navigator));
+  $('#wakeInfo').textContent = !('wakeLock' in navigator) ? 'Tu iPad no lo permite desde aquí: pon Ajustes → Pantalla y brillo → Bloqueo automático → Nunca'
+    : wakeLock ? 'Activo: el punto verde de arriba lo indica' : 'Evita que el iPhone se bloquee solo';
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { requestWake(); if (ctx && ctx.state !== 'running') ctx.resume().catch(()=>{}); } });
+
+/* ================= Interfaz: rejilla ================= */
+let editMode = false;
+const padEls = new Map();
+function renderBoard(){
+  const b = board();
+  $('#boardName').textContent = b.name;
+  const grid = $('#grid'); grid.innerHTML = ''; padEls.clear();
+  for (const id of b.pads){
+    const pad = state.pads[id]; if (!pad) continue;
+    const el = document.createElement('button');
+    el.className = 'pad'; el.style.setProperty('--c', pad.color); el.dataset.id = id;
+    el.innerHTML = '<div class="shade"></div><div class="bar"></div><div class="top"><div class="name"></div><div class="pnote"></div></div><div class="meta"><span class="time"></span><span class="tags"></span></div>';
+    el.querySelector('.name').textContent = pad.name;
+    el.addEventListener('click', () => { if (dragJustEnded) return; onPadTap(state.pads[id]); });
+    attachDrag(el, id);
+    grid.appendChild(el); padEls.set(id, el);
+    renderPadState(id);
+  }
+  if (editMode){
+    const add = document.createElement('button'); add.className = 'addTile'; add.innerHTML = '<b>＋</b>Añadir';
+    add.addEventListener('click', () => openSheet('addSheet')); grid.appendChild(add);
+  }
+  $('#empty').hidden = b.pads.length > 0 || editMode;
+}
+function renderPadState(id){
+  const el = padEls.get(id), pad = state.pads[id]; if (!el || !pad) return;
+  const p = players.get(id);
+  el.classList.toggle('playing', !!p && p.state === 'playing');
+  el.classList.toggle('stopping', !!p && p.state === 'stopping');
+  el.classList.toggle('paused', !!p && p.state === 'paused');
+  el.querySelector('.name').textContent = pad.name;
+  el.querySelector('.pnote').textContent = pad.notes || '';
+  el.classList.toggle('hasNote', !!pad.notes);
+  el.style.setProperty('--c', pad.color);
+  const tags = [];
+  if (pad.loop) tags.push('⟲');
+  if (pad.fadeIn > 0) tags.push('↗' + pad.fadeIn);
+  if (pad.fadeOut > 0) tags.push('↘' + pad.fadeOut);
+  if (pad.volume !== 1) tags.push(Math.round(pad.volume * 100) + '%');
+  if (pad.actions.length > 2) tags.push(pad.actions.length + ' pasos');
+  else if (pad.actions[1] && pad.actions[1] !== 'fadeOut') tags.push(SHORT[pad.actions[1]]);
+  if (pad.onEnd === 'next' && !pad.loop) tags.push('fin⏭');
+  const active = p && (p.state === 'playing' || p.state === 'paused');
+  el.querySelector('.tags').innerHTML = active
+    ? '<span class="nextAct">→ ' + SHORT[pad.actions[nextStepIndex(p)]] + '</span>' + (p.ducked ? '<span class="tag">fondo</span>' : '')
+    : tags.map(t => '<span class="tag">' + t + '</span>').join('');
+  if (!p || p.state === 'idle') el.querySelector('.time').textContent = fmt(padLength(pad));
+  updateStopBtn();
+}
+function padLength(pad){
+  const d = pad.duration || 0; const end = pad.end > 0 && pad.end < d ? pad.end : d;
+  return Math.max(0, end - (pad.start || 0));
+}
+function drawProgress(p, t, end){
+  const el = padEls.get(p.pad.id); if (!el) return;
+  const bar = el.querySelector('.bar'), time = el.querySelector('.time');
+  if (p.state === 'idle'){ bar.style.width = '0'; time.textContent = fmt(padLength(p.pad)); return; }
+  const start = p.pad.start || 0, len = Math.max(0.01, end - start);
+  bar.style.width = clamp((t - start) / len * 100, 0, 100) + '%';
+  time.textContent = '-' + fmt(Math.max(0, end - t));
+}
+function markMissing(id){ const el = padEls.get(id); if (el) el.classList.add('missing'); }
+function updateStopBtn(){
+  let playing = false, stopping = false;
+  for (const p of players.values()){ if (p.state === 'playing') playing = true; if (p.state === 'stopping') stopping = true; }
+  const b = $('#stopAll');
+  b.classList.toggle('cut', stopping && !playing);
+  b.textContent = stopping && !playing ? '✕ CORTAR' : '■ PARAR';
+}
+
+
+/* ================= Arrastrar para ordenar (modo Editar) ================= */
+let drag = null, dragJustEnded = false;
+function attachDrag(el, id){
+  el.addEventListener('pointerdown', e => {
+    if (!editMode || (e.button && e.button > 0)) return;
+    const d = { id, el, sx: e.clientX, sy: e.clientY, x: e.clientX, y: e.clientY, started: false };
+    d.timer = setTimeout(() => startDrag(d), 280);
+    drag = d; el.classList.add('lifting');
+  });
+}
+function startDrag(d){
+  if (drag !== d) return;
+  d.started = true;
+  const r = d.el.getBoundingClientRect();
+  d.offX = d.sx - r.left; d.offY = d.sy - r.top;
+  const g = d.el.cloneNode(true); g.classList.remove('lifting'); g.classList.add('dragGhost');
+  g.style.width = r.width + 'px'; g.style.height = r.height + 'px'; g.style.left = r.left + 'px'; g.style.top = r.top + 'px';
+  document.body.appendChild(g); d.ghost = g;
+  d.el.classList.remove('lifting'); d.el.classList.add('dragSrc');
+  if (navigator.vibrate) navigator.vibrate(15);
+  d.scroller = setInterval(() => {
+    if (d.y < 110) window.scrollBy(0, -10); else if (d.y > innerHeight - 170) window.scrollBy(0, 10); else return;
+    dragOver(d);
+  }, 30);
+}
+function dragMove(x, y){
+  const d = drag; if (!d) return;
+  d.x = x; d.y = y;
+  if (!d.started){
+    if (Math.hypot(x - d.sx, y - d.sy) > 10){ clearTimeout(d.timer); d.el.classList.remove('lifting'); drag = null; }
+    return;
+  }
+  d.ghost.style.left = (x - d.offX) + 'px'; d.ghost.style.top = (y - d.offY) + 'px';
+  dragOver(d);
+}
+function dragOver(d){
+  const hit = document.elementFromPoint(d.x, d.y); const t = hit && hit.closest('.pad');
+  if (!t || t === d.el) return;
+  const grid = $('#grid'), els = [...grid.querySelectorAll('.pad')];
+  if (els.indexOf(t) < els.indexOf(d.el)) grid.insertBefore(d.el, t); else grid.insertBefore(d.el, t.nextSibling);
+}
+function dragEnd(){
+  const d = drag; if (!d) return;
+  drag = null; clearTimeout(d.timer); clearInterval(d.scroller); d.el.classList.remove('lifting');
+  if (!d.started) return;
+  d.ghost.remove(); d.el.classList.remove('dragSrc');
+  board().pads = [...$('#grid').querySelectorAll('.pad')].map(x => x.dataset.id);
+  save();
+  dragJustEnded = true; setTimeout(() => { dragJustEnded = false; }, 120);
+}
+document.addEventListener('pointermove', e => dragMove(e.clientX, e.clientY));
+document.addEventListener('touchmove', e => { if (drag){ if (drag.started) e.preventDefault(); const t = e.touches[0]; dragMove(t.clientX, t.clientY); } }, { passive: false });
+document.addEventListener('pointerup', dragEnd);
+document.addEventListener('touchend', dragEnd);
+document.addEventListener('pointercancel', () => { if (drag && !drag.started) dragEnd(); });
+document.addEventListener('contextmenu', e => { if (editMode) e.preventDefault(); });
+
+/* ================= GO, siguiente, cronómetro ================= */
+$('#showTimer').onclick = () => { renderClock(); openSheet('timerSheet'); };
+$('#timerToggle').onclick = () => {
+  const t = state.timer;
+  if (t.start){ t.acc += Date.now() - t.start; t.start = null; } else t.start = Date.now();
+  save(); renderClock();
+};
+$('#timerReset').onclick = async () => {
+  if (!await ask('¿Reiniciar el cronómetro?', 'Volverá a 0:00:00 y arrancará solo con el próximo sonido.', 'Reiniciar', true)) return;
+  state.timer = { start: null, acc: 0 }; save(); renderClock();
+};
+document.addEventListener('click', () => { if (ctx) unlockAll(); }, true);
+
+/* ================= Hojas ================= */
+function openSheet(id){ $('#' + id).classList.add('open'); }
+function closeSheet(id){ $('#' + id).classList.remove('open'); if (id === 'padSheet') editingId = null; if (id === 'recSheet') cancelRec(); }
+document.querySelectorAll('.sheet').forEach(s => {
+  s.addEventListener('click', e => { if (e.target === s && s.id !== 'recSheet') closeSheet(s.id); });
+  s.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(s.id)));
+});
+function ask(title, msg, okText, danger){
+  return new Promise(res => {
+    $('#askTitle').textContent = title; $('#askMsg').textContent = msg || '';
+    const ok = $('#askOk'); ok.textContent = okText || 'Aceptar'; ok.className = 'btn ' + (danger ? 'danger' : 'primary');
+    $('#askCancel').hidden = false;
+    const done = v => { closeSheet('askSheet'); ok.onclick = $('#askCancel').onclick = null; res(v); };
+    ok.onclick = () => done(true); $('#askCancel').onclick = () => done(false);
+    openSheet('askSheet');
+  });
+}
+
+/* ================= Añadir audio ================= */
+function probeDuration(blob){
+  return new Promise(res => {
+    const a = new Audio(); const url = URL.createObjectURL(blob);
+    const fin = d => { URL.revokeObjectURL(url); a.removeAttribute('src'); res(isFinite(d) ? d : 0); };
+    const to = setTimeout(() => fin(0), 8000);
+    a.preload = 'metadata';
+    a.onloadedmetadata = () => { clearTimeout(to); fin(a.duration); };
+    a.onerror = () => { clearTimeout(to); fin(-1); };
+    a.src = url;
+  });
+}
+function nextColor(){ const c = COLORS[state.colorIdx % COLORS.length]; state.colorIdx++; return c; }
+function newPad(name, audioId, duration){
+  return { id: uid(), name, audioId, duration, color: nextColor(), volume: 1, fadeIn: 0, fadeOut: 2, loop: false, start: 0, end: null, actions: ['play', 'fadeOut'], onEnd: 'none', notes: '' };
+}
+async function addFiles(files){
+  closeSheet('addSheet');
+  let ok = 0, bad = 0;
+  for (const f of files){
+    const d = await probeDuration(f);
+    if (d < 0){ bad++; continue; }
+    const audioId = uid();
+    try { await putAudio(audioId, f); } catch (e) { toast('No hay espacio para guardar: ' + f.name); continue; }
+    const pad = newPad(f.name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim() || 'Pista', audioId, d);
+    state.pads[pad.id] = pad; board().pads.push(pad.id); ok++;
+  }
+  save(); renderBoard(); preloadBoard();
+  toast(ok + (ok === 1 ? ' pista añadida' : ' pistas añadidas') + (bad ? ' · ' + bad + ' no compatibles' : ''));
+}
+$('#addBtn').onclick = () => openSheet('addSheet');
+$('#importBtn').onclick = () => $('#fileIn').click();
+$('#fileIn').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; if (fs.length) addFiles(fs); };
+
+// Grabación
+let rec = null, recChunks = [], recStart = 0, recTimer = null, recStream = null;
+$('#recBtn').onclick = () => { closeSheet('addSheet'); $('#recTime').textContent = '0:00'; $('#recToggle').textContent = '● Empezar a grabar'; openSheet('recSheet'); };
+$('#recToggle').onclick = async () => {
+  if (rec && rec.state === 'recording'){ rec.stop(); return; }
+  if (!window.MediaRecorder || !navigator.mediaDevices){ toast('Este dispositivo no permite grabar aquí'); return; }
+  try {
+    setSession('play-and-record');
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) { setSession('playback'); toast('Sin permiso para usar el micrófono'); return; }
+  const type = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t));
+  rec = new MediaRecorder(recStream, type ? { mimeType: type } : undefined); recChunks = [];
+  rec.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+  rec.onstop = async () => {
+    clearInterval(recTimer); recStream.getTracks().forEach(t => t.stop()); setSession('playback');
+    if (rec._cancel){ rec = null; return; }
+    const blob = new Blob(recChunks, { type: rec.mimeType || type || 'audio/mp4' }); rec = null;
+    const audioId = uid(); await putAudio(audioId, blob);
+    const d = await probeDuration(blob);
+    const n = Object.values(state.pads).filter(p => p.name.startsWith('Grabación')).length + 1;
+    const pad = newPad('Grabación ' + n, audioId, Math.max(0, d));
+    state.pads[pad.id] = pad; board().pads.push(pad.id); save(); renderBoard(); preloadBoard();
+    $('#recSheet').classList.remove('open'); toast('Grabación añadida');
+  };
+  rec.start(250); recStart = Date.now();
+  $('#recToggle').innerHTML = '<span class="recDot"></span>Parar y guardar';
+  recTimer = setInterval(() => { $('#recTime').textContent = fmt((Date.now() - recStart) / 1000); }, 200);
+};
+function cancelRec(){ if (rec && rec.state === 'recording'){ rec._cancel = true; rec.stop(); } }
+
+/* ================= Editor de pista ================= */
+let editingId = null;
+function openPadEditor(id){
+  const pad = state.pads[id]; if (!pad) return;
+  editingId = id;
+  $('#pName').value = pad.name;
+  $('#pVol').value = Math.round(pad.volume * 100); $('#pVolL').textContent = Math.round(pad.volume * 100) + '%';
+  $('#pFin').value = pad.fadeIn; $('#pFout').value = pad.fadeOut; $('#pLoop').checked = pad.loop;
+  $('#pStart').value = pad.start > 0 ? fmt(pad.start, true) : '';
+  $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : '';
+  renderActions(); $('#pOnEnd').value = pad.onEnd || 'none'; $('#pNotes').value = pad.notes || '';
+  $('#pOnEndNote').hidden = !pad.loop;
+  const sw = $('#pColors'); sw.innerHTML = '';
+  for (const c of COLORS){
+    const b = document.createElement('button'); b.className = 'sw' + (c === pad.color ? ' sel' : ''); b.style.background = c;
+    b.onclick = () => { pad.color = c; sw.querySelectorAll('.sw').forEach(x => x.classList.toggle('sel', x === b)); changed(); };
+    sw.appendChild(b);
+  }
+  updateEditorPos(); openSheet('padSheet');
+}
+const editing = () => state.pads[editingId];
+function renderActions(){
+  const pad = editing(), box = $('#pActions'); box.innerHTML = '';
+  pad.actions.forEach((a, i) => {
+    const row = document.createElement('div'); row.className = 'actRow';
+    row.innerHTML = '<span class="n">' + (i + 1) + '.º toque</span>';
+    if (i === 0){ const f = document.createElement('div'); f.className = 'fixed'; f.textContent = 'Reproducir'; row.appendChild(f); row.appendChild(document.createElement('span')); }
+    else {
+      const sel = document.createElement('select');
+      for (const k of Object.keys(ACTIONS)) if (k !== 'play'){ const o = document.createElement('option'); o.value = k; o.textContent = ACTIONS[k]; sel.appendChild(o); }
+      sel.value = a; sel.onchange = () => { pad.actions[i] = sel.value; changed(); };
+      const del = document.createElement('button'); del.className = 'del'; del.textContent = '✕'; del.setAttribute('aria-label', 'Quitar paso');
+      del.onclick = () => { pad.actions.splice(i, 1); renderActions(); changed(); };
+      row.appendChild(sel); row.appendChild(del);
+    }
+    box.appendChild(row);
+  });
+  $('#pAddAct').hidden = pad.actions.length >= 8;
+}
+$('#pAddAct').onclick = () => { const pad = editing(); pad.actions.push(pad.actions.length === 1 ? 'fadeOut' : 'fadeNext'); renderActions(); changed(); };
+function changed(){ const pad = editing(); if (!pad) return; const p = players.get(pad.id); if (p){ p.pad = pad; applyLoop(p); if (p.state === 'playing') setGain(p, vol(p), 0.05); } renderPadState(pad.id); save(); }
+$('#pOnEnd').onchange = e => { editing().onEnd = e.target.value; changed(); };
+$('#pNotes').oninput = e => { editing().notes = e.target.value; changed(); };
+$('#pLoop').onchange = e => { editing().loop = e.target.checked; $('#pOnEndNote').hidden = !e.target.checked; changed(); };
+function setStart(v){ const pad = editing(); const d = pad.duration || Infinity;
+  if (v == null) pad.start = 0; else if (isNaN(v) || v < 0 || v >= d){ toast('Inicio no válido'); } else { pad.start = v; if (pad.end > 0 && pad.end <= v) pad.end = null; }
+  $('#pStart').value = pad.start > 0 ? fmt(pad.start, true) : ''; $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : ''; changed(); }
+function setEnd(v){ const pad = editing(); const d = pad.duration || Infinity;
+  if (v == null || v >= d) pad.end = null; else if (isNaN(v) || v <= (pad.start || 0)){ toast('El final debe ir después del inicio'); } else pad.end = v;
+  $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : ''; changed(); }
+$('#pStart').onchange = e => setStart(parseTime(e.target.value));
+$('#pEnd').onchange = e => setEnd(parseTime(e.target.value));
+$('#pMarkStart').onclick = () => { const p = players.get(editingId); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setStart(p.el.currentTime); };
+$('#pMarkEnd').onclick = () => { const p = players.get(editingId); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setEnd(p.el.currentTime); };
+$('#pPreview').onclick = async () => {
+  const pad = editing(); ensureCtx();
+  let p; try { p = await getPlayer(pad); } catch (e) { return toast('No encuentro el audio'); }
+  if (p.state !== 'idle') hardStop(p); else playExclusive(p, true);
+  updateEditorPos();
+};
+function updateEditorPos(){
+  const pad = editing(); if (!pad) return;
+  const p = players.get(pad.id);
+  const t = p && p.state !== 'idle' ? p.el.currentTime : (pad.start || 0);
+  $('#pPos').textContent = fmt(t, true) + ' / ' + fmt(pad.duration || 0, true);
+  $('#pPreview').textContent = p && p.state !== 'idle' ? '■ Parar prueba' : '▶ Probar';
+}
+$('#pDelete').onclick = async () => {
+  const pad = editing();
+  if (!await ask('¿Eliminar «' + pad.name + '»?', 'Se borrará de este tablero.', 'Eliminar', true)) return;
+  disposePlayer(pad.id);
+  const b = board(); b.pads = b.pads.filter(x => x !== pad.id); delete state.pads[pad.id];
+  if (!Object.values(state.pads).some(p => p.audioId === pad.audioId)) delAudio(pad.audioId).catch(() => {});
+  closeSheet('padSheet'); save(); renderBoard();
+};
+$('#pCopy').onclick = () => {
+  const others = state.boards.filter(b => b.id !== state.current);
+  const list = $('#pickList'); list.innerHTML = '';
+  if (!others.length){ list.innerHTML = '<p class="note">No hay otros tableros. Crea uno desde el menú de tableros (arriba a la izquierda).</p>'; }
+  for (const b of others){
+    const btn = document.createElement('button'); btn.innerHTML = '<span></span><small>' + b.pads.length + ' pistas</small>';
+    btn.firstChild.textContent = b.name;
+    btn.onclick = () => { const src = editing(); const cp = { ...src, id: uid(), actions: [...src.actions] }; state.pads[cp.id] = cp; b.pads.push(cp.id); save(); closeSheet('pickSheet'); toast('Copiada a «' + b.name + '»'); };
+    list.appendChild(btn);
+  }
+  openSheet('pickSheet');
+};
+
+/* ================= Tableros ================= */
+function renderBoardSheet(){
+  const list = $('#boardList'); list.innerHTML = '';
+  for (const b of state.boards){
+    const btn = document.createElement('button'); btn.className = b.id === state.current ? 'cur' : '';
+    btn.innerHTML = '<span></span><small>' + b.pads.length + ' pistas</small>'; btn.firstChild.textContent = b.name;
+    btn.onclick = () => { state.current = b.id; save(); renderBoard(); preloadBoard(); renderBoardSheet(); closeSheet('boardSheet'); };
+    list.appendChild(btn);
+  }
+  const b = board();
+  $('#bName').value = b.name; $('#bExclusive').checked = b.exclusive;
+  $('#delBoard').hidden = state.boards.length < 2;
+}
+$('#boardBtn').onclick = () => { renderBoardSheet(); openSheet('boardSheet'); };
+$('#bName').oninput = e => { board().name = e.target.value || 'Sin nombre'; $('#boardName').textContent = board().name; save(); };
+$('#bName').onchange = () => renderBoardSheet();
+$('#bExclusive').onchange = e => { board().exclusive = e.target.checked; save(); };
+$('#newBoard').onclick = () => {
+  const b = { id: uid(), name: 'Tablero ' + (state.boards.length + 1), exclusive: true, pads: [] };
+  state.boards.push(b); state.current = b.id; save(); renderBoard(); preloadBoard(); renderBoardSheet();
+  $('#bName').focus(); $('#bName').select();
+};
+$('#dupBoard').onclick = () => {
+  const src = board(); const b = { ...src, id: uid(), name: src.name + ' (copia)', pads: [] };
+  for (const id of src.pads){ const cp = { ...state.pads[id], id: uid(), actions: [...state.pads[id].actions] }; state.pads[cp.id] = cp; b.pads.push(cp.id); }
+  state.boards.push(b); state.current = b.id; save(); renderBoard(); preloadBoard(); renderBoardSheet(); toast('Tablero duplicado');
+};
+$('#delBoard').onclick = async () => {
+  const b = board();
+  if (!await ask('¿Eliminar el tablero «' + b.name + '»?', 'Se borrarán sus ' + b.pads.length + ' pistas.', 'Eliminar', true)) return;
+  for (const id of b.pads){ const p = players.get(id); if (p) hardStop(p); disposePlayer(id); delete state.pads[id]; }
+  state.boards = state.boards.filter(x => x !== b); state.current = state.boards[0].id;
+  await cleanOrphanAudio(); save(); renderBoard(); preloadBoard(); renderBoardSheet();
+};
+async function cleanOrphanAudio(){
+  const used = new Set(Object.values(state.pads).map(p => p.audioId));
+  const keys = await idb('audio', 'readonly', s => s.getAllKeys());
+  for (const k of keys || []) if (!used.has(k)) await delAudio(k);
+}
+
+/* ================= Ajustes, copia de seguridad ================= */
+$('#menuBtn').onclick = async () => {
+  $('#keepAwake').checked = state.keepAwake; updateWakeUI();
+  const n = Object.keys(state.pads).length;
+  let s = n + ' pistas en ' + state.boards.length + (state.boards.length === 1 ? ' tablero.' : ' tableros.');
+  try { const e = await navigator.storage.estimate(); s += ' Espacio usado: ' + (e.usage / 1048576).toFixed(0) + ' MB.'; } catch (e) {}
+  $('#storageInfo').textContent = s;
+  openSheet('menuSheet');
+};
+$('#keepAwake').onchange = e => { state.keepAwake = e.target.checked; save(); if (state.keepAwake) requestWake(); else releaseWake(); };
+$('#editBtn').onclick = () => { editMode = !editMode; document.body.classList.toggle('edit', editMode); $('#editBtn').classList.toggle('on', editMode); $('#editBtn').textContent = editMode ? 'Hecho' : 'Editar'; renderBoard(); };
+$('#masterVol').oninput = e => { state.masterVolume = e.target.value / 100; $('#mvLabel').textContent = e.target.value + '%'; if (master) master.gain.setTargetAtTime(state.masterVolume, ctx.currentTime, 0.02); save(); };
+$('#stopAll').onclick = () => { ensureCtx(); stopAll(); };
+$('#tipClose').onclick = () => { $('#installTip').style.display = 'none'; try { localStorage.setItem('tipClosed', '1'); } catch (e) {} };
+
+// Formato de copia: "SBK1" + longitud (uint32) + JSON + audios seguidos
+async function buildBackup(){
+  const entries = [], parts = []; let offset = 0;
+  const ids = [...new Set(Object.values(state.pads).map(p => p.audioId))];
+  for (const id of ids){ const b = await getAudio(id); if (!b) continue; entries.push({ id, type: b.type || '', offset, size: b.size }); parts.push(b); offset += b.size; }
+  const header = new TextEncoder().encode(JSON.stringify({ v: 1, state, entries }));
+  const pre = new Uint8Array(8); pre.set([83, 66, 75, 49]); new DataView(pre.buffer).setUint32(4, header.length);
+  return new Blob([pre, header, ...parts], { type: 'application/octet-stream' });
+}
+async function restoreBackup(file){
+  const pre = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  if (String.fromCharCode(...pre.slice(0, 4)) !== 'SBK1') throw new Error('No es una copia de esta app');
+  const len = new DataView(pre.buffer).getUint32(4);
+  const data = JSON.parse(new TextDecoder().decode(await file.slice(8, 8 + len).arrayBuffer()));
+  const base = 8 + len;
+  for (const p of [...players.keys()]){ const pl = players.get(p); if (pl.state !== 'idle') hardStop(pl); disposePlayer(p); }
+  await idb('audio', 'readwrite', s => s.clear());
+  for (const e of data.entries){
+    const ab = await file.slice(base + e.offset, base + e.offset + e.size).arrayBuffer();
+    await putAudio(e.id, new Blob([ab], { type: e.type }));
+  }
+  state = Object.assign(defaultState(), data.state); migrate();
+  await idb('meta', 'readwrite', s => s.put(state, 'state'));
+  applyState();
+}
+$('#exportBtn').onclick = async () => {
+  const btn = $('#exportBtn'); btn.textContent = 'Preparando…';
+  let blob; try { blob = await buildBackup(); } catch (e) { btn.textContent = '⬆︎ Exportar copia (todo)'; return toast('Error: ' + e.message); }
+  btn.textContent = '⬆︎ Exportar copia (todo)';
+  const d = new Date(); const name = 'soundboard-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + '.sbk';
+  const file = new File([blob], name, { type: 'application/octet-stream' });
+  closeSheet('menuSheet');
+  // Segundo toque para compartir (iOS exige que sea al tocar)
+  $('#askTitle').textContent = 'Copia lista'; $('#askMsg').textContent = name + ' · ' + (blob.size / 1048576).toFixed(1) + ' MB. Elige «Guardar en Archivos» para guardarla.';
+  const ok = $('#askOk'); ok.className = 'btn primary'; ok.textContent = 'Guardar / Compartir';
+  ok.onclick = async () => {
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      try { await navigator.share({ files: [file] }); closeSheet('askSheet'); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 10000); closeSheet('askSheet');
+  };
+  $('#askCancel').onclick = () => closeSheet('askSheet');
+  openSheet('askSheet');
+};
+$('#restoreBtn').onclick = () => $('#restoreIn').click();
+$('#restoreIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  if (!await ask('¿Restaurar esta copia?', 'Se reemplazará todo lo que hay ahora en la app por el contenido de la copia.', 'Restaurar', true)) return;
+  try { toast('Restaurando…'); await restoreBackup(f); closeSheet('menuSheet'); toast('Copia restaurada'); } catch (err) { toast('Error: ' + err.message); }
+};
+
+/* ================= Arranque ================= */
+function applyState(){
+  $('#masterVol').value = Math.round(state.masterVolume * 100); $('#mvLabel').textContent = Math.round(state.masterVolume * 100) + '%';
+  if (master) master.gain.value = state.masterVolume;
+  renderBoard(); preloadBoard(); updateWakeUI(); renderClock();
+}
+(async function init(){
+  try { db = await openDB(); state = await idb('meta', 'readonly', s => s.get('state')); }
+  catch (e) { toast('Error abriendo la base de datos: ' + e.message); }
+  if (!state) state = defaultState();
+  migrate();
+  applyState();
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  let closed = false; try { closed = localStorage.getItem('tipClosed') === '1'; } catch (e) {}
+  if (!standalone && !closed && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1))) $('#installTip').style.display = 'block';
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  requestWake();
+})();
+// Acceso para pruebas
+window.__sb = { get state(){ return state; }, players, buildBackup, restoreBackup, stopAll };
+</script>
+</body>
+</html>
