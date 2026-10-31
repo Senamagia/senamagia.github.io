@@ -207,6 +207,11 @@ textarea{width:100%;min-height:90px;border:0;border-radius:14px;background:var(-
 #toast button{color:#A8B2FF;font-weight:700;padding:6px 8px}
 .guide{padding:4px 16px 16px;font-size:15px;line-height:22px;-webkit-user-select:text;user-select:text}
 .guide p{margin-top:10px}.guide ul{margin:10px 0 0 20px}.guide li{margin-top:6px}.guide b{font-weight:600}
+#splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:opacity .45s ease}
+#splash img{width:116px;height:116px;border-radius:26px;box-shadow:0 12px 34px rgba(0,0,0,.18);margin-bottom:14px}
+#splash b{font-size:32px;font-weight:800;letter-spacing:-.6px}#splash span{font-size:16px;color:var(--sec)}
+#splash small{position:absolute;bottom:calc(28px + var(--sb));font-size:13px;color:var(--sec)}
+#splash.off{opacity:0;pointer-events:none}
 .note{font-size:13px;color:var(--sec);line-height:19px;padding:6px 4px 0}
 </style>
 </head>
@@ -225,6 +230,7 @@ textarea{width:100%;min-height:90px;border:0;border-radius:14px;background:var(-
 </nav>
 <div id="dim" data-a="closeSheet"></div>
 <div id="sheet"><div class="grab"><i></i></div><div class="sh" id="shead"></div><div id="sbody"></div></div>
+<div id="splash" data-a="hideSplash"><img src="icon-512.png" alt=""><b>Espatontos</b><span>Monta tu show</span><small id="splashVer"></small></div>
 <div id="toast"><span id="ttext"></span><button id="tundo">Deshacer</button></div>
 <input type="file" id="file" accept=".json,application/json" style="display:none">
 
@@ -238,8 +244,10 @@ const fmt=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(
 const mins=s=>Math.round((s||0)/60);
 const dots=p=>'●'.repeat(p)+'○'.repeat(5-p);
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
+const APP_VERSION='1.2';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -283,7 +291,7 @@ const KEY='espatontos-v1';
 function defaults(){
   return {v:1,nums:[],shows:[],cur:null,
     emos:[{id:'asombro',n:'Asombro',c:'#8DBDEB'},{id:'risa',n:'Risa',c:'#F2D27A'},{id:'misterio',n:'Misterio',c:'#B39BE6'},{id:'ternura',n:'Ternura',c:'#F2B1CB'},{id:'tension',n:'Tensión',c:'#F5B48A'},{id:'emocion',n:'Emoción',c:'#F29B8D'},{id:'complicidad',n:'Complicidad',c:'#95D9BD'}],
-    tiposPropios:[],
+    tiposPropios:[],bolos:[],
     set:{appearance:'auto',accent:'indigo',universal:true,openMax:90,off:{}}};
 }
 function N(o){return Object.assign({id:uid(),name:'',dur:300,emo:'asombro',pot:3,tipos:[],vols:0,sube:false,rodeado:false,mesa:false,musica:false,pres:false,reset:'inmediato',limpio:true,sujetar:false,mat:[],notes:''},o)}
@@ -315,7 +323,7 @@ function seed(){
 let D;
 function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);const d=defaults();o.set=Object.assign(d.set,o.set||{});return Object.assign(d,o)}}catch(e){}return null}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast('No se ha podido guardar')}}
-D=load()||seed();
+D=load()||defaults();
 
 const num=id=>D.nums.find(x=>x.id===id);
 const emoOf=id=>D.emos.find(e=>e.id===id)||{n:'Sin emoción',c:'#B8BEC9'};
@@ -469,7 +477,7 @@ function repMatch(x){
 function renderRep(){
   const el=$('#v-rep'),L=D.nums.filter(repMatch);
   const F=[['todos','Todos'],['pres','Presentación'],['coctel','Apto cóctel'],['rodeado','Rodeado'],['sinmesa','Sin mesa']].concat(D.emos.map(e=>['e:'+e.id,e.n]));
-  keepScroll(el,`<div class="wrap">${hdr(D.nums.length+' números',`<button class="ibtn fill" data-a="newNum" aria-label="Nuevo número">${ICON.plus}</button>`)}
+  keepScroll(el,`<div class="wrap">${hdr(pl(D.nums.length,'número','números'),`<button class="ibtn fill" data-a="newNum" aria-label="Nuevo número">${ICON.plus}</button>`)}
   <h1>Repertorio</h1>
   <label class="search">${ICON.search}<input type="search" placeholder="Buscar número, material o tipo" value="${esc(repQ)}" data-in="repQ" aria-label="Buscar"></label>
   <div class="chips">${F.map(f=>`<button class="chip${repF===f[0]?' on':''}" data-a="repF" data-f="${f[0]}">${esc(f[1])}</button>`).join('')}</div>
@@ -571,11 +579,13 @@ function renderMat(){
 
 /* ---- Shows ---- */
 function renderSho(){
-  const el=$('#v-sho');
-  keepScroll(el,`<div class="wrap">${hdr(D.shows.length+' shows',`<button class="ibtn fill" data-a="newShow" aria-label="Nuevo show">${ICON.plus}</button>`)}<h1>Shows</h1>
+  const el=$('#v-sho'),isB=shoSeg==='bolos';
+  const seg=`<div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:0 0 14px"><button class="${isB?'':'on'}" data-a="segSho" data-k="shows">Shows</button><button class="${isB?'on':''}" data-a="segSho" data-k="bolos">Bolos</button></div>`;
+  if(isB){keepScroll(el,`<div class="wrap">${hdr(pl(D.bolos.length,'bolo','bolos'),`<button class="ibtn fill" data-a="newBolo" aria-label="Nuevo bolo">${ICON.plus}</button>`)}<h1>Bolos</h1>${seg}${bolosHTML()}</div>`);return}
+  keepScroll(el,`<div class="wrap">${hdr(pl(D.shows.length,'show','shows'),`<button class="ibtn fill" data-a="newShow" aria-label="Nuevo show">${ICON.plus}</button>`)}<h1>Shows</h1>${seg}
   ${D.shows.length?`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${D.shows.map(s=>{const L=s.tpl==='coctel'?resolve(s.sets.A):resolve(s.items);
-    return `<div class="card sc${s.id===D.cur?' cur':''}"><button data-a="openShow" data-id="${s.id}" style="text-align:left;display:flex;flex-direction:column;gap:8px">
-    <span class="n">${esc(s.name)}</span><span class="m">${esc(TPL[s.tpl].n)} · ${s.tpl==='coctel'?'set A '+fmt(totalDur(L)):mins(totalDur(L))+' min · '+L.length+' números'}</span>
+    return `<div class="card sc${s.id===D.cur?' cur':''}"><button data-a="openShow" data-id="${s.id}" style="text-align:left;display:flex;flex-direction:column;gap:8px;min-width:0">
+    <span class="n" style="padding-right:30px;overflow-wrap:anywhere">${esc(s.name)}</span><span class="m">${esc(TPL[s.tpl].n)} · ${s.tpl==='coctel'?'set A '+fmt(totalDur(L)):mins(totalDur(L))+' min · '+L.length+' números'}</span>
     <span style="color:var(--accent)">${curveSVG(L,220,44,s.tpl,true)}</span></button><button class="ibtn more" data-a="showMenu" data-id="${s.id}" aria-label="Opciones" style="color:var(--sec)">${ICON.more}</button></div>`}).join('')}</div>`
   :`<div class="empty"><b>Sin shows</b>Crea tu primer show con el botón +.</div>`}</div>`);
 }
@@ -602,7 +612,7 @@ function fichaHTML(){
    <div class="fg"><div class="fr"><input type="text" class="name" placeholder="Nombre del número" value="${esc(F.name)}" data-in="F.name" aria-label="Nombre"></div>
      <div class="fr"><span>Duración</span><div class="step"><button data-a="fdur" data-d="-15" aria-label="Menos">−</button><b>${fmt(F.dur)}</b><button data-a="fdur" data-d="15" aria-label="Más">+</button></div></div></div>
    <div><div class="fl">Emoción</div><div class="wrapchips">${D.emos.map(e=>`<button class="ec${F.emo===e.id?' on':''}" style="${F.emo===e.id?'background:'+e.c:''}" data-a="femo" data-id="${e.id}"><i style="background:${e.c}"></i>${esc(e.n)}</button>`).join('')}</div></div>
-   <div><div class="fl">Potencia <span>${potL[F.pot-1]}</span></div><div class="pots">${[1,2,3,4,5].map(p=>`<button class="${p<=F.pot?'on':''}" data-a="fpot" data-p="${p}">${p}</button>`).join('')}</div></div>
+   <div><div class="fl">Potencia <span>${potL[F.pot-1]}</span></div><div class="pots">${[1,2,3,4,5].map(p=>`<button class="${p<=F.pot?'on':''}" data-a="fpot" data-p="${p}">${p}</button>`).join('')}</div>${(r=>r?`<div class="note">Según tus bolos: <b style="color:var(--text)">${avgTxt(r.avg)}</b> de media en ${r.n} ${r.n===1?'valoración':'valoraciones'}${r.n>=3&&Math.abs(r.avg-F.pot)>=1?' · <span style="color:var(--warnText)">funciona '+(r.avg>F.pot?'mejor':'peor')+' de lo que indica tu ficha</span>':''}.</div>`:'')(realPot(F.id))}</div>
    <div><div class="fl">Tipo de efecto <span>${F.tipos.length===1?'1 elegido':F.tipos.length+' elegidos'}</span></div>
      ${allT.map(([g,l])=>`<div style="font-size:12.5px;font-weight:600;color:var(--sec);margin:10px 4px 8px">${esc(g)}</div><div class="wrapchips">${l.map(t=>`<button class="tc${F.tipos.indexOf(t)>=0?' on':''}" data-a="ftipo" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>`).join('')}</div>
    <div><div class="fl">Público</div><div class="fg">
@@ -743,7 +753,7 @@ S.saveShow=()=>{const name=(SF.name||'').trim()||'Show sin nombre',target=Math.m
   else{const s={id:uid(),name,tpl:SF.tpl,target,items:[],sets:{A:[],B:[],X:[]},muted:[],checks:{}};D.shows.unshift(s);D.cur=s.id;save();tab='mon';closeSheet()}};
 function showMenu(id){
   const s=D.shows.find(x=>x.id===id);if(!s)return;
-  openSheet({title:s.name,body:()=>`<div class="act"><button data-a="smEdit">Nombre, objetivo y plantilla</button><button data-a="smDup">Duplicar</button>${D.shows.length>1?'<button data-a="smSwitch">Cambiar de show</button>':''}<button class="d" data-a="smDel">Eliminar show</button></div>`});
+  openSheet({title:s.name,body:()=>`<div class="act"><button data-a="newBoloShow" data-id="${s.id}" style="color:var(--accent);font-weight:600">Apuntar un bolo con este show</button><button data-a="smEdit">Nombre, objetivo y plantilla</button><button data-a="smDup">Duplicar</button>${D.shows.length>1?'<button data-a="smSwitch">Cambiar de show</button>':''}<button class="d" data-a="smDel">Eliminar show</button></div>`});
   S.smEdit=()=>showForm(id);
   S.smDup=()=>{const c=clone(s);c.id=uid();c.name=s.name+' (copia)';delete c.sample;c.checks={};D.shows.unshift(c);D.cur=c.id;save();closeSheet()};
   S.smSwitch=()=>{tab='sho';closeSheet()};
@@ -772,7 +782,7 @@ function settingsHTML(){
      <button data-a="exportData">Exportar copia</button><button data-a="importData">Importar copia</button>
      ${hasSample?'<button class="d" data-a="delSample">Borrar datos de ejemplo</button>':''}</div>
      <div class="note">La copia es un archivo con todos tus números, shows y ajustes. Guárdalo en Google Drive o mándaselo a quien quieras: al importarlo puedes reemplazarlo todo o añadir sus números a los tuyos.</div></div>
-   <div class="note" style="text-align:center;padding:10px 0 0">Espatontos · Monta tu show · v1.1</div>
+   <div class="note" style="text-align:center;padding:10px 0 0">Espatontos · Monta tu show · versión ${APP_VERSION}</div>
   </div>`;
 }
 Object.assign(S,{
@@ -830,10 +840,115 @@ function openGuide(){GOPEN=0;openSheet({title:'Guía',left:'Cerrar',body:()=>`<d
 S.gTog=el=>{const i=+el.dataset.i;GOPEN=GOPEN===i?-1:i;drawSheet()};
 S.guide=()=>openGuide();
 
+
+/* ============ bolos (ficha del bolo + valoración post-show) ============ */
+const EVENTOS=[['empresa','Empresa'],['boda','Boda'],['cumple','Cumpleaños'],['privada','Fiesta privada'],['teatro','Teatro o sala'],['festival','Festival'],['otro','Otro']];
+const FORMATOS=[['sentado','Sentado'],['depie','De pie'],['mixto','Mixto']];
+const RATE=['Flojo','Regular','Bien','Muy bien','Demoledor'];
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fdate=s=>{if(!s)return 'Sin fecha';const p=s.split('-');return `${+p[2]} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][+p[1]-1]} ${p[0]}`};
+const evName=k=>(EVENTOS.find(e=>e[0]===k)||['','Evento'])[1];
+let shoSeg='shows',BQ='',BF=null,E=null,EB=null;
+function boloNums(b){const s=D.shows.find(x=>x.id===b.showId);if(!s)return [];const arr=s.tpl==='coctel'?s.sets.A.concat(s.sets.B,s.sets.X):s.items;const seen={};return arr.map(it=>num(it.nid)).filter(n=>{if(!n||seen[n.id])return false;seen[n.id]=1;return true})}
+function realPot(nid){const r=[];D.bolos.forEach(b=>{if(b.eval)b.eval.items.forEach(i=>{if(i.nid===nid&&i.rate)r.push(i.rate)})});return r.length?{avg:r.reduce((a,c)=>a+c,0)/r.length,n:r.length}:null}
+const avgTxt=v=>v.toFixed(1).replace('.',',');
+function bolosHTML(){
+  const q=norm(BQ),t=todayStr();
+  const L=D.bolos.filter(b=>!q||[b.cliente,b.contacto,b.lugar,b.direccion,b.showName,evName(b.evento)].some(x=>norm(x).indexOf(q)>=0));
+  const up=L.filter(b=>!b.eval&&(b.date||'')>=t).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const pend=L.filter(b=>!b.eval&&b.date&&b.date<t).sort((a,b)=>b.date.localeCompare(a.date));
+  const done=L.filter(b=>b.eval).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const card=b=>`<button class="card sc" data-a="openBolo" data-id="${b.id}" style="margin-bottom:10px"><span class="m">${fdate(b.date)}${b.hora?' · '+esc(b.hora):''} · ${esc(evName(b.evento))}</span><span class="n">${esc(b.cliente||'Sin cliente')}</span><span class="m">${esc(b.showName||'Sin show')}${b.lugar?' · '+esc(b.lugar):''}</span>${b.eval?`<span class="m" style="color:var(--good);font-weight:600">Valorado · ${RATE[(b.eval.general||3)-1]}</span>`:(b.date&&b.date<t?'<span class="badge" style="align-self:flex-start">Pendiente de valorar</span>':'')}</button>`;
+  const sec=(t2,arr)=>arr.length?`<div class="sec-t">${t2} <span>${arr.length}</span></div>${arr.map(card).join('')}`:'';
+  return `<label class="search">${ICON.search}<input type="search" placeholder="Buscar cliente, lugar o show" value="${esc(BQ)}" data-in="BQ" aria-label="Buscar bolos"></label>
+   ${D.bolos.length?(sec('Pendientes de valorar',pend)+sec('Próximos',up)+sec('Realizados',done)||'<div class="empty"><b>Nada coincide</b>Prueba con otra búsqueda.</div>')
+   :'<div class="empty"><b>Aún no hay bolos</b>Apunta cada actuación con los datos del cliente y, al terminar, valora cómo fue cada número. Con el tiempo la app sabrá qué números funcionan de verdad.</div>'}`;
+}
+function newBolo(showId){
+  BF={id:null,showId:showId||D.cur||'',date:todayStr(),hora:'',cliente:'',contacto:'',telefono:'',email:'',lugar:'',direccion:'',evento:'empresa',personas:'',formato:'sentado',idioma:'Español',notas:''};
+  boloForm();
+}
+function boloForm(){
+  openSheet({title:BF.id?'Datos del bolo':'Nuevo bolo',left:'Cancelar',right:'Guardar',rightA:'saveBolo',body:()=>{
+    const inp=(k,ph,type,extra)=>`<div class="fr"><input type="${type||'text'}" placeholder="${ph}" value="${esc(BF[k])}" data-in="BF" data-k="${k}" aria-label="${ph}" ${extra||''}></div>`;
+    return `<div class="f">
+    <div><div class="fl">Show</div>${D.shows.length?`<div class="wrapchips">${D.shows.map(s=>`<button class="tc${BF.showId===s.id?' on':''}" data-a="bfShow" data-id="${s.id}">${esc(s.name)}</button>`).join('')}</div>`:'<div class="note">Aún no tienes shows. Puedes guardar el bolo igualmente y asignarle un show más tarde.</div>'}</div>
+    <div><div class="fl">Cuándo</div><div class="fg"><div class="fr"><span>Fecha</span><input type="date" value="${esc(BF.date)}" data-in="BF" data-k="date" style="text-align:right;flex:0 1 auto"></div><div class="fr"><span>Hora</span><input type="time" value="${esc(BF.hora)}" data-in="BF" data-k="hora" style="text-align:right;flex:0 1 auto"></div></div></div>
+    <div><div class="fl">Cliente</div><div class="fg">${inp('cliente','Cliente o empresa')}${inp('contacto','Persona de contacto')}${inp('telefono','Teléfono','tel','inputmode="tel"')}${inp('email','Email','email','inputmode="email"')}</div><div class="note" id="prevNote">${prevNote()}</div></div>
+    <div><div class="fl">Lugar</div><div class="fg">${inp('lugar','Lugar (p. ej. Hotel Miramar)')}${inp('direccion','Dirección')}</div></div>
+    <div><div class="fl">Evento</div><div class="wrapchips">${EVENTOS.map(e=>`<button class="tc${BF.evento===e[0]?' on':''}" data-a="bfEv" data-k="${e[0]}">${e[1]}</button>`).join('')}</div></div>
+    <div><div class="fl">Público</div><div class="fg"><div class="fr"><span>Personas</span><input type="number" inputmode="numeric" value="${esc(BF.personas)}" data-in="BF" data-k="personas" style="text-align:right;max-width:90px" aria-label="Personas"></div>${inp('idioma','Idioma')}</div>
+      <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px">${FORMATOS.map(f=>`<button class="${BF.formato===f[0]?'on':''}" data-a="bfFmt" data-k="${f[0]}">${f[1]}</button>`).join('')}</div></div>
+    <div><div class="fl">Notas</div><textarea placeholder="Caché, horarios, pruebas de sonido, peticiones del cliente…" data-in="BF" data-k="notas">${esc(BF.notas)}</textarea></div></div>`}});
+}
+function prevNote(){
+  const c=norm(BF&&BF.cliente);if(c.length<3)return '';
+  const prev=D.bolos.filter(b=>b.id!==BF.id&&norm(b.cliente)===c).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!prev.length)return '';
+  return '<b style="color:var(--warnText)">Ya actuaste para este cliente:</b> '+prev.slice(0,3).map(b=>`${fdate(b.date)} · ${esc(b.showName||'sin show')}`).join(' — ')+'. Revisa qué números hiciste para no repetir.';
+}
+function openBolo(id){
+  const b=D.bolos.find(x=>x.id===id);if(!b)return;
+  const row=(l,v)=>v?`<div class="fr"><span style="color:var(--sec);font-size:14px;flex:none">${l}</span><span style="text-align:right;min-width:0;overflow-wrap:anywhere">${v}</span></div>`:'';
+  openSheet({title:b.cliente||'Bolo',body:()=>{const nums=b.eval?b.eval.items:[];
+    return `<div class="f">
+    <div class="fg">${row('Fecha',fdate(b.date)+(b.hora?' · '+esc(b.hora):''))}${row('Show',esc(b.showName||''))}${row('Evento',esc(evName(b.evento)))}${row('Público',(b.personas?esc(b.personas)+' personas · ':'')+(FORMATOS.find(f=>f[0]===b.formato)||['',''])[1]+(b.idioma?' · '+esc(b.idioma):''))}</div>
+    <div class="fg">${row('Contacto',esc(b.contacto||''))}${row('Teléfono',b.telefono?`<a class="link" href="tel:${esc(b.telefono.replace(/\s/g,''))}">${esc(b.telefono)}</a>`:'')}${row('Email',b.email?`<a class="link" href="mailto:${esc(b.email)}">${esc(b.email)}</a>`:'')}${row('Lugar',esc(b.lugar||''))}${row('Dirección',b.direccion?`<a class="link" href="https://maps.apple.com/?q=${encodeURIComponent(b.direccion)}" target="_blank" rel="noopener">${esc(b.direccion)}</a>`:'')}</div>
+    ${b.notas?`<div><div class="fl">Notas</div><div class="wi"><p style="color:var(--text);white-space:pre-wrap">${esc(b.notas)}</p></div></div>`:''}
+    ${b.eval?`<div><div class="fl">Valoración <span>${RATE[(b.eval.general||3)-1]} · sala ${RATE[(b.eval.energia||3)-1].toLowerCase()}</span></div><div class="fg">${nums.map(i=>`<div class="fr"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.name)}${i.fallo?' <span class="badge">Fallo</span>':''}</span><span style="color:var(--sec);font-size:14px;flex:none">${i.rate?RATE[i.rate-1]:'—'}</span></div>`).join('')}</div>${b.eval.cambiar?`<div class="wi" style="margin-top:10px"><p style="color:var(--text);white-space:pre-wrap">${esc(b.eval.cambiar)}</p></div>`:''}</div>`:''}
+    <div class="act"><button data-a="evalBolo" style="color:var(--accent);font-weight:600">${b.eval?'Editar valoración':'Valorar actuación'}</button><button data-a="editBolo">Editar datos</button><button class="d" data-a="delBolo">Eliminar bolo</button></div></div>`}});
+  S.editBolo=()=>{BF=clone(b);boloForm()};
+  S.delBolo=()=>{closeSheet();withUndo('Bolo eliminado',()=>{D.bolos=D.bolos.filter(x=>x.id!==b.id)})};
+  S.evalBolo=()=>evalForm(b);
+}
+function evalForm(b){
+  EB=b;
+  if(b.eval){E=clone(b.eval);const have={};E.items.forEach(i=>have[i.nid]=1);boloNums(b).forEach(n=>{if(!have[n.id])E.items.push({nid:n.id,name:n.name,rate:0,fallo:false,nota:''})})}
+  else E={general:0,energia:0,cambiar:'',items:boloNums(b).map(n=>({nid:n.id,name:n.name,rate:0,fallo:false,nota:''}))};
+  const scale=(val,a,extra)=>`<div class="pots">${[1,2,3,4,5].map(p=>`<button class="${p<=val?'on':''}" data-a="${a}" data-p="${p}" ${extra||''} aria-label="${RATE[p-1]}">${p}</button>`).join('')}</div>`;
+  openSheet({title:'Valorar actuación',left:'Cancelar',right:'Guardar',rightA:'saveEval',body:()=>`<div class="f">
+    <div class="note" style="padding:0 4px">${esc(b.cliente||'Bolo')} · ${fdate(b.date)}. Valora cómo reaccionó el público a cada número: 1 flojo, 5 demoledor.</div>
+    ${E.items.length?E.items.map((i,k)=>`<div class="fg" style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline"><b style="font-size:16px;min-width:0;overflow-wrap:anywhere">${esc(i.name)}</b><span style="color:var(--sec);font-size:13px;flex:none">${i.rate?RATE[i.rate-1]:'Sin valorar'}</span></div>
+      ${scale(i.rate,'evRate','data-k="'+k+'"')}
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="font-size:15px">Hubo algún fallo</span>${tg(i.fallo,'evFallo','data-k="'+k+'"')}</div>
+      <input type="text" placeholder="Nota (opcional)" value="${esc(i.nota)}" data-in="E.nota" data-k="${k}" style="border:0;background:var(--field);border-radius:10px;height:40px;padding:0 12px;outline:none;width:100%"></div>`).join('')
+      :'<div class="note">Este bolo no tiene show asignado o el show está vacío. Puedes valorar igualmente el show en general.</div>'}
+    <div><div class="fl">Valoración del show <span>${E.general?RATE[E.general-1]:''}</span></div>${scale(E.general,'evGen')}</div>
+    <div><div class="fl">Energía de la sala <span>${E.energia?RATE[E.energia-1]:''}</span></div>${scale(E.energia,'evEn')}</div>
+    <div><div class="fl">Qué cambiarías</div><textarea placeholder="Lo que mejorarías la próxima vez…" data-in="E.cambiar">${esc(E.cambiar)}</textarea></div></div>`});
+}
+Object.assign(S,{
+  segSho:el=>{shoSeg=el.dataset.k;render()},
+  newBolo:()=>newBolo(),
+  newBoloShow:el=>newBolo(el.dataset.id),
+  openBolo:el=>openBolo(el.dataset.id),
+  bfShow:el=>{BF.showId=BF.showId===el.dataset.id?'':el.dataset.id;drawSheet()},
+  bfEv:el=>{BF.evento=el.dataset.k;drawSheet()},
+  bfFmt:el=>{BF.formato=el.dataset.k;drawSheet()},
+  saveBolo:()=>{const s=D.shows.find(x=>x.id===BF.showId);BF.showName=s?s.name:(BF.showName||'');BF.cliente=(BF.cliente||'').trim();
+    if(BF.id){const i=D.bolos.findIndex(x=>x.id===BF.id);if(i>=0)D.bolos[i]=Object.assign(D.bolos[i],BF)}else{BF.id=uid();BF.eval=null;D.bolos.push(BF)}
+    save();shoSeg='bolos';tab='sho';closeSheet();toast('Bolo guardado')},
+  evRate:el=>{const i=E.items[+el.dataset.k];i.rate=i.rate===+el.dataset.p?0:+el.dataset.p;drawSheet()},
+  evFallo:el=>{const i=E.items[+el.dataset.k];i.fallo=!i.fallo;drawSheet()},
+  evGen:el=>{E.general=+el.dataset.p;drawSheet()},
+  evEn:el=>{E.energia=+el.dataset.p;drawSheet()},
+  saveEval:()=>{EB.eval=E;save();const id=EB.id;closeSheet();toast('Valoración guardada');setTimeout(()=>openBolo(id),350)}
+});
+Object.assign(SI,{
+  BQ:el=>{BQ=el.value;const p=el.selectionStart;render();const n=$('[data-in=BQ]');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(e){}}},
+  BF:el=>{BF[el.dataset.k]=el.value;if(el.dataset.k==='cliente'){const n=$('#prevNote');if(n)n.innerHTML=prevNote()}},
+  'E.nota':el=>{E.items[+el.dataset.k].nota=el.value},
+  'E.cambiar':el=>{E.cambiar=el.value}
+});
+
 /* ============ arranque ============ */
 addEventListener('resize',()=>{if(tab==='mon')render()});
 render();
-if(!D.set.seenGuide){D.set.seenGuide=true;save();setTimeout(openGuide,400)}
+$('#splashVer').textContent='Versión '+APP_VERSION;
+S.hideSplash=()=>{const sp=$('#splash');if(sp&&!sp.classList.contains('off')){sp.classList.add('off');setTimeout(()=>sp.remove(),500)}};
+setTimeout(S.hideSplash,1500);
+if(!D.set.seenGuide){D.set.seenGuide=true;save();setTimeout(openGuide,1900)}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
