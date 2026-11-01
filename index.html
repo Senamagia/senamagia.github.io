@@ -224,7 +224,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <h2>Grabar <button data-close id="recClose">Cancelar</button></h2>
   <div id="recTime">0:00</div>
   <button class="btn primary" id="recToggle">● Empezar a grabar</button>
-  <p class="note">La grabación se añadirá como un botón nuevo en este tablero.</p>
+  <p class="note">La grabación se añadirá como un botón nuevo en este tablero. Al terminar, el sonido de la app se reinicia unos segundos para recuperar la calidad (el micrófono pone el iPad en «modo llamada»).</p>
 </div></div>
 
 <!-- Editar pista -->
@@ -308,6 +308,11 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
     <button class="btn" id="resetAudio">↻ Reiniciar sonido</button>
     <p class="note">Úsalo si alguna vez el sonido se oye raro o distorsionado (por ejemplo, tras conectar un altavoz Bluetooth). Tarda unos segundos en volver a preparar las pistas.</p>
   </div>
+  <div class="row"><label>Prueba de calidad</label>
+    <select id="abPad"></select>
+    <div class="two" style="margin-top:8px"><button class="btn" id="abEngine">▶ Motor SenaBoard</button><button class="btn" id="abNative">▶ Reproductor de Safari</button></div>
+    <p class="note">Escucha la misma canción de las dos formas (20 segundos cada una, o toca otra vez para parar) y compáralas con tu app de antes. Así sabremos si la diferencia está en el motor de SenaBoard o en cómo el iPad saca el sonido.</p>
+  </div>
   <hr>
   <p class="note" id="storageInfo"></p>
   <p class="note">SenaBoard · versión <b class="appVer"></b></p>
@@ -320,7 +325,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <div class="pos" id="timerBig">0:00:00</div>
   <button class="btn primary" id="timerToggle">▶ Iniciar</button>
   <button class="btn danger" id="timerReset">Reiniciar a 0:00:00</button>
-  <p class="note">Si está a cero, el cronómetro arranca solo con el primer sonido del show.</p>
+  <p class="note">Si está a cero, el cronómetro arranca solo con el primer sonido del show. Si sales de la app se pausa, y vuelve a correr solo con el siguiente sonido.</p>
 </div></div>
 
 <!-- Confirmación / compartir -->
@@ -337,7 +342,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
 
 <script>
 'use strict';
-const APP_VERSION = '11';
+const APP_VERSION = '12';
 /* ================= Utilidades ================= */
 const $ = s => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -755,7 +760,11 @@ function fadeAll(){
 }
 /* ================= Cronómetro y reloj ================= */
 function timerElapsed(){ const t = state.timer; return t.acc + (t.start ? Date.now() - t.start : 0); }
-function autoStartTimer(){ const t = state.timer; if (!t.start && !t.acc){ t.start = Date.now(); save(); renderClock(); } }
+function autoStartTimer(){ const t = state.timer; if (!t.start && (!t.acc || t.autoPaused)){ t.start = Date.now(); t.autoPaused = false; save(); renderClock(); } }
+// Al salir de la app el cronómetro se pausa; vuelve a correr solo con el siguiente sonido
+function pauseTimerOnLeave(){ const t = state && state.timer; if (t && t.start){ t.acc += Date.now() - t.start; t.start = null; t.autoPaused = true; saveNow(); } }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') pauseTimerOnLeave(); else renderClock(); });
+window.addEventListener('pagehide', pauseTimerOnLeave);
 function fmtHMS(ms){ const s = Math.floor(ms / 1000); return Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
 function renderClock(){
   if (!state) return;
@@ -942,7 +951,7 @@ $('#showTimer').onclick = () => { renderClock(); openSheet('timerSheet'); };
 $('#timerToggle').onclick = () => {
   const t = state.timer;
   if (t.start){ t.acc += Date.now() - t.start; t.start = null; } else t.start = Date.now();
-  save(); renderClock();
+  t.autoPaused = false; save(); renderClock();
 };
 $('#timerReset').onclick = async () => {
   if (!await ask('¿Reiniciar el cronómetro?', 'Volverá a 0:00:00 y arrancará solo con el próximo sonido.', 'Reiniciar', true)) return;
@@ -956,6 +965,7 @@ function closeSheet(id){
   if (id === 'padSheet'){ try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {} commitEditor(); }
   $('#' + id).classList.remove('open');
   if (id === 'padSheet') editingId = null;
+  if (id === 'menuSheet' && (abPlayer || abNativeEl)) abStop();
   if (id === 'recSheet') cancelRec();
 }
 document.querySelectorAll('.sheet').forEach(s => {
@@ -1021,15 +1031,17 @@ $('#recToggle').onclick = async () => {
   rec = new MediaRecorder(recStream, type ? { mimeType: type } : undefined); recChunks = [];
   rec.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
   rec.onstop = async () => {
-    clearInterval(recTimer); recStream.getTracks().forEach(t => t.stop()); setSession('playback');
-    if (rec._cancel){ rec = null; return; }
+    clearInterval(recTimer); recStream.getTracks().forEach(t => t.stop()); setSession('playback'); micUsed = true;
+    if (rec._cancel){ rec = null; if (!anyActive()) rebuildAudio(); return; }
     const blob = new Blob(recChunks, { type: rec.mimeType || type || 'audio/mp4' }); rec = null;
     const audioId = uid(); await putAudio(audioId, blob);
     const d = await probeDuration(blob);
     const n = Object.values(state.pads).filter(p => p.name.startsWith('Grabación')).length + 1;
     const pad = newPad('Grabación ' + n, audioId, Math.max(0, d));
     state.pads[pad.id] = pad; board().pads.push(pad.id); save(); renderBoard(); preloadBoard();
-    $('#recSheet').classList.remove('open'); toast('Grabación añadida');
+    $('#recSheet').classList.remove('open');
+    // usar el micrófono deja el iPad en «modo llamada» (sonido más bajo y apagado): se rehace el sonido
+    if (!anyActive()) rebuildAudio('Grabación añadida · sonido restablecido'); else toast('Grabación añadida');
   };
   rec.start(250); recStart = Date.now();
   $('#recToggle').innerHTML = '<span class="recDot"></span>Parar y guardar';
@@ -1278,8 +1290,37 @@ $('#menuBtn').onclick = async () => {
   try { const e = await navigator.storage.estimate(); s += ' Espacio usado: ' + (e.usage / 1048576).toFixed(0) + ' MB.'; } catch (e) {}
   s += ' Sonido preparado en memoria: ' + Math.round(pcmBytes / 1048576) + ' MB.';
   const res = [...players.values()].filter(p => p.mode === 'media').length; if (res) s += ' ' + res + ' pista(s) en modo de reserva.';
-  $('#storageInfo').textContent = s; renderAudioInfo();
+  $('#storageInfo').textContent = s; renderAudioInfo(); abFillPads();
   openSheet('menuSheet');
+};
+// ---- Prueba A/B ----
+let abNativeEl = null, abTimer = null, abPlayer = null;
+function abStop(){
+  clearTimeout(abTimer);
+  if (abNativeEl){ try { abNativeEl.pause(); URL.revokeObjectURL(abNativeEl.src); } catch (e) {} abNativeEl = null; }
+  if (abPlayer && abPlayer.state !== 'idle') hardStop(abPlayer, false); abPlayer = null;
+  $('#abEngine').textContent = '▶ Motor SenaBoard'; $('#abNative').textContent = '▶ Reproductor de Safari';
+}
+function abFillPads(){
+  const sel = $('#abPad'), prev = sel.value; sel.innerHTML = '';
+  for (const id of board().pads){ const pd = state.pads[id]; if (!pd) continue; const o = document.createElement('option'); o.value = id; o.textContent = pd.name; sel.appendChild(o); }
+  if (prev && state.pads[prev]) sel.value = prev;
+}
+$('#abEngine').onclick = async () => {
+  const wasOn = $('#abEngine').textContent.startsWith('■'); abStop(); if (wasOn) return;
+  const pad = state.pads[$('#abPad').value]; if (!pad) return toast('Este tablero no tiene pistas');
+  ensureCtx(); let p; try { p = await getPlayer(pad); } catch (e) { return toast('No encuentro el audio'); }
+  playExclusive(p, true); abPlayer = p; $('#abEngine').textContent = '■ Parar';
+  abTimer = setTimeout(abStop, 20000);
+};
+$('#abNative').onclick = async () => {
+  const wasOn = $('#abNative').textContent.startsWith('■'); abStop(); if (wasOn) return;
+  const pad = state.pads[$('#abPad').value]; if (!pad) return toast('Este tablero no tiene pistas');
+  const blob = await getAudio(pad.audioId); if (!blob) return toast('No encuentro el audio');
+  const a = new Audio(); a.setAttribute('playsinline', ''); a.src = URL.createObjectURL(blob); abNativeEl = a; // sin pasar por el motor: tal cual lo reproduce Safari
+  const st = pad.start || 0;
+  if (st > 0) a.addEventListener('loadedmetadata', () => { try { a.currentTime = st; } catch (e) {} }, { once: true });
+  a.play().then(() => { $('#abNative').textContent = '■ Parar'; abTimer = setTimeout(abStop, 20000); }).catch(() => toast('No se pudo reproducir'));
 };
 $('#resetAudio').onclick = () => { lastMismatch = ''; ensureCtx(); if (anyActive()) return toast('Para la música antes de reiniciar el sonido'); closeSheet('menuSheet'); checkRoute(true); };
 $('#keepAwake').onchange = e => { state.keepAwake = e.target.checked; save(); if (state.keepAwake) requestWake(); else releaseWake(); };
@@ -1296,7 +1337,7 @@ function hardwareRate(){
   catch (e) { return ctx ? ctx.sampleRate : 0; }
 }
 const anyActive = () => [...players.values()].some(p => p.state !== 'idle');
-let rebuilding = false, lastMismatch = '';
+let rebuilding = false, lastMismatch = '', lastHw = 0, micUsed = false;
 async function rebuildAudio(reason){
   if (rebuilding) return; rebuilding = true;
   try {
@@ -1311,7 +1352,7 @@ async function rebuildAudio(reason){
 }
 function checkRoute(force){
   if (!ctx || rebuilding || anyActive()) return false;
-  const hw = hardwareRate();
+  const hw = hardwareRate(); lastHw = hw;
   if (!force && hw && hw !== ctx.sampleRate){
     const pair = hw + '/' + ctx.sampleRate;
     if (pair === lastMismatch) return false; // ya se intentó: no repetir en bucle
@@ -1322,11 +1363,15 @@ function checkRoute(force){
 }
 function renderAudioInfo(){
   const el = $('#audioInfo'); if (!el) return;
-  el.textContent = ctx ? 'Sonido a ' + ctx.sampleRate.toLocaleString('es-ES') + ' Hz' : '';
+  if (!ctx){ el.textContent = ''; return; }
+  const n = [...players.values()].filter(p => p.mode === 'pcm').length, m = [...players.values()].filter(p => p.mode === 'media').length;
+  el.textContent = 'Diagnóstico: motor a ' + ctx.sampleRate.toLocaleString('es-ES') + ' Hz'
+    + (lastHw ? ' · salida del iPad a ' + lastHw.toLocaleString('es-ES') + ' Hz' + (lastHw === ctx.sampleRate ? ' ✓' : ' ✗') : '')
+    + ' · ' + n + ' pistas en memoria' + (m ? ' · ' + m + ' en reserva' : '')
+    + (micUsed ? ' · micrófono usado en esta sesión' : '');
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(() => checkRoute(false), 400); });
 window.addEventListener('focus', () => setTimeout(() => checkRoute(false), 400));
-setInterval(() => { if (document.visibilityState === 'visible') checkRoute(false); }, 10000);
 $('#startBtn').onclick = $('#startOverlay').onclick = () => {
   ensureCtx(); if (!checkRoute(false)) {} requestWake(); primeAll(); renderAudioInfo();
   $('#startOverlay').classList.add('hide');
