@@ -325,6 +325,10 @@ textarea{width:100%;min-height:90px;border:0;border-radius:14px;background:var(-
 @media (min-width:860px){.kchips{display:none}.kan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.kcol{display:block;background:var(--field);border-radius:16px;padding:4px 10px 10px;min-height:200px}.khead{display:flex;margin-top:10px}}
 
 /* ---- cuentas ---- */
+.tc.oth{box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--accent);background:transparent}.tc.oth.on{background:var(--accent);color:var(--onAccent);box-shadow:none}
+.nudge{padding:14px;display:flex;flex-direction:column;gap:4px;box-shadow:inset 0 0 0 2px var(--accent),var(--shadow);margin-bottom:10px}.nudge>b{font-size:16px}.nudge>span{font-size:13.5px;color:var(--sec);line-height:19px}
+.nbtn{display:flex;gap:8px;margin-top:8px}.nbtn .pill{flex:1;justify-content:center;height:40px;border-radius:12px}.nbtn .pill.ghost{background:var(--field);box-shadow:none}.nbtn .lat{flex:none;color:var(--sec)}
+#tabs button.dot svg{overflow:visible}#tabs button{position:relative}#tabs button.dot::after{content:'';position:absolute;top:6px;left:calc(50% + 8px);width:8px;height:8px;border-radius:4px;background:#E5484D}
 input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;background:var(--field);color:var(--text);border:0;border-radius:8px;padding:0 12px;height:34px;min-width:118px;font-size:16px;font-weight:600;outline:none;text-align:right;flex:0 0 auto}
 input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:right;color:var(--text)}
 input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-calendar-picker-indicator{opacity:.5}
@@ -400,7 +404,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='1.4';
+const APP_VERSION='1.5';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -613,6 +617,7 @@ function render(){
   $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+tab));
   ({rep:renderRep,mon:renderMon,ide:renderIde,mat:renderMat,sho:renderSho})[tab]();
+  const sd=$('#tabs [data-t=sho]');if(sd)sd.classList.toggle('dot',CTA().on&&unclosed().some(b=>!b.luego));
   const fb=$('#fab');if(fb)fb.style.display=(tab==='ide'&&!(IV.view==='ses'&&IV.unir))?'':'none';
   if(D.set.tab!==tab){D.set.tab=tab;save()}
 }
@@ -1023,7 +1028,10 @@ function boloForm(){
   openSheet({title:BF.id?'Datos del bolo':'Nuevo bolo',left:'Cancelar',right:'Guardar',rightA:'saveBolo',body:()=>{
     const inp=(k,ph,type,extra)=>`<div class="fr"><input type="${type||'text'}" placeholder="${ph}" value="${esc(BF[k])}" data-in="BF" data-k="${k}" aria-label="${ph}" ${extra||''}></div>`;
     return `<div class="f">
-    <div><div class="fl">Show</div>${D.shows.length?`<div class="wrapchips">${D.shows.map(s=>`<button class="tc${BF.showId===s.id?' on':''}" data-a="bfShow" data-id="${s.id}">${esc(s.name)}</button>`).join('')}</div>`:'<div class="note">Aún no tienes shows. Puedes guardar el bolo igualmente y asignarle un show más tarde.</div>'}</div>
+    <div><div class="fl">Show</div><div class="wrapchips">${D.shows.map(s=>`<button class="tc${!BF.otro&&BF.showId===s.id?' on':''}" data-a="bfShow" data-id="${s.id}">${esc(s.name)}</button>`).join('')}<button class="tc oth${BF.otro?' on':''}" data-a="bfOtro">＋ Otro espectáculo</button></div>
+     ${BF.otro?`<div class="fg" style="margin-top:10px"><div class="fr"><span>Espectáculo</span><input type="text" class="tin" list="dlOtro" placeholder="Magia a dos…" value="${esc(BF.otroNom||'')}" data-in="BF" data-k="otroNom"></div><div class="fr"><span>Con quién</span><input type="text" class="tin" list="dlCon" placeholder="Opcional" value="${esc(BF.con||'')}" data-in="BF" data-k="con"></div></div>
+      <datalist id="dlOtro">${[...new Set(D.bolos.map(b=>b.otro&&b.otroNom).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}</datalist><datalist id="dlCon">${[...new Set(D.bolos.map(b=>b.con).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+      <div class="note">Para los bolos que haces con otras personas o con un show que no está en tu app. Cuenta en la agenda y en las cuentas, pero no tiene números que valorar.</div>`:(D.shows.length?'':'<div class="note">Aún no tienes shows. Puedes guardar el bolo igualmente, apuntarlo como «Otro espectáculo» o asignarle un show más tarde.</div>')}</div>
     <div><div class="fl">Cuándo</div><div class="fg"><div class="fr"><span>Fecha</span><input type="date" value="${esc(BF.date)}" data-in="BF" data-k="date" style="text-align:right;flex:0 1 auto"></div><div class="fr"><span>Hora</span><input type="time" value="${esc(BF.hora)}" data-in="BF" data-k="hora" style="text-align:right;flex:0 1 auto"></div></div></div>
     <div><div class="fl">Cliente</div><div class="fg">${inp('cliente','Cliente o empresa')}${inp('contacto','Persona de contacto')}${inp('telefono','Teléfono','tel','inputmode="tel"')}${inp('email','Email','email','inputmode="email"')}</div><div class="note" id="prevNote">${prevNote()}</div></div>
     <div><div class="fl">Lugar</div><div class="fg">${inp('lugar','Lugar (p. ej. Hotel Miramar)')}${inp('direccion','Dirección')}</div></div>
@@ -1044,7 +1052,7 @@ function openBolo(id){
   const row=(l,v)=>v?`<div class="fr"><span style="color:var(--sec);font-size:14px;flex:none">${l}</span><span style="text-align:right;min-width:0;overflow-wrap:anywhere">${v}</span></div>`:'';
   openSheet({title:b.cliente||'Bolo',body:()=>{const nums=b.eval?b.eval.items:[];
     return `<div class="f">${moneyCard(b)}
-    <div class="fg">${row('Fecha',fdate(b.date)+(b.hora?' · '+esc(b.hora):''))}${row('Show',esc(b.showName||''))}${row('Evento',esc(evName(b.evento)))}${row('Público',(b.personas?esc(b.personas)+' personas · ':'')+(FORMATOS.find(f=>f[0]===b.formato)||['',''])[1]+(b.idioma?' · '+esc(b.idioma):''))}</div>
+    <div class="fg">${row('Fecha',fdate(b.date)+(b.hora?' · '+esc(b.hora):''))}${row('Show',esc(b.showName||'')+(b.con?' · con '+esc(b.con):''))}${row('Evento',esc(evName(b.evento)))}${row('Público',(b.personas?esc(b.personas)+' personas · ':'')+(FORMATOS.find(f=>f[0]===b.formato)||['',''])[1]+(b.idioma?' · '+esc(b.idioma):''))}</div>
     <div class="fg">${row('Contacto',esc(b.contacto||''))}${row('Teléfono',b.telefono?`<a class="link" href="tel:${esc(b.telefono.replace(/\s/g,''))}">${esc(b.telefono)}</a>`:'')}${row('Email',b.email?`<a class="link" href="mailto:${esc(b.email)}">${esc(b.email)}</a>`:'')}${row('Lugar',esc(b.lugar||''))}${row('Dirección',b.direccion?`<a class="link" href="https://maps.apple.com/?q=${encodeURIComponent(b.direccion)}" target="_blank" rel="noopener">${esc(b.direccion)}</a>`:'')}</div>
     ${b.notas?`<div><div class="fl">Notas</div><div class="wi"><p style="color:var(--text);white-space:pre-wrap">${esc(b.notas)}</p></div></div>`:''}
     ${b.eval?`<div><div class="fl">Valoración <span>${RATE[(b.eval.general||3)-1]} · sala ${RATE[(b.eval.energia||3)-1].toLowerCase()}</span></div><div class="fg">${nums.map(i=>`<div class="fr"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.name)}${i.fallo?' <span class="badge">Fallo</span>':''}</span><span style="color:var(--sec);font-size:14px;flex:none">${i.rate?RATE[i.rate-1]:'—'}</span></div>`).join('')}</div>${b.eval.cambiar?`<div class="wi" style="margin-top:10px"><p style="color:var(--text);white-space:pre-wrap">${esc(b.eval.cambiar)}</p></div>`:''}</div>`:''}
@@ -1075,12 +1083,16 @@ Object.assign(S,{
   newBolo:()=>newBolo(),
   newBoloShow:el=>newBolo(el.dataset.id),
   openBolo:el=>openBolo(el.dataset.id),
-  bfShow:el=>{BF.showId=BF.showId===el.dataset.id?'':el.dataset.id;drawSheet()},
+  bfShow:el=>{BF.otro=false;BF.showId=BF.showId===el.dataset.id?'':el.dataset.id;drawSheet()},
+  bfOtro:()=>{BF.otro=!BF.otro;if(BF.otro)BF.showId='';drawSheet()},
   bfEv:el=>{BF.evento=el.dataset.k;drawSheet()},
   bfFmt:el=>{BF.formato=el.dataset.k;drawSheet()},
-  saveBolo:()=>{const s=D.shows.find(x=>x.id===BF.showId);BF.showName=s?s.name:(BF.showName||'');BF.cliente=(BF.cliente||'').trim();
-    if(BF.id){const i=D.bolos.findIndex(x=>x.id===BF.id);if(i>=0)D.bolos[i]=Object.assign(D.bolos[i],BF)}else{BF.id=uid();BF.eval=null;D.bolos.push(BF)}
-    save();shoSeg='bolos';tab='sho';closeSheet();toast('Bolo guardado')},
+  saveBolo:()=>{const s=D.shows.find(x=>x.id===BF.showId),isNew=!BF.id;BF.cliente=(BF.cliente||'').trim();
+    if(BF.otro){BF.showId='';BF.otroNom=(BF.otroNom||'').trim();BF.con=(BF.con||'').trim();BF.showName=BF.otroNom||'Otro espectáculo'}else{BF.con='';BF.showName=s?s.name:(BF.showName||'')}
+    if(!isNew){const i=D.bolos.findIndex(x=>x.id===BF.id);if(i>=0)D.bolos[i]=Object.assign(D.bolos[i],BF)}else{BF.id=uid();BF.eval=null;D.bolos.push(BF)}
+    save();shoSeg='bolos';tab='sho';
+    if(isNew&&BF.date&&BF.date<=todayStr()&&CTA().on){render();openBolo(BF.id);return}
+    closeSheet();toast('Bolo guardado')},
   evRate:el=>{const i=E.items[+el.dataset.k];i.rate=i.rate===+el.dataset.p?0:+el.dataset.p;drawSheet()},
   evFallo:el=>{const i=E.items[+el.dataset.k];i.fallo=!i.fallo;drawSheet()},
   evGen:el=>{E.general=+el.dataset.p;drawSheet()},
@@ -1114,6 +1126,7 @@ function calc(b){const c=b.cobro,g=(b.gastos||[]).reduce((a,x)=>a+pnum(x.imp),0)
   if(c.modo==='factura'){const base=pnum(c.base),iva=base*pnum(c.iva)/100,irpf=base*pnum(c.irpf)/100;Object.assign(r,{base,iva,irpf,total:base+iva,ingresan:base+iva-irpf,queda:base-irpf})}
   else if(c.modo==='coop'){const br=pnum(c.bruto),com=br*pnum(c.com)/100;Object.assign(r,{bruto:br,com,ingresan:br-com,queda:br-com})}
   else{const im=pnum(c.imp);Object.assign(r,{ingresan:im,queda:im})}
+  if(c.rep){const tq=r.queda,mine=c.parteModo==='imp'?pnum(c.parte):tq*pnum(c.parte==null||c.parte===''?50:c.parte)/100,ratio=tq?mine/tq:0;r.totalQueda=tq;r.otros=tq-mine;r.queda=mine;r.ingresan=r.ingresan*ratio}
   r.benef=r.queda-g;return r}
 const ym=s=>(s||'').slice(0,7);
 const ymOf=(y,m)=>y+'-'+String(m+1).padStart(2,'0');
@@ -1123,14 +1136,15 @@ function monthStats(key){const B=D.bolos.filter(b=>ym(b.date)===key&&b.date<=tod
   B.forEach(b=>{const r=calc(b);if(r.set){ing+=r.queda;byModo[r.modo]+=r.queda;if(r.modo==='factura'){fac.base+=r.base;fac.iva+=r.iva;fac.irpf+=r.irpf}}gb+=r.gastos;(b.gastos||[]).forEach(x=>{cats[x.cat]=(cats[x.cat]||0)+pnum(x.imp)})});
   const G=genFor(key),gg=G.reduce((a,x)=>a+pnum(x.imp),0);G.forEach(x=>{cats[x.cat]=(cats[x.cat]||0)+pnum(x.imp)});
   return {B,G,ing,gastos:gb+gg,benef:ing-gb-gg,byModo,cats,fac}}
+function unclosed(){const t=todayStr();return D.bolos.filter(b=>b.date&&b.date<t&&!calc(b).set).sort((a,b)=>b.date.localeCompare(a.date))}
 function pendientes(){return D.bolos.filter(b=>{const r=calc(b);return r.set&&!b.cobro.cobrado&&(b.date||'')<=todayStr()}).sort((a,b)=>(a.date||'').localeCompare(b.date||''))}
 function cobroPill(b){const r=calc(b);if(!r.set)return '';const n=(MODOS.find(m=>m[0]===r.modo)||['',''])[1];return `<span class="pl ${b.cobro.cobrado?'ok':'wa'}">${n} · ${b.cobro.cobrado?'cobrado':'pendiente'}</span>`}
 
 /* ---- tarjetas y lista de bolos ---- */
 function boloCard(b,t){const d=(b.date||'').split('-'),on=CTA().on,r=calc(b),past=b.date&&b.date<t;
-  const val=!b.eval&&past?'<span class="pl wa">Por valorar</span>':(b.eval?`<span class="pl ok">${RATE[(b.eval.general||3)-1]}</span>`:'<span class="pl pd">Por hacer</span>');
+  const val=on&&past&&!r.set?'<span class="pl wa">Falta el dinero</span>':!b.eval&&past&&!b.otro?'<span class="pl wa">Por valorar</span>':(b.eval?`<span class="pl ok">${RATE[(b.eval.general||3)-1]}</span>`:'<span class="pl pd">Por hacer</span>');
   return `<button class="card bc" data-a="openBolo" data-id="${b.id}"><div class="bd"><b>${d[2]?+d[2]:'—'}</b><small>${d[1]?['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'][+d[1]-1]:''}</small></div>
-  <div class="bt"><b>${esc(b.cliente||'Sin cliente')}</b><small>${esc(b.showName||'Sin show')} · ${esc(evName(b.evento))}${b.hora?' · '+esc(b.hora):''}</small>
+  <div class="bt"><b>${esc(b.cliente||'Sin cliente')}</b><small>${esc(b.showName||'Sin show')}${b.con?' · con '+esc(b.con):''} · ${esc(evName(b.evento))}${b.hora?' · '+esc(b.hora):''}</small>
   <div class="bm"><span class="pls">${on?cobroPill(b):''}${val}</span>${on?(r.set?`<span class="mo">${eur(r.benef)}</span>`:'<span class="mo sec">Sin cobro</span>'):''}</div></div></button>`}
 function bolosHTML(){
   const q=norm(BQ),t=todayStr(),on=CTA().on;
@@ -1138,7 +1152,11 @@ function bolosHTML(){
   if(!D.bolos.length)return '<div class="empty"><b>Aún no hay bolos</b>Apunta cada actuación con los datos del cliente, el caché y los gastos. Al terminar, valora cómo fue cada número: con el tiempo la app sabrá qué números funcionan de verdad y cuánto te deja cada show.</div>';
   const up=L.filter(b=>(b.date||'')>t).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const past=L.filter(b=>!((b.date||'')>t)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  let h=`<label class="search">${ICON.search}<input type="search" placeholder="Buscar cliente, lugar o show" value="${esc(BQ)}" data-in="BQ" aria-label="Buscar bolos"></label>`;
+  const U=on&&!q?unclosed().filter(b=>!b.luego):[];let h='';
+  if(U.length){const b=U[0],ay=(new Date(Date.now()-864e5)).toISOString().slice(0,10)===b.date;
+    h+=`<div class="card nudge"><b>¿Qué tal ${ay?'ayer':'el '+fdate(b.date)} en ${esc(b.lugar||b.cliente||'el bolo')}?</b><span>${b.showName?esc(b.showName)+(b.con?' con '+esc(b.con):'')+'. ':''}Cierra el bolo apuntando el dinero y los gastos.${U.length>1?' Tienes '+U.length+' bolos sin cerrar.':''}</span>
+    <div class="nbtn"><button class="pill" data-a="nudgeCobro" data-id="${b.id}">Caché</button><button class="pill ghost" data-a="nudgeGastos" data-id="${b.id}">Gastos</button><button class="pill ghost lat" data-a="nudgeLater" data-id="${b.id}">Luego</button></div></div>`}
+  h+=`<label class="search">${ICON.search}<input type="search" placeholder="Buscar cliente, lugar o show" value="${esc(BQ)}" data-in="BQ" aria-label="Buscar bolos"></label>`;
   if(up.length)h+=`<div class="sec-t">Próximos <span>${up.length}</span></div>`+up.map(b=>boloCard(b,t)).join('');
   const groups={};past.forEach(b=>{const k=ym(b.date)||'sin';(groups[k]=groups[k]||[]).push(b)});
   Object.keys(groups).sort().reverse().forEach(k=>{const arr=groups[k],ben=arr.reduce((a,b)=>a+calc(b).benef,0),p=k.split('-');
@@ -1147,6 +1165,7 @@ function bolosHTML(){
   if(on)h+='<div class="note">El importe de cada bolo es su beneficio: lo que te queda menos lo que te ha costado.</div>';
   return h}
 function moneyCard(b){if(!CTA().on)return '';const r=calc(b);
+  if(!r.set&&b.date&&b.date<=todayStr())return `<div class="card nudge"><b>Este bolo ya ha pasado</b><span>Apunta el caché y lo que te costó para que entre en tus cuentas.</span><div class="nbtn"><button class="pill" data-a="cobroForm">Caché y cobro</button><button class="pill ghost" data-a="gastosBolo">Gastos${r.gastos?' ('+eurTxt(r.gastos)+')':''}</button></div></div>`;
   if(!r.set&&!r.gastos)return `<div><div class="fl">Dinero del bolo</div><div class="act"><button data-a="cobroForm" style="color:var(--accent);font-weight:600">Apuntar caché y forma de cobro</button><button data-a="gastosBolo">Gastos</button></div></div>`;
   const tot=Math.max(r.queda,0)+r.gastos,pg=tot?Math.round(Math.max(r.queda-r.gastos,0)/tot*100):0;
   return `<div class="card money"><div class="mrow big2"><span>Beneficio del bolo</span><b class="${r.benef>=0?'good':'bad'}">${eur(r.benef)}</b></div>
@@ -1157,7 +1176,7 @@ function moneyCard(b){if(!CTA().on)return '';const r=calc(b);
 
 /* ---- caché y cobro ---- */
 let CB=null,CBB=null;
-function cobroForm(b){CBB=b;const st=CTA();CB=b.cobro?clone(b.cobro):{modo:st.modo,base:'',iva:st.iva,irpf:st.irpf,nfac:'',bruto:'',com:st.coop,coopNom:'',imp:'',pago:'efectivo',cobrado:false,fcobro:''};
+function cobroForm(b){CBB=b;const st=CTA();CB=b.cobro?clone(b.cobro):{rep:!!b.con,parteModo:'pct',parte:50,modo:st.modo,base:'',iva:st.iva,irpf:st.irpf,nfac:'',bruto:'',com:st.coop,coopNom:'',imp:'',pago:'efectivo',cobrado:false,fcobro:''};
   openSheet({title:'Caché y cobro',left:'Cancelar',cancelA:'backBolo',right:'Guardar',rightA:'cbSave',body:()=>{const m=CB.modo;
     const nf=(k,l,ph,suf)=>`<div class="fr"><span>${l}</span><label class="nin"><input type="text" inputmode="decimal" value="${esc(numIn(CB[k]))}" placeholder="${ph||'0'}" data-in="CB" data-k="${k}">${suf||'€'}</label></div>`;
     const tf=(k,l,ph)=>`<div class="fr"><span>${l}</span><input type="text" value="${esc(CB[k]||'')}" placeholder="${ph}" data-in="CB" data-k="${k}" class="tin"></div>`;
@@ -1168,9 +1187,11 @@ function cobroForm(b){CBB=b;const st=CTA();CB=b.cobro?clone(b.cobro):{modo:st.mo
     return `<div class="f"><div class="note" style="padding:0 4px;margin-bottom:-6px">${esc(b.cliente||'Bolo')} · ${fdate(b.date)}</div>
      <div><div class="fl">Cómo se cobra</div><div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${MODOS.map(([k,n])=>`<button class="${m===k?'on':''}" data-a="cbModo" data-k="${k}">${n}</button>`).join('')}</div></div>
      <div><div class="fl">Importe</div>${f}</div>
+     <div><div class="fl">Reparto</div><div class="fg"><div class="fr"><span>Repartido con otros</span>${tg(!!CB.rep,'cbRep')}</div>${CB.rep?`<div class="fr"><span>Tu parte</span><span class="mini-seg"><button class="${CB.parteModo==='imp'?'':'on'}" data-a="cbParte" data-k="pct">%</button><button class="${CB.parteModo==='imp'?'on':''}" data-a="cbParte" data-k="imp">€</button></span><label class="nin"><input type="text" inputmode="decimal" value="${esc(numIn(CB.parte))}" placeholder="${CB.parteModo==='imp'?'0':'50'}" data-in="CB" data-k="parte">${CB.parteModo==='imp'?'€':'%'}</label></div>`:''}</div>${CB.rep?'<div class="note">Si pagáis los gastos a medias, apunta solo tu parte en «Gastos».</div>':''}</div>
      <div><div class="fl">Estado</div><div class="fg"><div class="fr"><span>Cobrado</span>${tg(CB.cobrado,'cbCob')}</div>${CB.cobrado?`<div class="fr"><span>Fecha de cobro</span><input type="date" value="${esc(CB.fcobro)}" data-in="CB" data-k="fcobro"></div>`:''}</div></div>
      ${b.cobro?'<button class="danger" data-a="cbDel">Borrar los datos de cobro</button>':''}</div>`}})}
-function brkHTML(){const r=calc({cobro:CB,gastos:[]});
+function brkHTML(){const r=calc({cobro:CB,gastos:[]});if(CB.rep){const t=calc({cobro:Object.assign({},CB,{rep:false}),gastos:[]});
+  return `<div class="mrow"><span>${CB.modo==='factura'?'Lo que queda de la factura <small>(sin IVA)</small>':CB.modo==='coop'?'Lo que paga la cooperativa':'Caché total'}</span><b>${eurTxt(t.queda)}</b></div><div class="mrow"><span>Parte de los compañeros${CB.parteModo==='imp'?'':' ('+numIn(100-pnum(CB.parte))+' %)'}</span><b>${eurTxt(-r.otros)}</b></div><div class="mrow hl"><span>Te queda</span><b>${eurTxt(r.queda)}</b></div>`}
   if(CB.modo==='factura')return `<div class="mrow"><span>Base</span><b>${eurTxt(r.base)}</b></div><div class="mrow"><span>+ IVA ${numIn(pnum(CB.iva))} %</span><b>${eurTxt(r.iva)}</b></div><div class="mrow"><span>− IRPF ${numIn(pnum(CB.irpf))} %</span><b>${eurTxt(-r.irpf)}</b></div><div class="mrow tot"><span>Total de la factura</span><b>${eurTxt(r.total)}</b></div><div class="mrow"><span>Te ingresan</span><b>${eurTxt(r.ingresan)}</b></div><div class="mrow hl"><span>Te queda <small>(sin el IVA, que es de Hacienda)</small></span><b>${eurTxt(r.queda)}</b></div>`;
   if(CB.modo==='coop')return `<div class="mrow"><span>Facturado</span><b>${eurTxt(r.bruto)}</b></div><div class="mrow"><span>− Comisión y cuotas ${numIn(pnum(CB.com))} %</span><b>${eurTxt(-r.com)}</b></div><div class="mrow hl"><span>Te ingresan</span><b>${eurTxt(r.ingresan)}</b></div>`;
   return `<div class="mrow hl"><span>Te queda</span><b>${eurTxt(r.queda)}</b></div>`}
@@ -1241,8 +1262,13 @@ Object.assign(S,{
   gastosBolo:()=>{const b=OB();if(b)gastosBolo(b)},
   cbModo:el=>{CB.modo=el.dataset.k;drawSheet()},
   cbPago:el=>{CB.pago=el.dataset.k;drawSheet()},
+  cbRep:()=>{CB.rep=!CB.rep;if(CB.rep&&(CB.parte===''||CB.parte==null))CB.parte=50;drawSheet()},
+  cbParte:el=>{CB.parteModo=el.dataset.k;CB.parte=el.dataset.k==='pct'?50:'';drawSheet()},
+  nudgeLater:el=>{const b=D.bolos.find(x=>x.id===el.dataset.id);if(b){b.luego=true;save();render()}},
+  nudgeCobro:el=>{OBID=el.dataset.id;const b=OB();if(b)cobroForm(b)},
+  nudgeGastos:el=>{OBID=el.dataset.id;const b=OB();if(b)gastosBolo(b)},
   cbCob:()=>{CB.cobrado=!CB.cobrado;if(CB.cobrado&&!CB.fcobro)CB.fcobro=todayStr();drawSheet()},
-  cbSave:()=>{['base','iva','irpf','bruto','com','imp'].forEach(k=>{if(CB[k]!==''&&CB[k]!=null)CB[k]=pnum(CB[k])});CBB.cobro=CB;save();render();openBolo(CBB.id)},
+  cbSave:()=>{['base','iva','irpf','bruto','com','imp','parte'].forEach(k=>{if(CB[k]!==''&&CB[k]!=null)CB[k]=pnum(CB[k])});CBB.cobro=CB;save();render();openBolo(CBB.id)},
   cbDel:()=>{const b=CBB;closeSheet();withUndo('Datos de cobro borrados',()=>{delete b.cobro})},
   gNew:el=>{gastoForm({isNew:true,gen:false,id:null,cat:el.dataset.k||'gasolina',imp:'',nota:''})},
   gEdit:el=>{const x=(GB.gastos||[]).find(g=>g.id===el.dataset.id);if(x)gastoForm(Object.assign(clone(x),{isNew:false,gen:false}))},
