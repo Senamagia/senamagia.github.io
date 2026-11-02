@@ -154,7 +154,7 @@ h1{font-size:34px;font-weight:800;letter-spacing:-.8px;padding:0 4px;margin-bott
 .fr{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:50px;padding:6px 8px 6px 14px;border-bottom:1px solid var(--sep)}
 .fr:last-child{border-bottom:0}
 .fr>span{font-size:16px}
-.fr input[type=text],.fr input[type=number],.fr input[type=tel],.fr input[type=email],.fr select{-webkit-appearance:none;appearance:none;border:0;background:transparent;outline:none;flex:1;min-width:0}
+.fr input[type=text],.fr input[type=number],.fr input[type=tel],.fr input[type=email],.fr input[type=password],.fr select{-webkit-appearance:none;appearance:none;border:0;background:transparent;outline:none;flex:1;min-width:0}
 .fr input.name{font-size:17px;font-weight:600}
 .step{display:flex;align-items:center;gap:4px}
 .step button{width:36px;height:36px;border-radius:10px;background:var(--field);font-size:20px;text-align:center}
@@ -404,7 +404,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='1.5';
+const APP_VERSION='1.6';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -479,7 +479,7 @@ function seed(){
 }
 let D;
 function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);const d=defaults();o.set=Object.assign(d.set,o.set||{});return Object.assign(d,o)}}catch(e){}return null}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast('No se ha podido guardar')}}
+function save(quiet){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast('No se ha podido guardar')}if(!quiet&&window.__sync)window.__sync.dirty()}
 D=load()||defaults();
 
 const num=id=>D.nums.find(x=>x.id===id);
@@ -940,6 +940,7 @@ function settingsHTML(){
      <div class="fr"><span>Presentación en los primeros segundos</span>${tg(st.universal,'setUni')}</div>
      <div class="fr"><span>Duración máxima del flash</span><div class="step"><button data-a="setOpen" data-d="-15">−</button><b>${fmt(st.openMax)}</b><button data-a="setOpen" data-d="15">+</button></div></div>
      ${RULES.filter(r=>r[0]!=='open').map(r=>`<div class="fr"><span style="font-size:15px">${esc(r[1])}<br><small style="color:var(--sec);font-size:12.5px">${esc(r[2])}</small></span>${tg(!st.off[r[0]],'setRule','data-k="'+r[0]+'"')}</div>`).join('')}</div></div>
+   ${accountSettingsHTML()}
    ${ctaSettingsHTML()}
    <div><div class="fl">Copia de seguridad</div><div class="act">
      <button data-a="exportData">Exportar copia</button><button data-a="importData">Importar copia</button>
@@ -975,11 +976,7 @@ $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
   r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(err){toast('El archivo no es una copia válida');return}
     if(!o||!Array.isArray(o.nums)||!Array.isArray(o.shows)){toast('El archivo no es una copia de Espatontos');return}
     openSheet({title:'Importar copia',body:()=>`<div class="note" style="padding:0 4px 12px">La copia tiene ${o.nums.length} números y ${o.shows.length} shows${o.ideas?', '+((o.ideas.notes||[]).length)+' notas, '+((o.ideas.ses||[]).length)+' sesiones de taller y '+((o.ideas.projs||[]).length)+' proyectos':''}.</div><div class="act"><button data-a="impMerge">Añadir a lo que ya tengo</button><button class="d" data-a="impReplace">Reemplazar todo</button></div>`});
-    S.impMerge=()=>{const ids={};D.nums.forEach(x=>ids[x.id]=1);o.nums.forEach(x=>{if(!ids[x.id])D.nums.push(N(x))});const sids={};D.shows.forEach(s=>sids[s.id]=1);o.shows.forEach(s=>{if(!sids[s.id])D.shows.push(Object.assign({items:[],sets:{A:[],B:[],X:[]},muted:[],checks:{}},s))});
-      (o.emos||[]).forEach(e=>{if(!D.emos.some(x=>x.id===e.id))D.emos.push(e)});(o.tiposPropios||[]).forEach(t=>{if(D.tiposPropios.indexOf(t)<0)D.tiposPropios.push(t)});
-      if(Array.isArray(o.gastos)){const hv={};D.gastos.forEach(x=>hv[x.id]=1);o.gastos.forEach(x=>{if(!hv[x.id])D.gastos.push(x)})}
-      if(o.ideas){const I=IDE();['folders','notes','ses','projs'].forEach(k=>{const have={};I[k].forEach(x=>have[x.id]=1);(o.ideas[k]||[]).forEach(x=>{if(!have[x.id])I[k].push(x)})})}
-      save();closeSheet();toast('Copia añadida')};
+    S.impMerge=()=>{mergeInto(o);save();closeSheet();toast('Copia añadida')};
     S.impReplace=()=>{closeSheet();withUndo('Copia restaurada',()=>{const d=defaults();o.set=Object.assign(d.set,o.set||{});D=Object.assign(d,o)})};
   };r.readAsText(f)});
 
@@ -1654,6 +1651,142 @@ Object.assign(SI,{
 });
 document.addEventListener('keydown',e=>{const el=e.target;if(e.key==='Enter'&&el&&el.dataset&&el.dataset.enter&&!e.isComposing){e.preventDefault();const f=A[el.dataset.enter]||S[el.dataset.enter];if(f)f(el)}});
 
+/* ============ cuenta y sincronización (Firebase) ============ */
+const FB_CONFIG=null; /* se rellena con la configuración del proyecto de Firebase */
+const FB_VER='10.12.2';
+const SYNC_KEY='espatontos-sync';
+const PARTS={repertorio:['nums','emos','tiposPropios'],shows:['shows','cur'],bolos:['bolos'],gastos:['gastos'],ideas:['ideas'],ajustes:['set']};
+const LOCAL_SET=['tab','seenGuide'];
+function mergeInto(o){if(!o)return;
+  const byId=(k,mk)=>{if(!Array.isArray(o[k]))return;D[k]=D[k]||[];const ids={};D[k].forEach(x=>ids[x.id]=1);o[k].forEach(x=>{if(x&&!ids[x.id])D[k].push(mk?mk(x):x)})};
+  byId('nums',x=>N(x));byId('shows',s=>Object.assign({items:[],sets:{A:[],B:[],X:[]},muted:[],checks:{}},s));byId('bolos');byId('gastos');byId('emos');
+  (o.tiposPropios||[]).forEach(t=>{if(D.tiposPropios.indexOf(t)<0)D.tiposPropios.push(t)});
+  if(o.ideas){const I=IDE();['folders','notes','ses','projs'].forEach(k=>{const have={};I[k].forEach(x=>have[x.id]=1);(o.ideas[k]||[]).forEach(x=>{if(!have[x.id])I[k].push(x)})})}}
+function fnv(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)}return (h>>>0).toString(16)+':'+s.length}
+function partJSON(name){const o={};PARTS[name].forEach(k=>{if(k==='set'){const st=Object.assign({},D.set);LOCAL_SET.forEach(x=>delete st[x]);o.set=st}else o[k]=D[k]});return JSON.stringify(o)}
+function applyPart(name,j){const o=JSON.parse(j);PARTS[name].forEach(k=>{if(!(k in o))return;if(k==='set'){const keep={};LOCAL_SET.forEach(x=>keep[x]=D.set[x]);D.set=Object.assign(defaults().set,o.set,keep)}else D[k]=o[k]});
+  if(name==='ideas')D.ideas=Object.assign(ideasDef(),D.ideas||{});if(!D.shows.some(s=>s.id===D.cur))D.cur=D.shows[0]?D.shows[0].id:null}
+function hasLocalData(){return D.nums.length||D.shows.length||D.bolos.length||(D.gastos||[]).length||IDE().notes.length||IDE().ses.length||IDE().projs.length}
+
+const SYNC={fb:null,user:null,meta:null,status:'off',err:'',timer:0,unsub:null,queue:{},applying:false,lastOk:0,
+  enabled(){return !!(FB_CONFIG||window.FBX_MOCK)},
+  loadMeta(){try{this.meta=JSON.parse(localStorage.getItem(SYNC_KEY))||null}catch(e){this.meta=null}
+    if(!this.meta)this.meta={dev:uid(),uid:null,email:'',last:{}};return this.meta},
+  saveMeta(){try{localStorage.setItem(SYNC_KEY,JSON.stringify(this.meta))}catch(e){}},
+  async load(){if(this.fb)return this.fb;
+    if(window.FBX_MOCK){this.fb=window.FBX_MOCK;return this.fb}
+    const base='https://www.gstatic.com/firebasejs/'+FB_VER+'/';
+    const [A,Au,F]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-firestore.js')]);
+    const app=A.initializeApp(FB_CONFIG),auth=Au.getAuth(app),db=F.getFirestore(app);auth.languageCode='es';
+    const col=u=>F.collection(db,'users',u,'parts');
+    this.fb={
+      onAuth:cb=>Au.onAuthStateChanged(auth,u=>cb(u?{uid:u.uid,email:u.email}:null)),
+      signIn:(e,p)=>Au.signInWithEmailAndPassword(auth,e,p),
+      signUp:(e,p)=>Au.createUserWithEmailAndPassword(auth,e,p),
+      reset:e=>Au.sendPasswordResetEmail(auth,e),
+      signOut:()=>Au.signOut(auth),
+      delUser:()=>Au.deleteUser(auth.currentUser),
+      getParts:async u=>{const s=await F.getDocs(col(u));const r={};s.forEach(d=>r[d.id]=d.data());return r},
+      putPart:(u,name,data)=>F.setDoc(F.doc(db,'users',u,'parts',name),data),
+      delPart:(u,name)=>F.deleteDoc(F.doc(db,'users',u,'parts',name)),
+      listen:(u,cb)=>F.onSnapshot(col(u),s=>{const r={};s.docChanges().forEach(ch=>{if(ch.type!=='removed')r[ch.doc.id]=ch.doc.data()});cb(r)},()=>{})
+    };return this.fb},
+  async start(){if(!this.enabled())return;this.loadMeta();if(!this.meta.uid)return;
+    try{const fb=await this.load();fb.onAuth(u=>{if(u&&u.uid===this.meta.uid){this.user=u;this.connect()}else if(!u){this.user=null;this.setStatus('off')}})}catch(e){this.setStatus('offline')}},
+  setStatus(s,err){this.status=s;this.err=err||'';if(SH&&SH.title==='Ajustes')drawSheet();if(SH&&SH.title==='Tu cuenta')drawSheet()},
+  connect(){if(this.unsub)return;this.setStatus('syncing');
+    this.unsub=this.fb.listen(this.user.uid,r=>this.incoming(r));this.push(true)},
+  incoming(r){let changed=false;
+    Object.keys(r).forEach(name=>{if(!PARTS[name])return;const d=r[name];if(!d||typeof d.j!=='string')return;const h=fnv(d.j);
+      if(h===this.meta.last[name])return;
+      const localH=fnv(partJSON(name)),localDirty=localH!==this.meta.last[name];
+      if(d.dev===this.meta.dev&&!localDirty){this.meta.last[name]=h;return}
+      if(localDirty&&(this.meta.editT||0)>(d.t||0))return; /* lo de este dispositivo es más nuevo: se subirá */
+      if(SH){this.queue[name]=d.j;return}
+      this.applying=true;applyPart(name,d.j);this.meta.last[name]=h;changed=true;this.applying=false});
+    this.saveMeta();if(changed){save(true);render();toast('Datos actualizados desde otro dispositivo')}
+    this.lastOk=Date.now();if(this.status!=='error')this.setStatus('ok')},
+  flushQueue(){const names=Object.keys(this.queue);if(!names.length||SH)return;names.forEach(n=>{applyPart(n,this.queue[n]);this.meta.last[n]=fnv(this.queue[n])});this.queue={};this.saveMeta();save(true);render()},
+  dirty(){if(!this.user||this.applying)return;this.meta.editT=Date.now();this.saveMeta();clearTimeout(this.timer);this.timer=setTimeout(()=>this.push(),1500)},
+  async push(force){if(!this.user)return;const fb=this.fb,u=this.user.uid;let n=0;
+    try{for(const name of Object.keys(PARTS)){const j=partJSON(name),h=fnv(j);if(!force&&h===this.meta.last[name])continue;if(force&&h===this.meta.last[name])continue;
+        if(j.length>950000){this.setStatus('error','Hay demasiados datos en «'+name+'» para guardarlos en la nube');continue}
+        await fb.putPart(u,name,{j,t:Date.now(),dev:this.meta.dev});this.meta.last[name]=h;n++}
+      this.saveMeta();this.lastOk=Date.now();this.setStatus('ok')}
+    catch(e){this.setStatus('offline');clearTimeout(this.timer);this.timer=setTimeout(()=>this.push(),30000)}
+    return n},
+  async login(email,pass,create){const fb=await this.load();
+    const cred=create?await fb.signUp(email,pass):await fb.signIn(email,pass);const user=cred.user?{uid:cred.user.uid,email:cred.user.email}:cred;
+    this.loadMeta();const same=this.meta.uid===user.uid;this.meta.uid=user.uid;this.meta.email=user.email||email;if(!same)this.meta.last={};this.saveMeta();
+    const remote=await fb.getParts(user.uid),names=Object.keys(remote).filter(n=>PARTS[n]&&remote[n]&&typeof remote[n].j==='string');
+    this.user=user;
+    if(!names.length){this.meta.last={};this.saveMeta();await this.push(true);this.connect();return 'subido'}
+    if(!hasLocalData()||same){names.forEach(n=>{applyPart(n,remote[n].j);this.meta.last[n]=fnv(remote[n].j)});this.saveMeta();save(true);this.connect();return 'bajado'}
+    this.pendingRemote=remote;return 'elegir'},
+  async resolve(mode){const remote=this.pendingRemote;this.pendingRemote=null;
+    const backup=JSON.stringify(D);try{localStorage.setItem('espatontos-antes-de-sincronizar',backup)}catch(e){}
+    const mine=JSON.parse(backup);
+    Object.keys(remote).forEach(n=>{if(PARTS[n]&&typeof remote[n].j==='string'){applyPart(n,remote[n].j);this.meta.last[n]=fnv(remote[n].j)}});
+    if(mode==='juntar')mergeInto(mine);
+    this.saveMeta();save(true);this.connect();if(mode==='juntar')this.push()},
+  async logout(wipe){try{if(this.unsub)this.unsub()}catch(e){}this.unsub=null;try{await this.fb.signOut()}catch(e){}
+    this.user=null;this.meta.uid=null;this.meta.email='';this.meta.last={};this.saveMeta();this.setStatus('off');
+    if(wipe){const keep={tab:D.set.tab,seenGuide:true};D=defaults();Object.assign(D.set,keep);save(true)}},
+  async deleteAll(){const u=this.user.uid;for(const n of Object.keys(PARTS)){await this.fb.delPart(u,n)}await this.fb.delUser();await this.logout(false)}
+};
+function authErr(e){const c=(e&&e.code)||'';return ({'auth/invalid-email':'El correo no es válido.','auth/missing-password':'Escribe la contraseña.','auth/weak-password':'La contraseña es demasiado corta: mínimo 6 caracteres.',
+  'auth/email-already-in-use':'Ya existe una cuenta con ese correo. Pulsa «Entrar».','auth/invalid-credential':'Correo o contraseña incorrectos.','auth/wrong-password':'Correo o contraseña incorrectos.',
+  'auth/user-not-found':'No hay ninguna cuenta con ese correo.','auth/too-many-requests':'Demasiados intentos. Espera un poco y vuelve a probar.','auth/network-request-failed':'No hay conexión a internet.',
+  'auth/requires-recent-login':'Por seguridad, cierra sesión y vuelve a entrar antes de borrar la cuenta.'})[c]||'No se ha podido completar. '+(c?'('+c.replace('auth/','')+')':'Comprueba tu conexión.')}
+let AU={email:'',pass:'',msg:'',busy:false};
+function syncAgo(){if(!SYNC.lastOk)return '';const s=Math.round((Date.now()-SYNC.lastOk)/1000);return s<60?'hace un momento':s<3600?'hace '+Math.round(s/60)+' min':'hace '+Math.round(s/3600)+' h'}
+function accountSettingsHTML(){if(!SYNC.enabled())return '';const m=SYNC.loadMeta();
+  if(!m.uid)return `<div><div class="fl">Cuenta</div><div class="act"><button data-a="authOpen" style="color:var(--accent);font-weight:600">Iniciar sesión o crear cuenta</button></div><div class="note">Con una cuenta, tus datos se guardan en la nube y puedes abrirlos desde el iPhone, el iPad o cualquier otro dispositivo. Sin cuenta, todo sigue guardándose solo en este dispositivo.</div></div>`;
+  const st={ok:'Sincronizado '+syncAgo(),syncing:'Sincronizando…',offline:'Sin conexión: se subirá en cuanto vuelva internet',error:SYNC.err||'Error al sincronizar',off:'Conectando…'}[SYNC.status]||'';
+  return `<div><div class="fl">Cuenta</div><div class="fg"><div class="fr"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(m.email)}</span><span class="pl ${SYNC.status==='ok'?'ok':SYNC.status==='error'?'wa':'pd'}" style="flex:none">${SYNC.status==='ok'?'En la nube':SYNC.status==='offline'?'Sin conexión':SYNC.status==='error'?'Error':'…'}</span></div></div><div class="note">${esc(st)}</div>
+   <div class="act" style="margin-top:10px"><button data-a="syncNow">Sincronizar ahora</button><button data-a="authOut">Cerrar sesión</button></div></div>`}
+function authSheet(){AU.msg='';openSheet({title:'Tu cuenta',left:'Cancelar',body:()=>`<div class="f">
+  <div class="note" style="padding:0 4px">Entra con tu cuenta o crea una nueva. Tus datos se guardarán en la nube y podrás abrirlos desde otros dispositivos.</div>
+  <div class="fg"><div class="fr"><input type="email" inputmode="email" autocomplete="username" placeholder="Correo" value="${esc(AU.email)}" data-in="AU" data-k="email" aria-label="Correo"></div><div class="fr"><input type="password" autocomplete="current-password" placeholder="Contraseña (mínimo 6 caracteres)" value="${esc(AU.pass)}" data-in="AU" data-k="pass" aria-label="Contraseña" data-enter="authIn"></div></div>
+  ${AU.msg?`<div class="note" style="color:${AU.ok?'var(--good)':'var(--badText)'};font-weight:600">${esc(AU.msg)}</div>`:''}
+  <div class="act"><button data-a="authIn" style="background:var(--accent);color:var(--onAccent);font-weight:600">${AU.busy?'Un momento…':'Entrar'}</button><button data-a="authUp">Crear cuenta nueva</button></div>
+  <button class="link" data-a="authReset" style="min-height:44px;align-self:center">He olvidado mi contraseña</button>
+  <div class="note">Cada persona solo puede ver sus propios datos. Si cierras sesión, lo que hay en este dispositivo se queda aquí.</div></div>`})}
+function chooseSheet(){openSheet({title:'Ya tienes datos en la nube',left:' ',cancelA:'noop',body:()=>`<div class="f">
+  <div class="note" style="padding:0 4px">Esta cuenta ya tiene datos guardados y en este dispositivo también hay datos. ¿Qué hacemos?</div>
+  <div class="act"><button data-a="syncJoin" style="color:var(--accent);font-weight:600">Juntar las dos cosas</button><button data-a="syncCloud">Usar solo lo de la nube</button></div>
+  <div class="note">«Juntar» suma lo de los dos sitios sin perder nada. «Usar solo lo de la nube» sustituye lo de este dispositivo; por si acaso, guardo una copia de lo que había aquí.</div></div>`})}
+async function authDo(kind){if(AU.busy)return;const e=(AU.email||'').trim(),p=AU.pass||'';
+  if(kind==='reset'){if(!e){AU.msg='Escribe tu correo arriba y vuelve a pulsar.';AU.ok=false;drawSheet();return}
+    try{AU.busy=true;drawSheet();await (await SYNC.load()).reset(e);AU.msg='Te hemos mandado un correo para cambiar la contraseña. Mira también en spam.';AU.ok=true}catch(err){AU.msg=authErr(err);AU.ok=false}AU.busy=false;drawSheet();return}
+  if(!e||!p){AU.msg='Escribe tu correo y tu contraseña.';AU.ok=false;drawSheet();return}
+  AU.busy=true;AU.msg='';drawSheet();
+  try{const r=await SYNC.login(e,p,kind==='up');AU.busy=false;AU.pass='';
+    if(r==='elegir'){chooseSheet();return}
+    closeSheet();toast(r==='bajado'?'Sesión iniciada: datos descargados de la nube':'Sesión iniciada: tus datos ya están en la nube')}
+  catch(err){AU.busy=false;AU.msg=authErr(err);AU.ok=false;drawSheet()}}
+Object.assign(S,{
+  noop:()=>{},
+  authOpen:()=>authSheet(),
+  authIn:()=>authDo('in'),authUp:()=>authDo('up'),authReset:()=>authDo('reset'),
+  syncJoin:async()=>{await SYNC.resolve('juntar');closeSheet();toast('Datos juntados y guardados en la nube')},
+  syncCloud:async()=>{await SYNC.resolve('nube');closeSheet();toast('Usando los datos de la nube')},
+  syncNow:async()=>{SYNC.setStatus('syncing');await SYNC.push();toast(SYNC.status==='ok'?'Sincronizado':'Sin conexión: se subirá más tarde')},
+  authOut:()=>openSheet({title:'Cerrar sesión',body:()=>`<div class="f"><div class="note" style="padding:0 4px">Tus datos siguen guardados en la nube. ¿Qué hacemos con lo que hay en este dispositivo?</div>
+   <div class="act"><button data-a="outKeep">Dejarlos aquí</button><button class="d" data-a="outWipe">Borrarlos de este dispositivo</button></div>
+   <div class="note">Borrarlos es útil si el dispositivo no es tuyo. Volverán al iniciar sesión otra vez.</div>
+   <div class="act" style="margin-top:14px"><button class="d" data-a="delAccount">Eliminar mi cuenta y mis datos de la nube</button></div></div>`}),
+  outKeep:async()=>{await SYNC.logout(false);closeSheet();toast('Sesión cerrada')},
+  outWipe:async()=>{await SYNC.logout(true);closeSheet();toast('Sesión cerrada y datos borrados de este dispositivo')},
+  delAccount:()=>openSheet({title:'Eliminar cuenta',body:()=>`<div class="f"><div class="note" style="padding:0 4px">Se borran tu cuenta y todos tus datos de la nube. Lo que hay en este dispositivo se queda aquí. No se puede deshacer.</div><div class="act"><button class="d" data-a="delAccountOk">Sí, eliminar mi cuenta</button><button data-a="closeSheet">Cancelar</button></div></div>`}),
+  delAccountOk:async()=>{try{await SYNC.deleteAll();closeSheet();toast('Cuenta eliminada')}catch(e){closeSheet();toast(authErr(e))}}
+});
+Object.assign(SI,{AU:el=>{AU[el.dataset.k]=el.value}});
+addEventListener('online',()=>{if(SYNC.user)SYNC.push()});
+setInterval(()=>{if(SYNC.user)SYNC.flushQueue()},2000);
+
+window.__sync=SYNC;
+
 /* ============ arranque ============ */
 addEventListener('resize',()=>{if(tab==='mon')render()});
 render();
@@ -1661,6 +1794,7 @@ $('#splashVer').textContent='Versión '+APP_VERSION;
 S.hideSplash=()=>{const sp=$('#splash');if(sp&&!sp.classList.contains('off')){sp.classList.add('off');setTimeout(()=>sp.remove(),500)}};
 setTimeout(S.hideSplash,1500);
 if(!D.set.seenGuide){D.set.seenGuide=true;save();setTimeout(openGuide,1900)}
+SYNC.start();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
