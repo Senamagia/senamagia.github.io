@@ -132,7 +132,7 @@ h1{font-size:34px;font-weight:800;letter-spacing:-.8px;padding:0 4px;margin-bott
 .sc.cur{box-shadow:inset 0 0 0 2px var(--accent),var(--shadow)}
 .sc .more{position:absolute;top:8px;right:8px}
 /* tab bar */
-#tabs{position:fixed;left:0;right:0;bottom:0;height:calc(64px + var(--sb));padding:6px 8px var(--sb);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--bar);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--sep);z-index:20}
+#tabs{position:fixed;left:0;right:0;bottom:0;height:calc(64px + var(--sb));padding:6px 8px var(--sb);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--bar);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--sep);z-index:20}
 #tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--sec);font-size:10.5px;font-weight:500}
 #tabs button.on{color:var(--accent);font-weight:600}
 /* sheet */
@@ -213,21 +213,135 @@ textarea{width:100%;min-height:90px;border:0;border-radius:14px;background:var(-
 #splash small{position:absolute;bottom:calc(28px + var(--sb));font-size:13px;color:var(--sec)}
 #splash.off{opacity:0;pointer-events:none}
 .note{font-size:13px;color:var(--sec);line-height:19px;padding:6px 4px 0}
+/* ---- ideas ---- */
+.wrap.ide{padding-bottom:100px}
+#fab{position:fixed;right:18px;bottom:calc(80px + var(--sb));width:56px;height:56px;border-radius:28px;background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.25);z-index:30}
+#fab:active{transform:scale(.94)}
+@media (min-width:860px){#fab{right:calc(50% - 380px + 18px)}}
+.chev{color:var(--sec);font-size:20px;flex:none}
+.inbox{display:flex;align-items:center;gap:12px;width:100%;padding:14px;margin-bottom:6px;text-align:left}
+.inbox .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.inbox .tx b{font-size:16px}.inbox .tx small{font-size:12.5px;color:var(--sec)}
+.ib{width:36px;height:36px;border-radius:18px;background:var(--accent);color:var(--onAccent);font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.ib.z{background:var(--field);color:var(--sec)}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:600px){.fgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.fold{padding:14px;display:flex;flex-direction:column;gap:4px;text-align:left;min-height:96px;min-width:0}
+.fold i{width:26px;height:20px;border-radius:5px;margin-bottom:6px}
+.fold b{font-size:15.5px;overflow-wrap:anywhere}.fold small{font-size:12.5px;color:var(--sec)}
+.fdot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:6px;vertical-align:1px}
+.nt{padding:12px 14px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px}
+.ntb{text-align:left;display:flex;flex-direction:column;gap:4px;width:100%}
+.nmeta{font-size:12px;color:var(--sec)}
+.nt p{font-size:16px;line-height:22px;white-space:pre-wrap;overflow-wrap:anywhere}
+.wrapchips.sm{gap:6px}.wrapchips.sm .tc{height:30px;font-size:13px;padding:0 11px}
+.sesc{padding:14px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;text-align:left;width:100%}
+.objs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.obj{padding:4px 10px;border-radius:10px;background:var(--field);font-weight:700;font-size:15px}
+.x2{color:var(--sec)}
+.sesc .m{font-size:13px;color:var(--sec)}.sesc .prog{margin:0}
+.ses .hdr{gap:8px}
+.steps{display:flex;gap:6px;margin:2px 4px 12px}
+.steps button{flex:1;height:28px;border-radius:14px;background:var(--field);color:var(--sec);font-size:12.5px;font-weight:600;text-align:center}
+.steps button.on{background:var(--accent);color:var(--onAccent)}
+.steps button.d{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+.sh1{font-size:28px;margin-bottom:10px}
+.cbtn,.ubtn{height:32px;padding:0 13px;border-radius:16px;background:var(--field);font-size:14px;font-weight:600;white-space:nowrap}
+.cbtn.on{background:#E8B84A;color:#111}
+.ubtn{color:var(--accent)}.ubtn.on{background:var(--accent);color:var(--onAccent)}
+.cleanbar,.unitbar{margin:2px 0 10px;padding:10px 12px;border-radius:12px;font-size:13px;line-height:18px}
+.cleanbar{background:var(--warnBg);color:var(--warnText)}
+.unitbar{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.cleanbar b,.unitbar b{display:block;font-size:14px}
+.struck{opacity:.38;text-decoration:line-through}
+.struck .k,.struck .v,.struck b,.struck span{text-decoration:line-through}
+.mr{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 14px;border-bottom:1px solid var(--sep);width:100%;text-align:left}
+.mr:last-child{border-bottom:0}
+.mr .k{font-size:14px;color:var(--sec);flex:none;width:118px}
+.mr .v{flex:1;min-width:0;font-size:15px;text-align:right;border:0;background:transparent;outline:none}
+.mr input.v::placeholder{color:var(--sec);opacity:.55}
+.inl{flex:1;min-width:0;border:0;background:transparent;outline:none;font-size:16px}
+.attr{display:inline-flex;align-items:center;gap:4px;padding-right:6px}
+.attr button{width:22px;height:22px;border-radius:11px;color:var(--sec);font-size:16px;text-align:center}
+.inv .ir{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;border-bottom:1px solid var(--sep);font-size:15px;width:100%;text-align:left;min-height:50px}
+.inv .ir:last-child{border-bottom:0}
+.inv .fr2{flex:1;color:var(--sec);min-width:0;overflow-wrap:anywhere}
+.inv .ar{color:var(--sec);flex:none}
+.inv .ir input,.inv .ir b{flex:1.2;min-width:0;border:0;background:transparent;outline:none;color:var(--accent);font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.inv .ir input::placeholder{color:var(--sec);font-weight:400;opacity:.6}
+.lamp{width:32px;height:32px;border-radius:16px;background:var(--field);display:flex;align-items:center;justify-content:center;color:var(--sec);flex:none}
+.lamp.on{background:var(--warnBg);color:var(--warnText)}
+.hint{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:12px;border-radius:14px;background:var(--card);font-size:13.5px;color:var(--sec);line-height:19px}
+.hint b{width:30px;height:30px;flex:none;border-radius:15px;background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center}
+.prepgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:600px){.prepgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.pp{padding:12px;display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:14.5px;font-weight:600;text-align:left;min-width:0}
+.pp span{min-width:0;overflow-wrap:anywhere}
+.pp em{font-style:normal;color:var(--accent)}.pp s{text-decoration:none;color:var(--sec);font-size:18px;flex:none}
+.pp.on{box-shadow:inset 0 0 0 2px #E8B84A}.pp.on s{color:#E8B84A}
+.tmode{margin-bottom:12px}
+.tree{padding:4px 0}
+.trw{display:flex;align-items:center;gap:6px;min-height:44px;padding:0 10px 0 calc(8px + var(--d)*20px);position:relative;font-size:15px;width:100%;text-align:left}
+.trw+.trw{border-top:1px solid var(--sep)}
+.trw::before{content:"";position:absolute;left:calc(var(--d)*20px - 4px);top:0;bottom:0;width:2px;background:color-mix(in srgb,var(--accent) 35%,transparent)}
+.trw[style*="--d:0"]::before{display:none}
+.tgl{width:20px;height:32px;color:var(--sec);font-size:12px;text-align:center;flex:none}
+.tn{flex:1;min-width:0;font-weight:500;text-align:left;min-height:40px;overflow-wrap:anywhere}
+.tn small{color:var(--sec);font-weight:400}
+.trw[style*="--d:1"] .tn{font-weight:650}
+.tn.root{font-size:17px;font-weight:800;color:var(--accent);display:flex;align-items:center}
+.tadd{width:30px;height:30px;border-radius:15px;background:var(--field);color:var(--accent);font-size:19px;display:flex;align-items:center;justify-content:center;flex:none}
+.trw.newb{color:var(--accent);font-weight:600}
+.board{position:relative;height:max(380px,calc(100vh - 340px));border-radius:16px;overflow:hidden;background:var(--card);background-image:radial-gradient(var(--sep) 1px,transparent 1px);background-size:18px 18px;touch-action:none}
+.bin{position:absolute;left:0;top:0;transform-origin:0 0}
+.blines{position:absolute;left:0;top:0;overflow:visible}
+.blines line{stroke:var(--sep);stroke-width:2}
+[data-theme=dark] .blines line{stroke:#3A3A44}
+.nd{position:absolute;transform:translate(-50%,-50%);padding:6px 11px;border-radius:14px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--sep);font-size:13px;font-weight:600;white-space:nowrap}
+.nd.s{font-size:11.5px;font-weight:500;padding:4px 9px}
+.nd.c{background:var(--accent);color:var(--onAccent);font-size:16px;padding:9px 16px;box-shadow:none;font-weight:700}
+.zoom{position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:14px;padding:4px;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.zoom button{width:36px;height:36px;border-radius:10px;background:var(--field);font-size:18px;text-align:center}
+.zoom b{font-size:13px;min-width:44px;text-align:center}
+.cnt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0 4px}
+.cnt div{background:var(--card);border-radius:12px;padding:8px 10px}.cnt b{font-size:20px;display:block}.cnt small{font-size:12px;color:var(--sec)}
+.sec-t .link{font-size:13px}
+.uniendo .tc.on{background:var(--accent);color:var(--onAccent);box-shadow:none;opacity:1}
+.li.hy.sel{box-shadow:inset 0 0 0 2px var(--accent)}
+.li.hy b{font-weight:400}
+.unibar{position:fixed;left:10px;right:10px;bottom:calc(74px + var(--sb));z-index:30;background:var(--sheet);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 0 0 2px var(--accent);max-width:720px;margin:0 auto}
+.unibar textarea{min-height:0;font-size:15px}
+.ub-t{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.uc{padding:4px 10px;border-radius:10px;background:var(--accent);color:var(--onAccent);font-weight:700;font-size:14px;overflow-wrap:anywhere}
+.uplus{color:var(--sec);font-weight:700}
+.uniendo{padding-bottom:260px}
+.nextb{width:100%;justify-content:center;height:50px;border-radius:14px;margin-top:20px;font-size:15px}
+.kchips{margin-bottom:12px}
+.pj{padding:14px;margin-bottom:12px;display:flex;flex-direction:column;gap:4px}
+.pj b{font-size:16px;overflow-wrap:anywhere}.pj small{font-size:12.5px;color:var(--sec)}
+.pjb{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--sec);margin-top:8px}
+.pjb span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pjb .link{flex:none;white-space:nowrap}
+.kcol{display:none}.kcol.act{display:block}.khead{display:none}
+.kempty{padding:10px 4px 16px}
+@media (min-width:860px){.kchips{display:none}.kan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.kcol{display:block;background:var(--field);border-radius:16px;padding:4px 10px 10px;min-height:200px}.khead{display:flex;margin-top:10px}}
+
 </style>
 </head>
 <body>
 <div id="views">
   <section class="view" id="v-rep"></section>
   <section class="view" id="v-mon"></section>
+  <section class="view" id="v-ide"></section>
   <section class="view" id="v-mat"></section>
   <section class="view" id="v-sho"></section>
 </div>
 <nav id="tabs">
   <button data-a="tab" data-t="rep"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>Repertorio</button>
   <button data-a="tab" data-t="mon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-1 4-8 7-8s3 6 6 6 3-7 5-9"/><circle cx="10" cy="9" r="1.6" fill="currentColor"/><circle cx="16" cy="15" r="1.6" fill="currentColor"/></svg>Montar</button>
+  <button data-a="tab" data-t="ide"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>Ideas</button>
   <button data-a="tab" data-t="mat"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="7.5" width="17" height="12" rx="3"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 12.5h17"/></svg>Material</button>
   <button data-a="tab" data-t="sho"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v8a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2z"/><path d="M12 9.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z" fill="currentColor" stroke="none"/></svg>Shows</button>
 </nav>
+<button id="fab" data-a="fab" aria-label="Nota rápida"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></button>
 <div id="dim" data-a="closeSheet"></div>
 <div id="sheet"><div class="grab"><i></i></div><div class="sh" id="shead"></div><div id="sbody"></div></div>
 <div id="splash" data-a="hideSplash"><img src="icon-512.png" alt=""><b>Espatontos</b><span>Monta tu show</span><small id="splashVer"></small></div>
@@ -247,7 +361,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='1.2';
+const APP_VERSION='1.3';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -442,7 +556,7 @@ function applyTheme(){
 if(mq&&mq.addEventListener)mq.addEventListener('change',applyTheme);else if(mq&&mq.addListener)mq.addListener(applyTheme);
 
 /* ============ vistas ============ */
-let tab='mon',repQ='',repF='todos';
+let tab=(D.set&&['rep','mon','ide','mat','sho'].indexOf(D.set.tab)>=0)?D.set.tab:'mon',repQ='',repF='todos';
 const ICON={
   gear:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
   plus:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 2.5v11M2.5 8h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
@@ -459,7 +573,9 @@ function render(){
   applyTheme();
   $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+tab));
-  ({rep:renderRep,mon:renderMon,mat:renderMat,sho:renderSho})[tab]();
+  ({rep:renderRep,mon:renderMon,ide:renderIde,mat:renderMat,sho:renderSho})[tab]();
+  const fb=$('#fab');if(fb)fb.style.display=(tab==='ide'&&!(IV.view==='ses'&&IV.unir))?'':'none';
+  if(D.set.tab!==tab){D.set.tab=tab;save()}
 }
 function keepScroll(el,html){const y=el.scrollTop;el.innerHTML=html;el.scrollTop=y}
 
@@ -643,7 +759,7 @@ function withUndo(msg,fn){const snap=JSON.stringify(D);fn();save();render();toas
 
 let PICK=null;
 const A={
-  tab:el=>{tab=el.dataset.t;if(SH)closeSheet();else render();$('#v-'+tab).scrollTop=0},
+  tab:el=>{if(el.dataset.t==='ide'&&tab==='ide'&&!SH){IV.view=null;IV.clean=false;IV.unir=false;IV.sel=[]}tab=el.dataset.t;if(SH)closeSheet();else render();$('#v-'+tab).scrollTop=0},
   settings:()=>openSettings(),
   closeSheet:()=>closeSheet(),
   repF:el=>{repF=el.dataset.f;render()},
@@ -811,9 +927,11 @@ function exportData(){
 $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(err){toast('El archivo no es una copia válida');return}
     if(!o||!Array.isArray(o.nums)||!Array.isArray(o.shows)){toast('El archivo no es una copia de Espatontos');return}
-    openSheet({title:'Importar copia',body:()=>`<div class="note" style="padding:0 4px 12px">La copia tiene ${o.nums.length} números y ${o.shows.length} shows.</div><div class="act"><button data-a="impMerge">Añadir a lo que ya tengo</button><button class="d" data-a="impReplace">Reemplazar todo</button></div>`});
+    openSheet({title:'Importar copia',body:()=>`<div class="note" style="padding:0 4px 12px">La copia tiene ${o.nums.length} números y ${o.shows.length} shows${o.ideas?', '+((o.ideas.notes||[]).length)+' notas, '+((o.ideas.ses||[]).length)+' sesiones de taller y '+((o.ideas.projs||[]).length)+' proyectos':''}.</div><div class="act"><button data-a="impMerge">Añadir a lo que ya tengo</button><button class="d" data-a="impReplace">Reemplazar todo</button></div>`});
     S.impMerge=()=>{const ids={};D.nums.forEach(x=>ids[x.id]=1);o.nums.forEach(x=>{if(!ids[x.id])D.nums.push(N(x))});const sids={};D.shows.forEach(s=>sids[s.id]=1);o.shows.forEach(s=>{if(!sids[s.id])D.shows.push(Object.assign({items:[],sets:{A:[],B:[],X:[]},muted:[],checks:{}},s))});
-      (o.emos||[]).forEach(e=>{if(!D.emos.some(x=>x.id===e.id))D.emos.push(e)});(o.tiposPropios||[]).forEach(t=>{if(D.tiposPropios.indexOf(t)<0)D.tiposPropios.push(t)});save();closeSheet();toast('Copia añadida')};
+      (o.emos||[]).forEach(e=>{if(!D.emos.some(x=>x.id===e.id))D.emos.push(e)});(o.tiposPropios||[]).forEach(t=>{if(D.tiposPropios.indexOf(t)<0)D.tiposPropios.push(t)});
+      if(o.ideas){const I=IDE();['folders','notes','ses','projs'].forEach(k=>{const have={};I[k].forEach(x=>have[x.id]=1);(o.ideas[k]||[]).forEach(x=>{if(!have[x.id])I[k].push(x)})})}
+      save();closeSheet();toast('Copia añadida')};
     S.impReplace=()=>{closeSheet();withUndo('Copia restaurada',()=>{const d=defaults();o.set=Object.assign(d.set,o.set||{});D=Object.assign(d,o)})};
   };r.readAsText(f)});
 
@@ -824,6 +942,7 @@ const GUIDE=[
  ['Repertorio: tus fichas','<p>Cada número tiene su ficha. Lo más importante es que sea realista, porque el asistente trabaja con estos datos:</p><ul><li><b>Duración</b> en minutos y segundos.</li><li><b>Emoción</b> principal que transmite. Puedes crear las tuyas y elegir su color en Ajustes.</li><li><b>Potencia</b> del 1 (suave) al 5 (demoledora): cuánto impacta en el público.</li><li><b>Tipo de efecto</b>: puedes marcar varios, y crear los tuyos.</li><li><b>Público</b>: voluntarios, si suben al escenario y si es un número de presentación.</li><li><b>Condiciones</b>: si aguanta público rodeando, si necesita mesa o música, si termina limpio y si pide al público sujetar cosas.</li><li><b>Reset</b>: cuánto tardas en tenerlo listo otra vez.</li><li><b>Material</b>: dónde va (maleta, bolsillo o mesa) y si es consumible, con las unidades que te quedan.</li></ul><p>Usa el buscador y los filtros para encontrar números rápido. «Apto cóctel» muestra los que aguantan rodeado, duran 3 minutos o menos y tienen potencia 4 o 5.</p>'],
  ['Montar un show','<ul><li><b>Añadir:</b> pulsa «Añadir número» y elige de tu repertorio. En el iPad en horizontal tienes el repertorio a la derecha: tócalo para añadir.</li><li><b>Ordenar:</b> mantén el dedo en el icono ≡ de la derecha y arrastra.</li><li><b>Opciones de un número:</b> toca su nombre para editar la ficha, añadir una transición o quitarlo del show.</li><li><b>Transiciones:</b> entre número y número toca «+ transición» y apunta la frase puente, el chiste o el cambio de música.</li><li><b>La curva:</b> cada punto es un número, su altura es la potencia y su color la emoción. La línea gris discontinua es la curva ideal de la plantilla elegida.</li><li><b>El asistente:</b> bajo la curva aparecen los avisos más importantes. Tócalos para leer la explicación. Si algo lo haces a propósito, ocúltalo solo para ese show.</li></ul><p>Los colores de los avisos: rojo es importante, naranja es para revisar y gris es una sugerencia.</p>'],
  ['Material y shows','<p><b>Material</b> junta automáticamente el material de todos los números del show, sin repetidos y agrupado por maleta, bolsillo y mesa. Ve marcando lo que metes al hacer la maleta. «Reiniciar» deja la lista en blanco para el próximo bolo.</p><p><b>Shows</b> guarda todos tus shows. Toca uno para abrirlo en Montar. Con «···» puedes cambiar nombre, duración objetivo y plantilla, duplicarlo o eliminarlo. Si eliminas algo por error, pulsa «Deshacer» en el aviso que aparece abajo.</p>'],
+ ['Ideas: notas, taller y proyectos','<p><b>Notas rápidas:</b> pulsa el botón del lápiz en la pestaña Ideas y apunta en dos segundos (también puedes dictar con el micrófono del teclado). Si no eliges carpeta, la nota va a «Sin ordenar»; desde ahí la mandas a su carpeta con un toque. Las carpetas las creas tú, con su nombre y su color.</p><p><b>Taller:</b> tu método creativo en seis pasos.</p><ul><li><b>Objetos:</b> los que quieras, o al azar.</li><li><b>Análisis morfológico:</b> físico, sensorial y función y contexto, más atributos libres.</li><li><b>Inversión:</b> la app te propone el contrario de cada atributo cuando lo conoce; cámbialo y marca con ✦ los que te sugieran algo.</li><li><b>Preposiciones:</b> combina los objetos por parejas en los dos sentidos. Marca con estrella las buenas y baraja para verlas de otra forma.</li><li><b>Árbol:</b> el mapa mental de cada objeto, en vista de ramas (cómoda en el iPhone) o de pizarra (arrastra y pellizca).</li><li><b>Hoja:</b> todo lo que ha salido en una sola página. Con «Limpiar» vas tachando lo que no tiene sentido (también se puede en cada paso); lo tachado se queda a la vista, salvo en el árbol. Con «Unir» eliges 2 o 3 conceptos, también tachados, y apuntas lo que sale. Al final, tus hipótesis fantásticas y tus conexiones.</li></ul><p><b>Proyectos:</b> las ideas que quieres convertir en número, en cuatro fases: idea, en desarrollo, ensayando y estrenado. Apunta qué falta y cuántas veces lo has ensayado. Al estrenarlo se crea su ficha en el Repertorio.</p>'],
  ['Ajustes y copias','<ul><li><b>Apariencia:</b> automático (sigue al dispositivo), claro u oscuro, y el color de acento.</li><li><b>Emociones y tipos propios:</b> créalos, renómbralos y elige colores.</li><li><b>Asistente:</b> activa o desactiva cada regla y ajusta la duración máxima de tu flash.</li><li><b>Copia de seguridad:</b> «Exportar copia» crea un archivo con todo. Guárdalo en Google Drive. «Importar copia» lo recupera en otro dispositivo, o añade el repertorio de un amigo al tuyo.</li></ul><p>Cada dispositivo guarda sus propios datos: para tener lo mismo en el iPhone y en el iPad, exporta en uno e importa en el otro.</p>'],
  ['Teoría: la regla de presentación','<p>El público se forma una impresión de alguien en muy pocos segundos, y lo primero que ve pesa más en cómo recuerda todo lo demás. Por eso la app propone abrir siempre con un <b>flash corto</b> (1:30 como máximo, ajustable) marcado como <b>número de presentación</b>: algo que en los primeros 30 segundos deje claro quién eres, aunque alguien tenga que irse pronto.</p><p>Se aplica a todas las plantillas y se puede desactivar.</p>'],
  ['Teoría: Crescendo constante','<p><b>Origen:</b> Darwin Ortiz, en <i>Strong Magic</i> (1994), uno de los libros de referencia sobre cómo presentar magia. Organiza el acto en apertura, construcción y cierre, y defiende que el show debe ir siempre a más, equilibrando unidad (un hilo común) y variedad.</p><p><b>Curva ideal:</b> una rampa que sube de principio a fin.</p><p><b>Qué comprueba la app:</b> que el cierre sea tu número más fuerte, que la potencia no caiga más de un punto de golpe entre dos números y que, tras la presentación, abras con algo fuerte.</p><p><b>Ideal para:</b> close-up, salón y bolos cortos.</p>'],
@@ -941,6 +1060,359 @@ Object.assign(SI,{
   'E.nota':el=>{E.items[+el.dataset.k].nota=el.value},
   'E.cambiar':el=>{E.cambiar=el.value}
 });
+
+/* ============ ideas: notas, taller y proyectos ============ */
+const FOLD_DEF=[['chistes','Chistes','#F2D27A'],['locas','Ideas locas','#B39BE6'],['sinsentido','Frases sin sentido','#95D9BD'],['truco','Ideas de truco','#8DBDEB'],['ninos','Frases de niños','#F2B1CB'],['hipotesis','Hipótesis fantásticas','#F5B48A']];
+function ideasDef(){return {folders:FOLD_DEF.map(f=>({id:f[0],n:f[1],c:f[2]})),notes:[],ses:[],projs:[]}}
+D.ideas=Object.assign(ideasDef(),D.ideas||{});
+const IDE=()=>D.ideas||(D.ideas=ideasDef());
+const STEPS=['Objetos','Análisis','Inversión','Preposiciones','Árbol','Hoja'];
+const MORF=[['Físico',['Forma','Tamaño','Peso','Material','Partes','Rigidez','Temperatura','Estado']],['Sensorial',['Color','Transparencia','Brillo','Textura','Olor','Sabor','Sonido']],['Función y contexto',['Función','Cómo se usa','Quién lo usa','Dónde está','Cuándo se usa','Cómo se fabrica','Valor','Cuánto dura','Si se rompe','Qué simboliza']]];
+const MORF_PH={Forma:'Redonda, alargada…',Tamaño:'Cabe en la mano…',Peso:'Ligero, pesado…',Material:'Madera, metal…',Partes:'Mango, cabeza…',Rigidez:'Blando, rígido…',Temperatura:'Frío, tibio…',Estado:'Sólido, líquido…',Color:'Blanco, azul…',Transparencia:'Opaco, transparente…',Brillo:'Mate, brillante…',Textura:'Suave, rugosa…',Olor:'A goma, no huele…',Sabor:'—',Sonido:'Silencioso, suena al…',Función:'Borra, golpea…','Cómo se usa':'Se frota, se agita…','Quién lo usa':'Estudiantes…','Dónde está':'Estuche, cocina…','Cuándo se usa':'Al equivocarse…','Cómo se fabrica':'—',Valor:'Barato, valioso…','Cuánto dura':'Se gasta, eterno…','Si se rompe':'Se parte, se astilla…','Qué simboliza':'Error, fuerza…'};
+const PREPS=['a','ante','bajo','con','contra','de','desde','dentro de','en','entre','hacia','hasta','para','por','sin','sobre','tras','encima de','debajo de','junto a','frente a','alrededor de','como','detrás de'];
+const RAND_OBJ=['Goma de borrar','Martillo','Paraguas','Reloj','Llave','Vaso','Moneda','Vela','Espejo','Cuerda','Huevo','Sobre','Lápiz','Tijeras','Globo','Botella','Cuchara','Libro','Imán','Bombilla','Candado','Peine','Zapato','Sombrero','Anillo','Teléfono','Brújula','Dado','Naipe','Billete','Pañuelo','Limón','Reloj de arena','Botón','Clip','Lupa','Silbato','Cerilla','Tiza','Pelota','Gafas','Calcetín','Taza','Piedra','Pluma','Hoja de árbol','Cubo de hielo','Imperdible','Sello','Mapa','Termómetro','Cinta adhesiva','Grapadora','Caracola','Semilla','Plátano','Cepillo de dientes','Linterna','Tenedor','Puzle','Marioneta','Caja de cerillas','Vaso de papel','Periódico','Corcho','Muelle','Tuerca','Collar','Cascabel','Mechero','Abanico','Pajita','Servilleta','Cuchillo de mantequilla','Bolsa de plástico','Cronómetro','Gomita elástica','Cartera','Rotulador','Calculadora','Pasaporte','Ticket','Pinza de la ropa','Esponja','Chupete','Llavero','Trompo','Canica','Copa','Bufanda','Guante','Sal','Azúcar','Pan','Manzana','Naranja','Nube de algodón'];
+const ANT={};
+[['opaca','transparente'],['opaco','transparente'],['blanda','dura'],['blando','duro'],['flexible','rígida'],['ligera','pesada'],['ligero','pesado'],['pequeña','enorme'],['pequeño','enorme'],['grande','diminuto'],['silenciosa','ruidosa'],['silencioso','ruidoso'],['borra','pinta'],['borrar','pintar'],['pinta','borra'],['escribe','borra'],['frío','caliente'],['fría','caliente'],['caliente','helado'],['suave','áspera'],['lisa','rugosa'],['liso','rugoso'],['brillante','mate'],['mate','brillante'],['oscuro','luminoso'],['oscura','luminosa'],['negro','blanco'],['negra','blanca'],['blanco','negro'],['blanca','negra'],['viejo','nuevo'],['vieja','nueva'],['nuevo','viejo'],['nueva','vieja'],['lleno','vacío'],['llena','vacía'],['vacío','lleno'],['vacía','llena'],['abierto','cerrado'],['abierta','cerrada'],['cerrado','abierto'],['cerrada','abierta'],['rompe','repara'],['romper','reparar'],['golpea','acaricia'],['golpear','acariciar'],['corta','une'],['cortar','unir'],['une','separa'],['seco','mojado'],['seca','mojada'],['mojado','seco'],['alto','bajo'],['alta','baja'],['largo','corto'],['larga','corta'],['corto','larguísimo'],['ancho','estrecho'],['ancha','estrecha'],['grueso','fino'],['gruesa','fina'],['fino','grueso'],['fina','gruesa'],['rápido','lento'],['rápida','lenta'],['lento','rápido'],['fuerte','débil'],['débil','fuerte'],['barato','carísimo'],['barata','carísima'],['caro','gratis'],['cara','gratis'],['vivo','muerto'],['viva','muerta'],['sólido','líquido'],['sólida','líquida'],['líquido','sólido'],['natural','artificial'],['redondo','cuadrado'],['redonda','cuadrada'],['cuadrado','redondo'],['recto','curvo'],['recta','curva'],['dulce','amargo'],['amargo','dulce'],['visible','invisible'],['útil','inútil'],['frágil','irrompible'],['limpio','sucio'],['limpia','sucia'],['sucio','limpio'],['enciende','apaga'],['encender','apagar'],['apaga','enciende'],['calienta','enfría'],['sube','baja'],['baja','sube'],['entra','sale'],['guarda','suelta'],['sujeta','suelta'],['ilumina','oscurece'],['clava','arranca'],['clavar','arrancar'],['abre','cierra'],['abrir','cerrar'],['cierra','abre'],['flota','se hunde'],['cae','sube'],['día','noche'],['noche','día'],['siempre','nunca'],['nunca','siempre'],['mucho','nada'],['todo','nada'],['nada','todo'],['huele','no huele'],['suena','no suena'],['eterno','instantáneo'],['muy','nada']].forEach(p=>ANT[p[0]]=p[1]);
+ANT['se gasta']='crece al usarla';ANT['se rompe']='se arregla solo';
+function antonym(v){v=String(v||'').trim();if(!v)return '';const low=v.toLowerCase();if(ANT[low])return cap(ANT[low],v);
+  let hit=false;const out=v.replace(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g,w=>{const a=ANT[w.toLowerCase()];if(a){hit=true;return cap(a,w)}return w});return hit?out:''}
+function cap(a,ref){return ref&&ref[0]===ref[0].toUpperCase()&&ref[0]!==ref[0].toLowerCase()?a[0].toUpperCase()+a.slice(1):a}
+
+let IV={seg:'notas',view:null,fid:null,sid:null,clean:false,unir:false,sel:[],tmode:'ramas',oi:0,pair:0,allPreps:false,hidT:false,phase:'idea',q:'',shuf:0,draft:'',fold:{}};
+let TB={x:0,y:0,s:1,key:''};
+let saveT=0;const saveSoon=()=>{clearTimeout(saveT);saveT=setTimeout(save,400)};
+const ses=()=>IDE().ses.find(s=>s.id===IV.sid);
+const sesName=s=>s.objs.length?s.objs.map(o=>o.n).join(' × '):'Sesión sin objetos';
+const folderOf=id=>IDE().folders.find(f=>f.id===id);
+function relDate(ts){const d=new Date(ts),n=new Date(),hm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const day=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime(),diff=Math.round((day(n)-day(d))/864e5);
+  if(diff===0)return 'Hoy · '+hm;if(diff===1)return 'Ayer · '+hm;return fdate(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))}
+function noteSrc(n){if(n.src){const s=IDE().ses.find(x=>x.id===n.src);return s?'Del taller '+sesName(s):'Del taller'}return ''}
+function newSes(objs){return {id:uid(),ts:Date.now(),step:1,objs:(objs||[]).map(newObj),preps:{},tree:{},struck:{},hyps:[],cons:[]}}
+function newObj(n){return {id:uid(),n,m:{},attrs:[],inv:{}}}
+
+/* ---- conceptos de una sesión ---- */
+function invSources(o){const r=[];MORF.forEach(g=>g[1].forEach(f=>{const v=(o.m[f]||'').trim();if(v)r.push({k:'m:'+o.id+':'+f,v})}));o.attrs.forEach(a=>r.push({k:'a:'+a.id,v:a.t}));return r}
+function invTo(o,k,v){const e=o.inv[k];return e&&e.to!=null?e.to:antonym(v)}
+function prepList(a,b){const r=[];PREPS.forEach((p,i)=>{r.push({k:'p:'+a.id+':'+i+':'+b.id,l:a.n+' '+p+' '+lc(b.n),a:a.n,p,b:lc(b.n)});r.push({k:'p:'+b.id+':'+i+':'+a.id,l:b.n+' '+p+' '+lc(a.n),a:b.n,p,b:lc(a.n)})});return r}
+const lc=s=>s?s[0].toLowerCase()+s.slice(1):s;
+function pairsOf(s){const r=[];for(let i=0;i<s.objs.length;i++)for(let j=i+1;j<s.objs.length;j++)r.push([s.objs[i],s.objs[j]]);return r}
+function treeOf(s,o){s.tree[o.id]=s.tree[o.id]||[];return s.tree[o.id]}
+function hojaSecs(s){
+  const secs=[];
+  s.objs.forEach(o=>{const it=[];MORF.forEach(g=>g[1].forEach(f=>{const v=(o.m[f]||'').trim();if(v)it.push({id:'m:'+o.id+':'+f,l:v})}));o.attrs.forEach(a=>it.push({id:'a:'+a.id,l:a.t}));if(it.length)secs.push({t:'Análisis · '+o.n,items:it})});
+  const inv=[];s.objs.forEach(o=>invSources(o).forEach(src=>{const to=invTo(o,src.k,src.v);if(to)inv.push({id:'i:'+src.k,l:src.v+' → '+to+((o.inv[src.k]||{}).lamp?' ✦':'')})}));
+  if(inv.length)secs.push({t:'Inversiones',items:inv});
+  const pr=[];let ptotal=0;pairsOf(s).forEach(([a,b])=>prepList(a,b).forEach(p=>{ptotal++;if(s.preps[p.k]||IV.allPreps)pr.push({id:p.k,l:p.l+(s.preps[p.k]?' ★':'')})}));
+  if(ptotal)secs.push({t:'Preposiciones',right:IV.allPreps?'todas · <button class="link" data-a="allPreps">solo con estrella</button>':'con estrella · <button class="link" data-a="allPreps">ver las '+ptotal+'</button>',items:pr});
+  const tr=[];let hid=0;s.objs.forEach(o=>treeOf(s,o).forEach(n=>{if(s.struck['t:'+n.id]&&!IV.hidT){hid++;return}tr.push({id:'t:'+n.id,l:n.t})}));
+  if(tr.length||hid)secs.push({t:'Árbol',right:IV.hidT?'<button class="link" data-a="hidT">ocultar tachados</button>':(hid?'solo lo que queda · <button class="link" data-a="hidT">'+pl(hid,'tachado oculto','tachados ocultos')+'</button>':'solo lo que queda'),items:tr});
+  return secs}
+function labelOf(s,id){if(id.indexOf('h:')===0){const h=s.hyps.find(x=>'h:'+x.id===id);return h?h.t:''}
+  const sv=[IV.allPreps,IV.hidT];IV.allPreps=true;IV.hidT=true;let l='';hojaSecs(s).some(sec=>sec.items.some(i=>{if(i.id===id){l=i.l.replace(/ [★✦]$/,'');return true}}));IV.allPreps=sv[0];IV.hidT=sv[1];return l}
+function sesCounts(s){const sv=[IV.allPreps,IV.hidT];IV.allPreps=false;IV.hidT=true;let v=0,x=0;hojaSecs(s).forEach(sec=>sec.items.forEach(i=>{if(s.struck[i.id])x++;else v++}));
+  s.hyps.forEach(h=>{if(s.struck['h:'+h.id])x++;else v++});IV.allPreps=sv[0];IV.hidT=sv[1];
+  let st=Object.keys(s.preps).filter(k=>s.preps[k]).length;s.objs.forEach(o=>Object.keys(o.inv).forEach(k=>{if(o.inv[k].lamp)st++}));return {v,x,st}}
+
+/* ---- vista principal ---- */
+function renderIde(){
+  const el=$('#v-ide');
+  if(IV.view==='ses'&&ses()){keepScroll(el,sesHTML());attachBoard();return}
+  if(IV.view==='inbox'){keepScroll(el,inboxHTML());return}
+  if(IV.view==='folder'&&folderOf(IV.fid)){keepScroll(el,folderHTML());return}
+  IV.view=null;
+  const seg=`<div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:14px">${[['notas','Notas'],['taller','Taller'],['proy','Proyectos']].map(([k,n])=>`<button class="${IV.seg===k?'on':''}" data-a="ideSeg" data-k="${k}">${n}</button>`).join('')}</div>`;
+  let left='',plus='',body='';
+  if(IV.seg==='notas'){left=pl(IDE().notes.length,'nota','notas');plus='qnNew';body=notasHTML()}
+  else if(IV.seg==='taller'){left=pl(IDE().ses.length,'sesión','sesiones');plus='sesNew';body=tallerHTML()}
+  else{left=pl(IDE().projs.length,'proyecto','proyectos');plus='projNew';body=proyHTML()}
+  keepScroll(el,`<div class="wrap ide">${hdr(left,`<button class="ibtn fill" data-a="${plus}" aria-label="Nuevo">${ICON.plus}</button>`)}<h1>Ideas</h1>${seg}${body}</div>`);
+}
+function noteCard(n,chips){const f=folderOf(n.f),src=noteSrc(n);
+  return `<div class="card nt"><button class="ntb" data-a="qnEdit" data-id="${n.id}"><div class="nmeta">${relDate(n.ts)}${src?' · '+esc(src):''}${!chips&&f?'':''}</div><p>${esc(n.t)}</p></button>${chips?`<div class="wrapchips sm">${IDE().folders.map(x=>`<button class="tc" data-a="noteMove" data-id="${n.id}" data-f="${x.id}"><i class="fdot" style="background:${x.c}"></i>${esc(x.n)}</button>`).join('')}</div>`:''}</div>`}
+function notasHTML(){
+  const I=IDE(),q=norm(IV.q);
+  const search=`<label class="search">${ICON.search}<input type="search" placeholder="Buscar en tus notas" value="${esc(IV.q)}" data-in="IV.q" aria-label="Buscar"></label>`;
+  if(q){const L=I.notes.filter(n=>norm(n.t).indexOf(q)>=0).sort((a,b)=>b.ts-a.ts);
+    return search+(L.length?L.map(n=>{const f=folderOf(n.f);return noteCard(n,false).replace('<div class="nmeta">','<div class="nmeta">'+(f?`<i class="fdot" style="background:${f.c}"></i>${esc(f.n)} · `:'Sin ordenar · '))}).join(''):'<div class="empty"><b>Nada por aquí</b>Ninguna nota contiene ese texto.</div>')}
+  const inbox=I.notes.filter(n=>!n.f||!folderOf(n.f));
+  return search+`<button class="card inbox" data-a="ideView" data-v="inbox"><span class="ib${inbox.length?'':' z'}">${inbox.length}</span><span class="tx"><b>Sin ordenar</b><small>${inbox.length?'Lo que apuntaste deprisa, pendiente de clasificar':'Todo ordenado'}</small></span><span class="chev">›</span></button>
+  <div class="sec-t">Carpetas <button class="link" data-a="foldNew" style="text-transform:none;letter-spacing:0">+ Nueva</button></div>
+  <div class="fgrid">${I.folders.map(f=>{const c=I.notes.filter(n=>n.f===f.id).length;return `<button class="card fold" data-a="ideView" data-v="folder" data-id="${f.id}"><i style="background:${f.c}"></i><b>${esc(f.n)}</b><small>${pl(c,'nota','notas')}</small></button>`}).join('')}</div>
+  ${I.notes.length?'':'<div class="note" style="text-align:center;padding-top:18px">Pulsa ✎ para apuntar una idea en dos segundos.</div>'}`;
+}
+function inboxHTML(){const L=IDE().notes.filter(n=>!n.f||!folderOf(n.f)).sort((a,b)=>b.ts-a.ts);
+  return `<div class="wrap ide"><div class="hdr"><button class="l link" data-a="ideBack">‹ Ideas</button></div><h1>Sin ordenar</h1>
+  ${L.length?'<div class="note" style="margin:-6px 4px 12px">Toca una carpeta para mandar cada nota a su sitio.</div>'+L.map(n=>noteCard(n,true)).join(''):'<div class="empty"><b>Todo ordenado</b>Las notas que apuntes sin carpeta aparecerán aquí.</div>'}</div>`}
+function folderHTML(){const f=folderOf(IV.fid),L=IDE().notes.filter(n=>n.f===f.id).sort((a,b)=>b.ts-a.ts);
+  return `<div class="wrap ide"><div class="hdr"><button class="l link" data-a="ideBack">‹ Ideas</button><button class="ibtn" data-a="foldMenu" aria-label="Opciones de carpeta" style="color:var(--sec)">${ICON.more}</button></div>
+  <h1 style="display:flex;align-items:center;gap:10px"><i style="width:14px;height:14px;border-radius:7px;background:${f.c};flex:none"></i><span style="min-width:0;overflow-wrap:anywhere">${esc(f.n)}</span></h1>
+  ${L.length?L.map(n=>noteCard(n,false)).join(''):'<div class="empty"><b>Carpeta vacía</b>Apunta con ✎ y elige esta carpeta, o mándale notas desde «Sin ordenar».</div>'}</div>`}
+function tallerHTML(){const L=IDE().ses.slice().sort((a,b)=>b.ts-a.ts);
+  return (L.length?L.map(s=>{const c=sesCounts(s);return `<button class="card sesc" data-a="sesOpen" data-id="${s.id}"><div class="objs">${s.objs.length?s.objs.map((o,i)=>(i?'<span class="x2">×</span>':'')+`<span class="obj">${esc(o.n)}</span>`).join(''):'<span class="m">Sin objetos todavía</span>'}</div>
+    <div class="m">Paso ${s.step} de 6 · ${STEPS[s.step-1]}</div><div class="prog"><i style="width:${Math.round(s.step/6*100)}%"></i></div>
+    <div class="m">${pl(c.v,'concepto vivo','conceptos vivos')}${c.x?' · '+c.x+' tachados':''}${s.cons.length?' · '+pl(s.cons.length,'conexión','conexiones'):''}${s.hyps.length?' · '+pl(s.hyps.length,'hipótesis','hipótesis'):''}</div></button>`}).join('')
+    :`<div class="empty"><b>Tu taller creativo</b>Elige objetos y sigue tu método: análisis morfológico, inversión, preposiciones, árbol y hoja final con la criba.</div>`)
+   +`<button class="addrow" data-a="sesRandom">🎲 Empezar con objetos al azar</button><button class="addrow" data-a="sesNew" style="border-style:solid">${ICON.plus} Nueva sesión</button>`}
+const PHASES=[['idea','Idea'],['des','En desarrollo'],['ens','Ensayando'],['est','Estrenado']];
+function proyHTML(){const P=IDE().projs;
+  const chips=`<div class="chips kchips">${PHASES.map(([k,n])=>`<button class="chip${IV.phase===k?' on':''}" data-a="phase" data-k="${k}">${n} · ${P.filter(p=>p.phase===k).length}</button>`).join('')}</div>`;
+  const card=p=>{const t=(p.tasks||[]).find(x=>!x.d);return `<div class="card pj"><button data-a="projEdit" data-id="${p.id}" style="text-align:left;display:flex;flex-direction:column;gap:4px;min-width:0"><b>${esc(p.t)}</b>${p.src?`<small>${esc(p.src)}</small>`:''}</button><div class="pjb"><span>${t?'Falta: '+esc(t.t):(p.tasks&&p.tasks.length?'Todo hecho':(p.reps?pl(p.reps,'ensayo','ensayos'):'Sin tareas'))}</span><button class="link" data-a="projMove" data-id="${p.id}">Mover ›</button></div></div>`};
+  return `${chips}<div class="kan">${PHASES.map(([k,n])=>{const L=P.filter(p=>p.phase===k).sort((a,b)=>b.ts-a.ts);return `<div class="kcol${IV.phase===k?' act':''}"><div class="sec-t khead">${n} <span>${L.length}</span></div>${L.map(card).join('')||`<div class="note kempty">${k==='idea'?'Lleva aquí tus conexiones del taller o tus notas.':'Nada en esta fase.'}</div>`}</div>`}).join('')}</div>
+  <div class="note">Al pasar un proyecto a «Estrenado» se crea su ficha en el Repertorio.</div>`}
+
+/* ---- taller: sesión ---- */
+function stepsBar(s){return `<div class="steps">${STEPS.map((n,i)=>`<button class="${i+1===s.step?'on':(i+1<s.step?'d':'')}" data-a="sesStep" data-n="${i+1}" aria-label="${n}">${i+1}</button>`).join('')}</div>`}
+function objSel(s,label){if(s.objs.length<2)return '';if(IV.oi>=s.objs.length)IV.oi=0;
+  if(s.objs.length<=3)return `<div class="seg" style="grid-template-columns:repeat(${s.objs.length},minmax(0,1fr));margin-bottom:12px">${s.objs.map((o,i)=>`<button class="${IV.oi===i?'on':''}" data-a="oiSet" data-i="${i}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(o.n)}</button>`).join('')}</div>`;
+  return `<div class="chips">${s.objs.map((o,i)=>`<button class="chip${IV.oi===i?' on':''}" data-a="oiSet" data-i="${i}">${esc(o.n)}</button>`).join('')}</div>`}
+function sesHTML(){
+  const s=ses(),st=s.step;if(st<2)IV.clean=false;if(st!==6)IV.unir=false;
+  const btns=(st>=2&&!IV.unir?`<button class="cbtn${IV.clean?' on':''}" data-a="cleanTog">${IV.clean?'Hecho':'✕ Limpiar'}</button>`:'')+(st===6&&!IV.clean?`<button class="ubtn${IV.unir?' on':''}" data-a="unirTog">${IV.unir?'Hecho':'＋ Unir'}</button>`:'')+`<button class="ibtn" data-a="sesMenu" aria-label="Opciones" style="color:var(--sec)">${ICON.more}</button>`;
+  const bar=IV.clean?'<div class="cleanbar"><b>Modo limpieza</b>Toca lo que sobra y se tacha. Vuelve a tocar para recuperarlo.</div>':(IV.unir?'<div class="unitbar"><b>Modo unir</b>Toca 2 o 3 conceptos, también los tachados, y escribe lo que sale al juntarlos.</div>':'');
+  const body=[stepObjs,stepMorf,stepInv,stepPrep,stepTree,stepHoja][st-1](s);
+  const next=st<6?`<button class="pill nextb" data-a="sesStep" data-n="${st+1}">Siguiente: ${STEPS[st].toLowerCase()} ›</button>`:'';
+  return `<div class="wrap ide ses${IV.clean?' cleaning':''}${IV.unir?' uniendo':''}"><div class="hdr"><button class="l link" data-a="ideBack">‹ Taller</button><div style="display:flex;gap:8px;align-items:center">${btns}</div></div>${bar}${stepsBar(s)}
+   <h1 class="sh1">${st===6?'Hoja de la sesión':st===2?'Análisis morfológico':STEPS[st-1]}</h1>${body}${next}</div>${IV.unir?unibarHTML(s):''}`;
+}
+function stepObjs(s){
+  return `<div class="note" style="margin:-6px 4px 14px">Elige los objetos con los que vas a trabajar. Los que quieras: las preposiciones se hacen por parejas.</div>
+  <div class="group">${s.objs.map((o,i)=>`<div class="li"><span class="tx"><b>${esc(o.n)}</b></span><button class="x" data-a="objDel" data-i="${i}" aria-label="Quitar">×</button></div>`).join('')}
+  <div class="li"><input type="text" class="inl" placeholder="Añadir objeto" value="${esc(IV.draft)}" data-in="IV.draft" data-enter="objAdd" aria-label="Nuevo objeto"><button class="link" data-a="objAdd">Añadir</button></div></div>
+  <button class="addrow" data-a="objRand">🎲 Objeto al azar</button>`}
+function strikeBtn(s,id,inner,cls){return `<button class="${cls}${s.struck[id]?' struck':''}" data-a="strike" data-id="${esc(id)}">${inner}</button>`}
+function stepMorf(s){
+  if(!s.objs.length)return '<div class="empty"><b>Sin objetos</b>Vuelve al paso 1 y añade al menos uno.</div>';
+  const o=s.objs[IV.oi]||s.objs[0];let h=objSel(s);
+  MORF.forEach(g=>{const rows=g[1].map(f=>{const id='m:'+o.id+':'+f,v=o.m[f]||'';
+      if(IV.clean)return v.trim()?strikeBtn(s,id,`<span class="k">${f}</span><span class="v">${esc(v)}</span>`,'mr'):'';
+      return `<label class="mr"><span class="k">${f}</span><input class="v" type="text" value="${esc(v)}" placeholder="${esc(MORF_PH[f]||'—')}" data-in="morf" data-f="${esc(f)}"></label>`}).join('');
+    const nx=g[1].filter(f=>s.struck['m:'+o.id+':'+f]).length;
+    h+=`<div class="sec-t">${g[0]}${nx?` <span>${pl(nx,'tachado','tachados')}</span>`:''}</div>`+(rows?`<div class="group">${rows}</div>`:'<div class="note">Nada que limpiar aquí.</div>')});
+  h+=`<div class="sec-t">Atributos libres</div><div class="wrapchips">${o.attrs.map(a=>IV.clean?strikeBtn(s,'a:'+a.id,esc(a.t),'tc'):`<span class="tc attr">${esc(a.t)}<button data-a="attrDel" data-id="${a.id}" aria-label="Quitar">×</button></span>`).join('')}</div>`;
+  if(!IV.clean)h+=`<div class="group" style="margin-top:10px"><div class="li"><input type="text" class="inl" placeholder="Otro atributo: deja migas, corrige errores…" value="${esc(IV.draft)}" data-in="IV.draft" data-enter="attrAdd"><button class="link" data-a="attrAdd">Añadir</button></div></div>`;
+  return h}
+function stepInv(s){
+  if(!s.objs.length)return '<div class="empty"><b>Sin objetos</b>Vuelve al paso 1.</div>';
+  const o=s.objs[IV.oi]||s.objs[0],src=invSources(o);let h=objSel(s);
+  if(!src.length)return h+'<div class="empty"><b>Nada que invertir</b>Rellena primero el análisis de este objeto.</div>';
+  h+='<div class="note" style="margin:-4px 4px 10px">La app te propone el contrario cuando lo conoce. Cámbialo a tu gusto y marca con ✦ los que te sugieran algo.</div><div class="group inv">';
+  h+=src.map(x=>{const to=invTo(o,x.k,x.v),lamp=(o.inv[x.k]||{}).lamp;
+    if(IV.clean)return to?strikeBtn(s,'i:'+x.k,`<span class="fr2">${esc(x.v)}</span><span class="ar">→</span><b>${esc(to)}</b><span class="lamp${lamp?' on':''}">✦</span>`,'ir'):'';
+    return `<div class="ir"><span class="fr2">${esc(x.v)}</span><span class="ar">→</span><input type="text" value="${esc(to)}" placeholder="¿Lo contrario?" data-in="inv" data-k="${esc(x.k)}"><button class="lamp${lamp?' on':''}" data-a="lamp" data-k="${esc(x.k)}" aria-label="Me sugiere algo">✦</button></div>`}).join('');
+  return h+'</div><div class="hint"><b>✎</b><span>¿Se te ocurre algo mientras trabajas? Apúntalo con el botón ✎. Va a «Sin ordenar» marcado con este taller y luego lo mandas a su carpeta.</span></div>'}
+function shuffled(arr,seed){if(!seed)return arr;const a=arr.slice();let x=seed;for(let i=a.length-1;i>0;i--){x=(x*9301+49297)%233280;const j=Math.floor(x/233280*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function stepPrep(s){
+  if(s.objs.length<2)return '<div class="empty"><b>Hacen falta dos objetos</b>Las preposiciones combinan los objetos por parejas. Añade otro en el paso 1.</div>';
+  const P=pairsOf(s);if(IV.pair>=P.length)IV.pair=0;const [a,b]=P[IV.pair],L=shuffled(prepList(a,b),IV.shuf),star=L.filter(p=>s.preps[p.k]).length;
+  let h=P.length>1?`<div class="chips">${P.map((p,i)=>`<button class="chip${IV.pair===i?' on':''}" data-a="pairSet" data-i="${i}">${esc(p[0].n)} × ${esc(p[1].n)}</button>`).join('')}</div>`:'';
+  h+=`<div class="note" style="margin:-6px 4px 10px">${L.length} combinaciones · ${star} con estrella · <button class="link" data-a="shuf">Barajar</button></div><div class="prepgrid">`;
+  h+=L.map(p=>IV.clean?strikeBtn(s,p.k,`<span>${esc(p.a)} <em>${esc(p.p)}</em> ${esc(p.b)}</span><s>${s.preps[p.k]?'★':''}</s>`,'card pp'+(s.preps[p.k]?' on':'')):`<button class="card pp${s.preps[p.k]?' on':''}${s.struck[p.k]?' struck':''}" data-a="prepStar" data-k="${esc(p.k)}"><span>${esc(p.a)} <em>${esc(p.p)}</em> ${esc(p.b)}</span><s>${s.preps[p.k]?'★':'☆'}</s></button>`).join('');
+  return h+'</div>'}
+
+/* árbol */
+function kids(nodes,p){return nodes.filter(n=>(n.p||null)===p)}
+function stepTree(s){
+  if(!s.objs.length)return '<div class="empty"><b>Sin objetos</b>Vuelve al paso 1.</div>';
+  const o=s.objs[IV.oi]||s.objs[0],T=treeOf(s,o);
+  let h=`<div class="seg tmode" style="grid-template-columns:repeat(2,minmax(0,1fr))">${[['ramas','Ramas'],['pizarra','Pizarra']].map(([k,n])=>`<button class="${IV.tmode===k?'on':''}" data-a="tmode" data-k="${k}">${n}</button>`).join('')}</div>`+objSel(s);
+  if(IV.tmode==='ramas'){
+    const row=(n,d)=>{const ch=kids(T,n.id),f=IV.fold[n.id];
+      return `<div class="trw${s.struck['t:'+n.id]?' struck':''}" style="--d:${d}"><button class="tgl" data-a="tFold" data-id="${n.id}" aria-label="Plegar">${ch.length?(f?'▸':'▾'):''}</button><button class="tn" data-a="tNode" data-id="${n.id}">${esc(n.t)}${f&&ch.length?` <small>(${ch.length})</small>`:''}</button>${IV.clean?'':`<button class="tadd" data-a="tAdd" data-id="${n.id}" aria-label="Añadir rama">+</button>`}</div>`+(f?'':ch.map(c=>row(c,d+1)).join(''))};
+    h+=`<div class="card tree"><div class="trw" style="--d:0"><span class="tgl">${T.length?'▾':''}</span><span class="tn root">${esc(o.n)}</span>${IV.clean?'':'<button class="tadd" data-a="tAdd" data-id="" aria-label="Añadir rama">+</button>'}</div>${kids(T,null).map(n=>row(n,1)).join('')}
+      ${IV.clean?'':'<button class="trw newb" style="--d:1" data-a="tAdd" data-id=""><span class="tgl"></span>+ Nueva rama</button>'}</div>
+      <div class="note">Toca + para sacar ramas a un concepto y ▾ para plegarlo. Toca un concepto para renombrarlo o borrarlo. Es el mismo árbol que la pizarra.</div>`;
+  }else{
+    const key=s.id+':'+o.id;if(TB.key!==key)TB={x:0,y:0,s:1,key};
+    const pos=layoutTree(T);let lines='',nodes=`<button class="nd c" data-a="tAdd" data-id="" style="left:0;top:0">${esc(o.n)}</button>`;
+    T.forEach(n=>{const a=pos[n.id],b=n.p?pos[n.p]:{x:0,y:0};if(!a)return;lines+=`<line x1="${b.x}" y1="${b.y}" x2="${a.x}" y2="${a.y}"/>`;
+      const dep=a.d;nodes+=`<button class="nd${dep>1?' s':''}${s.struck['t:'+n.id]?' struck':''}" data-a="tNode" data-id="${n.id}" style="left:${a.x}px;top:${a.y}px">${esc(n.t)}</button>`});
+    h+=`<div class="board" id="board"><div class="bin" id="bin"><svg class="blines" width="1" height="1">${lines}</svg>${nodes}</div>
+      <div class="zoom"><button data-a="zoom" data-d="-1" aria-label="Alejar">−</button><b id="zpct">${Math.round(TB.s*100)}%</b><button data-a="zoom" data-d="1" aria-label="Acercar">+</button><button data-a="zoom" data-d="0" aria-label="Centrar">⌖</button></div></div>
+      <div class="note">Arrastra con un dedo para moverte y pellizca para acercar. Toca el objeto central para sacarle ramas y cualquier concepto para ver sus opciones.</div>`;
+  }
+  return h}
+function layoutTree(T){const pos={},R=118;
+  const leaves=id=>{const c=kids(T,id);return c.length?c.reduce((a,n)=>a+leaves(n.id),0):1};
+  const place=(p,a0,a1,d)=>{const c=kids(T,p);const tot=c.reduce((a,n)=>a+leaves(n.id),0)||1;let a=a0;
+    c.forEach(n=>{const span=(a1-a0)*leaves(n.id)/tot,mid=a+span/2,r=R*d+(d>1?(d-1)*12:0);pos[n.id]={x:Math.round(Math.cos(mid)*r),y:Math.round(Math.sin(mid)*r),d};place(n.id,a,a+span,d+1);a+=span})};
+  place(null,-Math.PI/2,Math.PI*1.5,1);return pos}
+function applyTB(){const b=$('#board'),i=$('#bin');if(!b||!i)return;i.style.transform=`translate(${b.clientWidth/2+TB.x}px,${b.clientHeight/2+TB.y}px) scale(${TB.s})`;const z=$('#zpct');if(z)z.textContent=Math.round(TB.s*100)+'%'}
+function attachBoard(){const b=$('#board');if(!b)return;applyTB();const P=new Map();let st=null,pin=null,moved=false;
+  const dist=()=>{const v=[...P.values()];return Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y)};
+  b.addEventListener('pointerdown',e=>{if(e.target.closest('.zoom'))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(P.size===1){st={x:e.clientX,y:e.clientY,tx:TB.x,ty:TB.y};moved=false}else if(P.size===2){pin={d:dist(),s:TB.s};st=null}});
+  b.addEventListener('pointermove',e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(P.size===1&&st){const dx=e.clientX-st.x,dy=e.clientY-st.y;if(Math.abs(dx)+Math.abs(dy)>6)moved=true;if(moved){TB.x=st.tx+dx;TB.y=st.ty+dy;applyTB()}}
+    else if(P.size===2&&pin){TB.s=Math.max(.35,Math.min(2.6,pin.s*dist()/pin.d));moved=true;applyTB()}});
+  const up=e=>{P.delete(e.pointerId);pin=null;if(P.size===1){const v=[...P.values()][0];st={x:v.x,y:v.y,tx:TB.x,ty:TB.y}}else st=null};
+  b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up);
+  b.addEventListener('wheel',e=>{e.preventDefault();TB.s=Math.max(.35,Math.min(2.6,TB.s*(e.deltaY<0?1.1:.9)));applyTB()},{passive:false});
+  b.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false}},true)}
+
+/* hoja */
+function stepHoja(s){
+  const c=sesCounts(s),secs=hojaSecs(s);
+  const chip=i=>`<button class="tc${s.struck[i.id]?' struck':''}${IV.sel.indexOf(i.id)>=0?' on':''}" data-a="hojaTap" data-id="${esc(i.id)}">${esc(i.l)}</button>`;
+  let h=`<div class="note" style="margin:-4px 4px 8px">Todo lo que ha salido, en una sola página. Lo tachado se queda a la vista: releerlo también puede dar ideas.</div>
+  <div class="cnt"><div><b>${c.v}</b><small>vivos</small></div><div><b>${c.x}</b><small>tachados</small></div><div><b>${c.st}</b><small>con estrella</small></div></div>`;
+  if(!secs.length&&!s.hyps.length)h+='<div class="empty"><b>La hoja está vacía</b>Rellena los pasos anteriores y aquí aparecerá todo junto.</div>';
+  secs.forEach(sec=>{h+=`<div class="sec-t">${esc(sec.t)} <span>${sec.right||sec.items.length}</span></div>`+(sec.items.length?`<div class="wrapchips sm">${sec.items.map(chip).join('')}</div>`:'<div class="note">Marca con estrella las que te gusten en el paso 4.</div>')});
+  h+=`<div class="sec-t">Hipótesis fantásticas <span>${s.hyps.length}</span></div><div class="group">${s.hyps.map(x=>`<button class="li hy${s.struck['h:'+x.id]?' struck':''}${IV.sel.indexOf('h:'+x.id)>=0?' sel':''}" data-a="hojaTap" data-id="h:${x.id}"><span class="tx"><b>${esc(x.t)}</b></span></button>`).join('')}<button class="li" data-a="hypAdd" style="color:var(--accent)">+ ¿Y si…?</button></div>`;
+  h+=`<div class="sec-t">Conexiones <span>${s.cons.length}</span></div>${s.cons.length?`<div class="group">${s.cons.map(x=>`<button class="li" data-a="conOpen" data-id="${x.id}"><span class="tx"><b>${esc(x.t)}</b><small>${esc(x.parts.join(' + '))}</small></span><span class="chev">›</span></button>`).join('')}</div>`:'<div class="note">Pulsa «Unir» arriba, elige 2 o 3 conceptos y apunta lo que sale.</div>'}
+  <button class="pill ghost nextb" data-a="hojaShare">Compartir hoja</button>`;
+  return h}
+function unibarHTML(s){if(!IV.sel.length)return '';const L=IV.sel.map(id=>labelOf(s,id));
+  return `<div class="unibar"><div class="ub-t">${L.map((l,i)=>(i?'<span class="uplus">+</span>':'')+`<span class="uc">${esc(l)}</span>`).join('')}</div>
+  ${IV.sel.length<2?'<div class="note" style="padding:0 2px">Elige al menos otro concepto.</div>':`<textarea rows="2" placeholder="¿Qué sale al juntarlos?" data-in="IV.draft">${esc(IV.draft)}</textarea>
+  <div style="display:flex;gap:8px"><button class="pill ghost" style="flex:1;justify-content:center" data-a="conSave">Guardar conexión</button><button class="pill" style="flex:1;justify-content:center" data-a="conProj">Llevar a Proyectos ›</button></div>`}</div>`}
+function hojaText(s){const sv=[IV.allPreps,IV.hidT];IV.allPreps=false;IV.hidT=false;
+  let t='HOJA DE LA SESIÓN · '+sesName(s)+'\n';hojaSecs(s).forEach(sec=>{t+='\n'+sec.t.toUpperCase()+'\n'+sec.items.map(i=>(s.struck[i.id]?'  ✕ ':'  • ')+i.l).join('\n')+'\n'});
+  IV.allPreps=sv[0];IV.hidT=sv[1];
+  if(s.hyps.length)t+='\nHIPÓTESIS FANTÁSTICAS\n'+s.hyps.map(h=>(s.struck['h:'+h.id]?'  ✕ ':'  • ')+h.t).join('\n')+'\n';
+  if(s.cons.length)t+='\nCONEXIONES\n'+s.cons.map(c=>'  • '+c.t+' ('+c.parts.join(' + ')+')').join('\n')+'\n';return t}
+
+/* ---- proyectos ---- */
+let PF=null;
+function newProj(t,src,notes){const p={id:uid(),t:(t||'').trim().slice(0,90)||'Proyecto sin título',src:src||'',phase:'idea',tasks:[],reps:0,notes:notes||'',numId:null,ts:Date.now()};IDE().projs.push(p);save();return p}
+function projForm(id){const p=id?IDE().projs.find(x=>x.id===id):null;PF=p?clone(p):{id:null,t:'',src:'',phase:IV.phase||'idea',tasks:[],reps:0,notes:'',numId:null};let NTk='';
+  openSheet({title:p?'Proyecto':'Nuevo proyecto',left:'Cancelar',right:'Guardar',rightA:'projSave',body:()=>{const n=PF.numId&&num(PF.numId);return `<div class="f">
+    <div class="fg"><div class="fr"><input type="text" class="name" placeholder="Nombre del proyecto" value="${esc(PF.t)}" data-in="PF.t"></div></div>${PF.src?`<div class="note" style="margin-top:-14px">${esc(PF.src)}</div>`:''}
+    <div><div class="fl">Fase</div><div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))">${PHASES.map(([k,nm])=>`<button class="${PF.phase===k?'on':''}" data-a="pfPhase" data-k="${k}" style="font-size:12.5px">${k==='des'?'Desarrollo':k==='ens'?'Ensayo':k==='est'?'Estreno':nm}</button>`).join('')}</div></div>
+    <div><div class="fl">Qué falta <span>${PF.tasks.filter(t=>t.d).length}/${PF.tasks.length}</span></div><div class="group">${PF.tasks.map((t,i)=>`<div class="li"><button class="chk${t.d?' on':''}" data-a="pfTask" data-i="${i}" aria-label="Hecho">${t.d?ICON.check:''}</button><span class="tx"><b style="${t.d?'text-decoration:line-through;color:var(--sec)':''}">${esc(t.t)}</b></span><button class="x" data-a="pfTaskDel" data-i="${i}" aria-label="Quitar">×</button></div>`).join('')}
+      <div class="li"><input type="text" class="inl" placeholder="Método, texto, material…" data-in="PF.task" data-enter="pfTaskAdd"><button class="link" data-a="pfTaskAdd">Añadir</button></div></div></div>
+    <div><div class="fl">Ensayos</div><div class="fg"><div class="fr"><span>Veces ensayado</span><div class="step"><button data-a="pfReps" data-d="-1">−</button><b>${PF.reps}</b><button data-a="pfReps" data-d="1">+</button></div></div></div></div>
+    <div><div class="fl">Notas</div><textarea data-in="PF.notes" placeholder="Efecto, método, ideas de presentación…">${esc(PF.notes)}</textarea></div>
+    <div class="note">${n?'Ya tiene ficha en el Repertorio: «'+esc(n.name)+'».':'Al pasar a «Estreno» se crea su ficha en el Repertorio.'}</div>
+    ${p?'<button class="danger" data-a="projDel">Eliminar proyecto</button>':''}</div>`}});
+  S.pfTaskAdd=()=>{const t=(NTk||'').trim();if(!t)return;PF.tasks.push({t,d:false});NTk='';drawSheet();const i=$('[data-in="PF.task"]');if(i)i.focus()};
+  SI['PF.task']=el=>{NTk=el.value};
+}
+function finishProj(p){if(p.phase==='est'&&!(p.numId&&num(p.numId))){const n=N({name:p.t,notes:p.notes});D.nums.unshift(n);p.numId=n.id;return true}return false}
+
+/* ---- acciones ---- */
+let QN=null;
+function quickNote(id){const n=id?IDE().notes.find(x=>x.id===id):null;QN=n?clone(n):{id:null,t:'',f:(IV.view==='folder'?IV.fid:null),src:(IV.view==='ses'&&tab==='ide'?IV.sid:null)};
+  openSheet({title:n?'Nota':'Nota rápida',left:'Cancelar',right:'Guardar',rightA:'qnSave',body:()=>`<div class="f">
+   <textarea data-in="QN.t" style="min-height:150px;font-size:17px" placeholder="Escribe o dicta con el micrófono del teclado…">${esc(QN.t)}</textarea>
+   <div><div class="fl">Carpeta <span>opcional</span></div><div class="wrapchips">${IDE().folders.map(f=>`<button class="tc${QN.f===f.id?' on':''}" data-a="qnF" data-id="${f.id}"><i class="fdot" style="background:${f.c}"></i>${esc(f.n)}</button>`).join('')}</div>
+   <div class="note">${QN.src?'Quedará marcada como idea de este taller. ':''}Si no eliges carpeta, va a «Sin ordenar».</div></div>
+   ${n?`<div class="act"><button data-a="noteProj" style="color:var(--accent);font-weight:600">Llevar a Proyectos</button><button class="d" data-a="noteDel">Eliminar nota</button></div>`:''}</div>`});
+  if(!n){const t=$('[data-in="QN.t"]');if(t)t.focus()}}
+let FF=null;
+function folderForm(id){const f=id?folderOf(id):null;FF=f?clone(f):{id:null,n:'',c:PALETTE[(IDE().folders.length*3)%PALETTE.length][0]};
+  openSheet({title:f?'Carpeta':'Nueva carpeta',left:'Cancelar',right:'Guardar',rightA:'foldSave',body:()=>`<div class="f"><div class="fg"><div class="fr"><input type="text" class="name" placeholder="Nombre de la carpeta" value="${esc(FF.n)}" data-in="FF.n"></div></div>
+   <div><div class="fl">Color</div><div class="fg"><div class="pal">${PALETTE.map(p=>`<button class="${FF.c===p[0]?'on':''}" style="background:${p[0]}" data-a="ffC" data-c="${p[0]}" aria-label="${p[1]}"></button>`).join('')}</div></div></div></div>`});
+  const t=$('[data-in="FF.n"]');if(t&&!f)t.focus()}
+let ADDP=null,ADDT='';
+function treeAdd(pid){const s=ses(),o=s.objs[IV.oi]||s.objs[0],T=treeOf(s,o);ADDP=pid||null;ADDT='';
+  const pn=pid?T.find(n=>n.id===pid):null;
+  openSheet({title:'Ramas de «'+(pn?pn.t:o.n)+'»',left:'Listo',body:()=>{const ch=kids(T,ADDP);return `<div class="f"><div class="fg"><div class="fr"><input type="text" placeholder="¿Qué te sugiere?" value="${esc(ADDT)}" data-in="ADDT" data-enter="tAddOne" style="font-size:17px"><button class="link" data-a="tAddOne" style="padding:0 8px">Añadir</button></div></div>
+   ${ch.length?`<div class="wrapchips">${ch.map(n=>`<span class="tc">${esc(n.t)}</span>`).join('')}</div>`:''}<div class="note">Escribe y pulsa Intro para ir añadiendo varias seguidas.</div></div>`}});
+  const t=$('[data-in="ADDT"]');if(t)t.focus()}
+let RN='';
+function nodeMenu(id){const s=ses(),o=s.objs[IV.oi]||s.objs[0],T=treeOf(s,o),n=T.find(x=>x.id===id);if(!n)return;RN=n.t;
+  const desc=x=>kids(T,x).reduce((a,c)=>a+1+desc(c.id),0),dn=desc(id);
+  openSheet({title:n.t,left:'Cerrar',right:'Guardar',rightA:'nodeSave',body:()=>`<div class="f"><div class="fg"><div class="fr"><input type="text" value="${esc(RN)}" data-in="RN" aria-label="Nombre" style="font-size:17px"></div></div>
+   <div class="act"><button data-a="nodeAdd" style="color:var(--accent);font-weight:600">Sacarle ramas</button><button data-a="nodeStrike">${s.struck['t:'+id]?'Recuperar (quitar tachado)':'Tachar'}</button><button class="d" data-a="nodeDel">Eliminar${dn?' con sus '+pl(dn,'rama','ramas'):''}</button></div></div>`});
+  S.nodeSave=()=>{n.t=RN.trim()||n.t;save();closeSheet()};
+  S.nodeAdd=()=>{n.t=RN.trim()||n.t;save();treeAdd(id)};
+  S.nodeStrike=()=>{const k='t:'+id;if(s.struck[k])delete s.struck[k];else s.struck[k]=1;save();closeSheet()};
+  S.nodeDel=()=>{closeSheet();withUndo('Concepto eliminado',()=>{const rm={};const mark=x=>{rm[x]=1;kids(T,x).forEach(c=>mark(c.id))};mark(id);s.tree[o.id]=T.filter(x=>!rm[x.id])})};
+}
+let HT='';
+function hypForm(){HT='';openSheet({title:'Hipótesis fantástica',left:'Cancelar',right:'Guardar',rightA:'hypSave',body:()=>`<textarea data-in="HT" style="min-height:120px;font-size:17px" placeholder="¿Y si…?">${esc(HT)}</textarea><div class="note">Se guarda en la hoja de esta sesión y también en tu carpeta «Hipótesis fantásticas».</div>`});const t=$('[data-in="HT"]');if(t){t.value='¿Y si ';HT=t.value;t.focus()}}
+let CF=null;
+function conOpen(id){const s=ses(),c=s.cons.find(x=>x.id===id);if(!c)return;CF=clone(c);
+  openSheet({title:'Conexión',left:'Cancelar',right:'Guardar',rightA:'cfSave',body:()=>`<div class="f"><div class="wrapchips">${CF.parts.map(p=>`<span class="tc on">${esc(p)}</span>`).join('')}</div><textarea data-in="CF.t">${esc(CF.t)}</textarea>
+   <div class="act"><button data-a="cfProj" style="color:var(--accent);font-weight:600">Llevar a Proyectos</button><button class="d" data-a="cfDel">Eliminar conexión</button></div></div>`});
+  S.cfSave=()=>{c.t=CF.t.trim()||c.t;save();closeSheet()};
+  S.cfProj=()=>{c.t=CF.t.trim()||c.t;newProj(c.t,'Del taller '+sesName(s)+' · '+c.parts.join(' + '),c.t);save();closeSheet();toast('Llevado a Proyectos')};
+  S.cfDel=()=>{closeSheet();withUndo('Conexión eliminada',()=>{s.cons=s.cons.filter(x=>x.id!==id)})};
+}
+function goSes(id){IV=Object.assign(IV,{view:'ses',sid:id,clean:false,unir:false,sel:[],oi:0,pair:0,draft:'',fold:{}});tab='ide';render();$('#v-ide').scrollTop=0}
+Object.assign(S,{
+  ideSeg:el=>{IV.seg=el.dataset.k;IV.q='';render();$('#v-ide').scrollTop=0},
+  ideView:el=>{IV.view=el.dataset.v;IV.fid=el.dataset.id||null;render();$('#v-ide').scrollTop=0},
+  ideBack:()=>{if(IV.view==='ses'){IV.seg='taller'}IV.view=null;IV.clean=false;IV.unir=false;IV.sel=[];render();$('#v-ide').scrollTop=0},
+  qnNew:()=>quickNote(null),fab:()=>quickNote(null),qnEdit:el=>quickNote(el.dataset.id),
+  qnF:el=>{QN.f=QN.f===el.dataset.id?null:el.dataset.id;drawSheet()},
+  qnSave:()=>{const t=(QN.t||'').trim();if(!t){closeSheet();return}
+    if(QN.id){const n=IDE().notes.find(x=>x.id===QN.id);n.t=t;n.f=QN.f;save();closeSheet();return}
+    IDE().notes.push({id:uid(),t,f:QN.f,src:QN.src,ts:Date.now()});save();closeSheet();const f=folderOf(QN.f);toast('Guardada en '+(f?'«'+f.n+'»':'«Sin ordenar»'))},
+  noteDel:()=>{const id=QN.id;closeSheet();withUndo('Nota eliminada',()=>{IDE().notes=IDE().notes.filter(x=>x.id!==id)})},
+  noteProj:()=>{const n=IDE().notes.find(x=>x.id===QN.id),f=folderOf(QN.f);newProj((QN.t||'').split('\n')[0],'Nota rápida'+(f?' · '+f.n:''),QN.t);n.t=(QN.t||'').trim()||n.t;save();closeSheet();toast('Llevada a Proyectos')},
+  noteMove:el=>{const n=IDE().notes.find(x=>x.id===el.dataset.id),f=folderOf(el.dataset.f);withUndo('Movida a «'+f.n+'»',()=>{n.f=f.id})},
+  foldNew:()=>folderForm(null),
+  ffC:el=>{FF.c=el.dataset.c;drawSheet()},
+  foldSave:()=>{const n=(FF.n||'').trim();if(!n){toast('Ponle un nombre');return}if(FF.id){const f=folderOf(FF.id);f.n=n;f.c=FF.c}else IDE().folders.push({id:uid(),n,c:FF.c});save();closeSheet()},
+  foldMenu:()=>{const f=folderOf(IV.fid);openSheet({title:f.n,body:()=>`<div class="act"><button data-a="foldEdit">Nombre y color</button><button class="d" data-a="foldDel">Eliminar carpeta</button></div><div class="note">Si eliminas la carpeta, sus notas vuelven a «Sin ordenar».</div>`})},
+  foldEdit:()=>folderForm(IV.fid),
+  foldDel:()=>{const id=IV.fid;IV.view=null;closeSheet();withUndo('Carpeta eliminada',()=>{IDE().folders=IDE().folders.filter(f=>f.id!==id);IDE().notes.forEach(n=>{if(n.f===id)n.f=null})})},
+  /* taller */
+  sesNew:()=>{const s=newSes([]);IDE().ses.push(s);save();goSes(s.id)},
+  sesRandom:()=>{const a=RAND_OBJ.slice().sort(()=>Math.random()-.5).slice(0,2);const s=newSes(a);IDE().ses.push(s);save();goSes(s.id);toast('Hoy toca: '+a.join(' × '))},
+  sesOpen:el=>goSes(el.dataset.id),
+  sesStep:el=>{const s=ses();s.step=+el.dataset.n;IV.clean=false;IV.unir=false;IV.sel=[];IV.draft='';save();render();$('#v-ide').scrollTop=0},
+  sesMenu:()=>{const s=ses();openSheet({title:sesName(s),body:()=>`<div class="act"><button data-a="hojaShare">Compartir hoja</button><button class="d" data-a="sesDel">Eliminar sesión</button></div>`})},
+  sesDel:()=>{const id=IV.sid;IV.view=null;IV.seg='taller';closeSheet();withUndo('Sesión eliminada',()=>{IDE().ses=IDE().ses.filter(x=>x.id!==id)})},
+  cleanTog:()=>{IV.clean=!IV.clean;IV.unir=false;IV.sel=[];render()},
+  unirTog:()=>{IV.unir=!IV.unir;IV.clean=false;IV.sel=[];IV.draft='';render()},
+  strike:el=>{const s=ses(),k=el.dataset.id;if(s.struck[k])delete s.struck[k];else s.struck[k]=1;saveSoon();el.classList.toggle('struck',!!s.struck[k])},
+  objAdd:()=>{const t=IV.draft.trim();if(!t)return;ses().objs.push(newObj(t));IV.draft='';save();render();const i=$('[data-in="IV.draft"]');if(i)i.focus()},
+  objRand:()=>{const s=ses(),have=s.objs.map(o=>o.n);const c=RAND_OBJ.filter(x=>have.indexOf(x)<0);s.objs.push(newObj(c[Math.floor(Math.random()*c.length)]));save();render()},
+  objDel:el=>{const s=ses(),o=s.objs[+el.dataset.i];withUndo('Objeto quitado',()=>{s.objs.splice(+el.dataset.i,1);delete s.tree[o.id];IV.oi=0})},
+  oiSet:el=>{IV.oi=+el.dataset.i;IV.draft='';render()},
+  attrAdd:()=>{const t=IV.draft.trim();if(!t)return;const s=ses();(s.objs[IV.oi]||s.objs[0]).attrs.push({id:uid(),t});IV.draft='';save();render();const i=$('[data-in="IV.draft"]');if(i)i.focus()},
+  attrDel:el=>{const s=ses(),o=s.objs[IV.oi]||s.objs[0];o.attrs=o.attrs.filter(a=>a.id!==el.dataset.id);save();render()},
+  lamp:el=>{const s=ses(),o=s.objs[IV.oi]||s.objs[0],k=el.dataset.k;o.inv[k]=o.inv[k]||{};o.inv[k].lamp=!o.inv[k].lamp;save();el.classList.toggle('on',o.inv[k].lamp)},
+  pairSet:el=>{IV.pair=+el.dataset.i;render()},
+  shuf:()=>{IV.shuf=Math.floor(Math.random()*9999)+1;render()},
+  prepStar:el=>{const s=ses(),k=el.dataset.k;if(s.preps[k])delete s.preps[k];else s.preps[k]=true;saveSoon();el.classList.toggle('on',!!s.preps[k]);el.querySelector('s').textContent=s.preps[k]?'★':'☆';
+    const n=$('.ses .note');if(n){const L=$$('.pp'),st=L.filter(x=>x.classList.contains('on')).length;n.firstChild.textContent=L.length+' combinaciones · '+st+' con estrella · '}},
+  tmode:el=>{IV.tmode=el.dataset.k;render()},
+  tFold:el=>{const id=el.dataset.id;IV.fold[id]=!IV.fold[id];render()},
+  tAdd:el=>{if(IV.clean)return;treeAdd(el.dataset.id)},
+  tAddOne:()=>{const t=ADDT.trim();if(!t)return;const s=ses(),o=s.objs[IV.oi]||s.objs[0];treeOf(s,o).push({id:uid(),t,p:ADDP});if(ADDP)IV.fold[ADDP]=false;ADDT='';save();drawSheet();const i=$('[data-in="ADDT"]');if(i)i.focus()},
+  tNode:el=>{if(IV.clean){const s=ses(),k='t:'+el.dataset.id;if(s.struck[k])delete s.struck[k];else s.struck[k]=1;saveSoon();render();return}nodeMenu(el.dataset.id)},
+  zoom:el=>{const d=+el.dataset.d;if(!d){TB.x=0;TB.y=0;TB.s=1}else TB.s=Math.max(.35,Math.min(2.6,TB.s*(d>0?1.25:.8)));applyTB()},
+  hojaTap:el=>{const s=ses(),id=el.dataset.id;
+    if(IV.unir){const i=IV.sel.indexOf(id);if(i>=0)IV.sel.splice(i,1);else{if(IV.sel.length>=4){toast('Como mucho 4 conceptos');return}IV.sel.push(id)}render();return}
+    if(IV.clean){if(s.struck[id])delete s.struck[id];else s.struck[id]=1;saveSoon();render();return}
+    toast('Pulsa «Limpiar» para tachar o «Unir» para juntar conceptos')},
+  allPreps:()=>{IV.allPreps=!IV.allPreps;render()},
+  hidT:()=>{IV.hidT=!IV.hidT;render()},
+  hypAdd:()=>hypForm(),
+  hypSave:()=>{const t=HT.trim();if(!t||t==='¿Y si'){closeSheet();return}const s=ses();s.hyps.push({id:uid(),t});
+    const f=IDE().folders.find(x=>x.id==='hipotesis')||IDE().folders.find(x=>norm(x.n).indexOf('hipotesis')>=0);IDE().notes.push({id:uid(),t,f:f?f.id:null,src:s.id,ts:Date.now()});save();closeSheet()},
+  conSave:()=>{const s=ses(),t=IV.draft.trim();if(!t){toast('Escribe qué sale al juntarlos');return}s.cons.push({id:uid(),t,parts:IV.sel.map(id=>labelOf(s,id))});IV.sel=[];IV.draft='';save();render();toast('Conexión guardada')},
+  conProj:()=>{const s=ses(),t=IV.draft.trim();if(!t){toast('Escribe qué sale al juntarlos');return}const parts=IV.sel.map(id=>labelOf(s,id));s.cons.push({id:uid(),t,parts});newProj(t,'Del taller '+sesName(s)+' · '+parts.join(' + '),t);IV.sel=[];IV.draft='';save();render();toast('Llevado a Proyectos')},
+  conOpen:el=>conOpen(el.dataset.id),
+  hojaShare:()=>{const s=ses(),t=hojaText(s);if(SH)closeSheet();
+    if(navigator.share){navigator.share({title:'Hoja · '+sesName(s),text:t}).catch(()=>{});return}
+    if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Hoja copiada')).catch(()=>toast('No se ha podido copiar'));else toast('No se puede compartir aquí')},
+  /* proyectos */
+  phase:el=>{IV.phase=el.dataset.k;render()},
+  projNew:()=>projForm(null),projEdit:el=>projForm(el.dataset.id),
+  pfPhase:el=>{PF.phase=el.dataset.k;drawSheet()},
+  pfTask:el=>{const t=PF.tasks[+el.dataset.i];t.d=!t.d;drawSheet()},
+  pfTaskDel:el=>{PF.tasks.splice(+el.dataset.i,1);drawSheet()},
+  pfReps:el=>{PF.reps=Math.max(0,PF.reps+ +el.dataset.d);drawSheet()},
+  projSave:()=>{PF.t=(PF.t||'').trim()||'Proyecto sin título';let p;if(PF.id){p=IDE().projs.find(x=>x.id===PF.id);Object.assign(p,PF)}else{p=Object.assign({},PF,{id:uid(),ts:Date.now()});IDE().projs.push(p)}
+    const made=finishProj(p);IV.phase=p.phase;save();closeSheet();if(made)toast('¡Estrenado! Ficha creada en el Repertorio')},
+  projDel:()=>{const id=PF.id;closeSheet();withUndo('Proyecto eliminado',()=>{IDE().projs=IDE().projs.filter(x=>x.id!==id)})},
+  projMove:el=>{const p=IDE().projs.find(x=>x.id===el.dataset.id);openSheet({title:'Mover «'+p.t+'»',body:()=>`<div class="act">${PHASES.map(([k,n])=>`<button data-a="pmTo" data-k="${k}" style="${p.phase===k?'color:var(--accent);font-weight:600':''}">${p.phase===k?'✓ ':''}${n}</button>`).join('')}</div>`});
+    S.pmTo=b=>{p.phase=b.dataset.k;p.ts=Date.now();const made=finishProj(p);IV.phase=p.phase;save();closeSheet();if(made)toast('¡Estrenado! Ficha creada en el Repertorio')}}
+});
+Object.assign(SI,{
+  'IV.q':el=>{IV.q=el.value;const p=el.selectionStart;render();const n=$('[data-in="IV.q"]');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(e){}}},
+  'IV.draft':el=>{IV.draft=el.value},
+  morf:el=>{const s=ses(),o=s.objs[IV.oi]||s.objs[0];o.m[el.dataset.f]=el.value;saveSoon()},
+  inv:el=>{const s=ses(),o=s.objs[IV.oi]||s.objs[0],k=el.dataset.k;o.inv[k]=o.inv[k]||{};o.inv[k].to=el.value;saveSoon()},
+  'QN.t':el=>{QN.t=el.value},'FF.n':el=>{FF.n=el.value},'ADDT':el=>{ADDT=el.value},'RN':el=>{RN=el.value},'HT':el=>{HT=el.value},'CF.t':el=>{CF.t=el.value},
+  'PF.t':el=>{PF.t=el.value},'PF.notes':el=>{PF.notes=el.value}
+});
+document.addEventListener('keydown',e=>{const el=e.target;if(e.key==='Enter'&&el&&el.dataset&&el.dataset.enter&&!e.isComposing){e.preventDefault();const f=A[el.dataset.enter]||S[el.dataset.enter];if(f)f(el)}});
 
 /* ============ arranque ============ */
 addEventListener('resize',()=>{if(tab==='mon')render()});
