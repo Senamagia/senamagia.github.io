@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '1.2';
+const VERSION = '1.3';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -521,7 +521,7 @@ function formCambio() {
   const F = S.cambio;
   const lista = vivos('cambios').sort((a, b) => b.fecha.localeCompare(a.fecha));
   return `<section class="card form">
-    <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cambio u observación</h2><span class="small muted">Cada cambio empieza una etapa nueva en Progreso, para comparar antes y después.</span></div>
+    <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cambio u observación</h2><span class="small muted">Los cambios de dieta y de medicación salen marcados en la gráfica de peso y empiezan una etapa nueva en Progreso. Las visitas y notas quedan en el Diario.</span></div>
     <div class="chips">${TIPOS_CAMBIO.map(([k, l]) => `<button class="chip" data-a="cambio-tipo" data-v="${k}" aria-pressed="${F.tipo === k}">${l}</button>`).join('')}</div>
     <label class="lbl">Qué ha cambiado<textarea class="field" rows="3" data-bind="cambio.texto" placeholder="Ej.: empezamos la dieta nueva de la nutricionista">${esc(F.texto)}</textarea></label>
     <label class="lbl">Desde qué día<input class="field" type="date" value="${F.fecha}" data-bind="cambio.fecha"></label>
@@ -548,7 +548,7 @@ function datosDia() {
   return map;
 }
 function etapas(desde, hasta) {
-  const cs = vivos('cambios').filter(c => c.fecha <= hasta).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const cs = vivos('cambios').filter(c => c.fecha <= hasta && (ES_DIETA(c) || ES_MED(c))).sort((a, b) => a.fecha.localeCompare(b.fecha));
   const out = [];
   const ini0 = primerDia() || desde;
   if (!cs.length || cs[0].fecha > ini0) out.push({ nombre: cs.length ? 'Antes de: ' + (cs[0].texto || TIPO_CAMBIO_N[cs[0].tipo]) : 'Desde el principio', desde: ini0, cambio: null });
@@ -587,10 +587,11 @@ function vistaProg() {
     <div style="background:var(--good);color:#fff"><span class="n">${R.g}</span><span class="t">días buenos</span></div>
     <div style="background:var(--reg);color:var(--reg-t)"><span class="n">${R.r}</span><span class="t">regulares</span></div>
     <div style="background:var(--bad);color:#fff"><span class="n">${R.m}</span><span class="t">malos</span></div></section>`;
+  h += graficaPeso(desde, hasta, map);
   // Etapas
   const E = etapas(desde, hasta);
   const ER = E.map(e => Object.assign({}, e, resumen(e.desde < desde ? desde : e.desde, e.hasta, map)));
-  h += `<section class="card col" style="gap:14px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Antes y después de cada cambio</h2><span class="tiny muted">Cada etapa empieza con un cambio apuntado en Registrar › Cambio</span></div>
+  h += `<section class="card col" style="gap:14px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Antes y después de cada cambio</h2><span class="tiny muted">Cada cambio de dieta o de medicación empieza una etapa nueva</span></div>
     ${ER.map((e, i) => `<div class="etapa" style="background:${i % 2 ? 'var(--teal-s)' : 'var(--soft)'}">
       <div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><span class="b" style="font-size:16px">${esc(e.nombre)}</span><span class="tiny muted" style="white-space:nowrap">${fCorta(e.desde)} – ${e.hasta === hasta ? 'hoy' : fCorta(e.hasta)}</span></div>
       ${barra(e.g, e.r, e.m, 0)}
@@ -598,7 +599,6 @@ function vistaProg() {
     </div>`).join('')}
     ${conclusion(ER)}
   </section>`;
-  h += graficaPeso(desde, hasta, map, E);
   h += semanas(desde, hasta, map);
   h += `<section class="card col" style="gap:10px"><h2 style="font-size:18px;font-weight:800">Informe para la vet</h2><p class="small muted">Este resumen en texto, para mandarlo por WhatsApp a la vet o a la nutricionista.</p><button class="btn btn-line" data-a="informe">Copiar informe</button></section>`;
   return h;
@@ -614,38 +614,68 @@ function conclusion(ER) {
   if (dp != null) t += ' y ' + (Math.abs(dp) < 3 ? 'el peso estable' : (dp > 0 ? Math.round(dp) + ' g más' : Math.round(-dp) + ' g menos') + ' de media');
   return `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b" style="color:var(--teal-d)">${t}.</span></div>`;
 }
-function graficaPeso(desde, hasta, map, E) {
+const ES_DIETA = c => c.tipo === 'dieta';
+const ES_MED = c => ['dosis', 'medicacion', 'suplemento'].includes(c.tipo);
+function graficaPeso(desde, hasta, map) {
   const N = diffDays(hasta, desde) + 1;
   const pts = [];
   for (let i = 0; i < N; i++) { const f = addDays(desde, i); const d = map[f]; if (d && d.pesos.length) pts.push([i, d.pesos.reduce((a, b) => a + b, 0) / d.pesos.length]); }
   const ult = pts.length ? pts[pts.length - 1][1] : null;
   const dif = pts.length > 1 ? ult - pts[0][1] : null;
-  let h = `<section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between;align-items:flex-end"><div class="col"><h2 style="font-size:19px;font-weight:800">Peso</h2><span class="tiny muted">Media de mañana y noche de cada día</span></div>
+  let h = `<section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between;align-items:flex-end"><div class="col"><h2 style="font-size:19px;font-weight:800">Peso, dieta y medicación</h2><span class="tiny muted">Media de mañana y noche de cada día</span></div>
     ${ult != null ? `<div class="col" style="align-items:flex-end"><span style="font-size:28px;font-weight:800;line-height:1">${Math.round(ult)} g</span>${dif != null ? `<span class="tiny b" style="color:${dif < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${dif > 0 ? '+' : dif < 0 ? '−' : '±'}${Math.round(Math.abs(dif))} g en el periodo</span>` : ''}</div>` : ''}</div>`;
   if (pts.length < 2) return h + `<div class="empty">Hacen falta al menos dos días con peso para dibujar la gráfica.</div></section>`;
-  const W = 326, H = 200, x0 = 34, x1 = W - 4, yT = 26, yB = 172;
+  const cs = vivos('cambios').sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const dietas = cs.filter(ES_DIETA);
+  const meds = cs.filter(c => ES_MED(c) && c.fecha >= desde && c.fecha <= hasta);
+  const W = 326, x0 = 34, x1 = W - 6, yD = 4, yM = 34, yT = 66, yB = 214, H = 236;
   let lo = Math.min(...pts.map(p => p[1])), hi = Math.max(...pts.map(p => p[1]));
-  const pad_ = Math.max(4, (hi - lo) * 0.15); lo -= pad_; hi += pad_;
-  const X = i => N === 1 ? (x0 + x1) / 2 : x0 + i * (x1 - x0) / (N - 1);
+  const pd = Math.max(4, (hi - lo) * 0.15); lo -= pd; hi += pd;
+  const X = i => x0 + i * (x1 - x0) / Math.max(1, N - 1);
+  const XF = f => X(Math.min(N - 1, Math.max(0, diffDays(f, desde))));
   const Y = v => yB - (v - lo) * (yB - yT) / (hi - lo);
-  let s = `<svg role="img" aria-label="Gráfica del peso de Susi del ${fCorta(desde)} al ${fCorta(hasta)}" width="100%" viewBox="0 0 ${W} ${H}" style="display:block">`;
-  E.forEach((e, i) => {
-    const a = X(Math.max(0, diffDays(e.desde, desde))), b = X(Math.min(N - 1, diffDays(e.hasta, desde)));
-    s += `<rect x="${a.toFixed(1)}" y="0" width="${Math.max(1, b - a).toFixed(1)}" height="${yB + 4}" fill="${i % 2 ? '#E3F0EE' : '#F6EEE3'}"/>`;
-    if (i > 0) s += `<line x1="${a.toFixed(1)}" x2="${a.toFixed(1)}" y1="0" y2="${yB + 4}" stroke="#1D6B66" stroke-width="2"/>`;
-    if (b - a > 60) s += `<text x="${(a + 6).toFixed(1)}" y="16" font-size="11" font-weight="800" fill="${i % 2 ? '#14524E' : '#6E625A'}">${esc(((n, k) => n.length > k ? n.slice(0, k - 1) + '…' : n)(e.nombre || '', Math.floor((b - a) / 7)))}</text>`;
+  const corta = (n, k) => n.length > k ? n.slice(0, Math.max(1, k - 1)) + '…' : n;
+  let s = `<svg role="img" aria-label="Peso de Susi del ${fCorta(desde)} al ${fCorta(hasta)}, con los cambios de dieta y de medicación marcados" width="100%" viewBox="0 0 ${W} ${H}" style="display:block">`;
+  // Carril de dieta
+  s += `<text x="0" y="${yD + 15}" font-size="10" font-weight="800" fill="#6E625A">DIETA</text>`;
+  const tramos = [];
+  const antes = dietas.filter(c => c.fecha <= desde).pop();
+  tramos.push({ desde, nombre: antes ? (antes.texto || 'Dieta') : 'Dieta de antes' });
+  dietas.filter(c => c.fecha > desde && c.fecha <= hasta).forEach(c => tramos.push({ desde: c.fecha, nombre: c.texto || 'Dieta nueva', cambio: true }));
+  const COLD = ['#F6E7D4', '#CFE7E3', '#F2D4B5', '#B9DCD6'];
+  tramos.forEach((t, i) => {
+    const a = XF(t.desde), b = i + 1 < tramos.length ? XF(tramos[i + 1].desde) : x1;
+    s += `<rect x="${a.toFixed(1)}" y="${yD}" width="${Math.max(2, b - a - 1).toFixed(1)}" height="22" rx="6" fill="${COLD[i % COLD.length]}"/>`;
+    if (b - a > 28) s += `<text x="${(a + 6).toFixed(1)}" y="${yD + 15}" font-size="11" font-weight="800" fill="#2A2320">${esc(corta(t.nombre, Math.floor((b - a - 10) / 6.2)))}</text>`;
+    if (t.cambio) s += `<line x1="${a.toFixed(1)}" x2="${a.toFixed(1)}" y1="${yD}" y2="${yB}" stroke="#1D6B66" stroke-width="2.5"/>`;
   });
-  const ticks = 3;
-  for (let k = 0; k < ticks; k++) {
+  // Carril de medicación
+  s += `<text x="0" y="${yM + 13}" font-size="10" font-weight="800" fill="#6E625A">MED.</text><line x1="${x0}" x2="${x1}" y1="${yM + 9}" y2="${yM + 9}" stroke="#EADCCB" stroke-width="2"/>`;
+  meds.forEach((c, i) => {
+    const x = XF(c.fecha);
+    s += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${yM + 18}" y2="${yB}" stroke="#C2620E" stroke-width="1.6" stroke-dasharray="4 4"/><circle cx="${x.toFixed(1)}" cy="${yM + 9}" r="9" fill="#F2B880" stroke="#fff" stroke-width="2"/><text x="${x.toFixed(1)}" y="${yM + 13}" text-anchor="middle" font-size="11" font-weight="800" fill="#4A2402">${i + 1}</text>`;
+  });
+  // Peso
+  for (let k = 0; k < 3; k++) {
     const v = lo + (hi - lo) * (0.2 + 0.3 * k);
-    s += `<line x1="${x0}" x2="${x1}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#D9D0C4" stroke-dasharray="2 4"/><text x="${x0 - 6}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#6E625A">${Math.round(v)}</text>`;
+    s += `<line x1="${x0}" x2="${x1}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#E2D8CB" stroke-dasharray="2 4"/><text x="${x0 - 6}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#6E625A">${Math.round(v)}</text>`;
   }
   s += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ')}" fill="none" stroke="#2A2320" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
   if (pts.length < 40) pts.forEach(p => { s += `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" fill="#2A2320"/>`; });
   const lp = pts[pts.length - 1];
   s += `<circle cx="${X(lp[0]).toFixed(1)}" cy="${Y(lp[1]).toFixed(1)}" r="5.5" fill="#2A2320"/>`;
-  s += `<text x="${x0}" y="${H - 6}" font-size="11" fill="#6E625A">${fCorta(desde)}</text><text x="${x1}" y="${H - 6}" text-anchor="end" font-size="11" fill="#6E625A">hoy</text></svg>`;
-  return h + s + '</section>';
+  s += `<text x="${x0}" y="${H - 4}" font-size="11" fill="#6E625A">${fCorta(desde)}</text><text x="${x1}" y="${H - 4}" text-anchor="end" font-size="11" fill="#6E625A">hoy</text></svg>`;
+  // Leyenda: qué pasó en cada marca, con el peso antes y después
+  const media = (a, b) => { const v = []; for (let f = a; f <= b; f = addDays(f, 1)) { const d = map[f]; if (d) v.push(...d.pesos); } return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
+  const efecto = f => { const a = media(addDays(f, -7), addDays(f, -1)), b = media(f, addDays(f, 6)); if (a == null || b == null) return ''; const d = b - a; return ` · <b style="color:${d < -2 ? 'var(--warn)' : 'var(--teal-d)'}">${Math.abs(d) < 2 ? 'peso igual' : (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'}</b> la semana siguiente`; };
+  const filas = [];
+  dietas.filter(c => c.fecha > desde && c.fecha <= hasta).forEach(c => filas.push({ f: c.fecha, html: `<span style="width:22px;height:22px;border-radius:6px;background:#1D6B66;flex:0 0 22px"></span><span class="small"><b>${fCorta(c.fecha)} · ${esc(c.texto || 'Dieta nueva')}</b>${efecto(c.fecha)}</span>` }));
+  meds.forEach((c, i) => filas.push({ f: c.fecha, html: `<span style="width:22px;height:22px;border-radius:999px;background:#F2B880;color:#4A2402;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 22px">${i + 1}</span><span class="small"><b>${fCorta(c.fecha)} · ${esc(c.texto || TIPO_CAMBIO_N[c.tipo])}</b>${efecto(c.fecha)}</span>` }));
+  filas.sort((a, b) => a.f.localeCompare(b.f));
+  h += s;
+  h += filas.length ? `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px">${filas.map(r => `<div class="row" style="gap:10px;align-items:flex-start">${r.html}</div>`).join('')}</div>`
+    : `<span class="tiny muted">Cuando apuntes un cambio de dieta o de medicación en Registrar › Cambio, saldrá marcado aquí con su efecto en el peso.</span>`;
+  return h + '</section>';
 }
 function semanas(desde, hasta, map) {
   const cambios = vivos('cambios');
