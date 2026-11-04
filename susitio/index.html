@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '1.5';
+const VERSION = '2.0';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -211,7 +211,8 @@ function guardar() {
 }
 function sembrarMeds() {
   const t = Date.now();
-  const m = (o) => Object.assign({ id: uid(), activo: true, upd: t, autor: yo() || 'Sena', desde: hoy() }, o);
+  const slug = n => 'med-' + n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
+  const m = (o) => Object.assign({ id: slug(o.nombre), activo: true, upd: 1, autor: yo() || 'Sena', desde: hoy() }, o);
   DB.meds = [
     m({ nombre: 'Prednisona', dosis: '0,07 ml', tipo: 'diario', momentos: ['manana', 'noche'] }),
     m({ nombre: 'Pepcid', dosis: '0,2 ml', tipo: 'diario', momentos: ['manana', 'noche'] }),
@@ -245,10 +246,11 @@ function poner(col, rec) {
   const i = DB[col].findIndex(r => r.id === rec.id);
   if (i >= 0) DB[col][i] = rec; else DB[col].push(rec);
   guardar();
+  SYNC.marcar(col, rec.id);
 }
 function borrar(col, id) {
   const r = DB[col].find(x => x.id === id);
-  if (r) { r.borrado = true; r.upd = Date.now(); r.por = yo(); guardar(); }
+  if (r) { r.borrado = true; r.upd = Date.now(); r.por = yo(); guardar(); SYNC.marcar(col, id); }
 }
 // Junta dos copias (otro móvil, una copia de seguridad o la nube): gana el cambio más reciente de cada registro.
 function juntar(otro) {
@@ -257,8 +259,8 @@ function juntar(otro) {
     (otro[c] || []).forEach(r => {
       if (!r || !r.id) return;
       const i = DB[c].findIndex(x => x.id === r.id);
-      if (i < 0) { DB[c].push(r); n++; }
-      else if ((r.upd || 0) > (DB[c][i].upd || 0)) { DB[c][i] = r; n++; }
+      if (i < 0) { DB[c].push(r); n++; SYNC.marcar(c, r.id); }
+      else if ((r.upd || 0) > (DB[c][i].upd || 0)) { DB[c][i] = r; n++; SYNC.marcar(c, r.id); }
     });
   });
   guardar();
@@ -752,8 +754,9 @@ function vistaMed() {
     ${grupo('Cada día', act.filter(m => m.tipo === 'diario'))}
     ${grupo('Cada semana', act.filter(m => m.tipo === 'semanal'))}
     ${viejos.length ? `<h2 class="sec-title" style="font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Ya no se le da</h2><div class="card" style="padding:4px 16px">${viejos.map(m => `<div class="list-row"><span class="col grow"><span class="b">${esc(m.nombre)}</span><span class="tiny muted">${esc(m.dosis)}${m.hasta ? ' · hasta el ' + fCorta(m.hasta) : ''}</span></span><button class="chip" data-a="med-volver" data-id="${m.id}">Volver a dar</button></div>`).join('')}</div>` : ''}
-    <section class="card col" style="gap:10px;margin-top:6px"><h2 style="font-size:17px;font-weight:800">Ajustes y copia de seguridad</h2>
-      <p class="small muted">Ahora los datos se guardan en este móvil. Haz una copia de vez en cuando hasta que conectemos la nube.</p>
+    ${nubeHTML()}
+    <section class="card col" style="gap:10px"><h2 style="font-size:17px;font-weight:800">Ajustes y copia de seguridad</h2>
+      <p class="small muted">${SYNC.meta.casa ? 'Los datos están en la nube y en este móvil. La copia es por si acaso.' : 'Ahora los datos se guardan solo en este móvil. Haz una copia de vez en cuando.'}</p>
       <div class="grid2"><button class="btn btn-line" data-a="exportar">Hacer copia</button><button class="btn btn-soft" data-a="importar">Cargar copia</button></div>
       <button class="btn btn-soft" data-a="quien">Este móvil es de: ${esc(yo())} · cambiar</button>
       <span class="tiny muted" style="text-align:center">Susitio ${VERSION}</span>
@@ -847,7 +850,7 @@ function vistaSheetToma() {
    Pintar
    ========================================================= */
 function abrirSheet(tipo, extra) { S.sheet = { tipo, extra }; pintarSheet(); }
-function cerrarSheet() { S.sheet = null; S.form = null; pintarSheet(); }
+function cerrarSheet() { S.sheet = null; S.form = null; pintarSheet(); if (SYNC.pendiente) { SYNC.pendiente = false; repintar(); } }
 function pintarSheet() {
   const el = document.getElementById('sheet');
   if (!S.sheet) { el.innerHTML = ''; return; }
@@ -857,6 +860,9 @@ function pintarSheet() {
   else if (t === 'toma') c = vistaSheetToma();
   else if (t === 'quien') c = `<div class="who">${LOGO(88).replace('<svg', '<svg style="align-self:center"')}<h2>¿Quién usa este móvil?</h2><p class="muted">Así cada cosa que apuntes saldrá con tu nombre.</p><button class="btn btn-big btn-teal" data-a="soy" data-v="Sena">Soy Sena</button><button class="btn btn-big btn-line" data-a="soy" data-v="Sara">Soy Sara</button></div>`;
   else if (t === 'comida') c = `<h2>Comida</h2><div class="form"><label class="lbl">Qué<input class="field" data-bind="form.que" value="${esc(S.form.que)}"></label><div class="grid2"><label class="lbl">Hora<input class="field" type="time" data-bind="form.hora" value="${esc(S.form.hora)}"></label><label class="lbl">Gramos<input class="field" inputmode="decimal" data-bind="form.g" value="${esc(S.form.g)}" placeholder="—"></label></div><button class="btn btn-teal" data-a="comida-guardar">Guardar</button><button class="btn btn-danger" data-a="comida-borrar-sheet">Borrar</button></div>`;
+  else if (t === 'nube') c = vistaSheetNube();
+  else if (t === 'casa') c = vistaSheetCasa();
+  else if (t === 'invitar') c = vistaSheetInvitar();
   else if (t === 'meta') c = `<h2>Meta de comida</h2><p class="small muted">Los gramos que debería comer al día. Se puede cambiar cuando quieras y vale para los dos móviles.</p><div class="form"><label class="lbl">Gramos al día<input class="field" id="meta-in" inputmode="decimal" value="${fNum(metaComida())}" style="font-size:24px;text-align:center;font-weight:800"></label><button class="btn btn-teal" data-a="meta-guardar">Guardar</button></div>`;
   else if (t === 'borrar') c = `<h2>¿Borrar?</h2><p class="muted">${esc(S.sheet.extra.texto)}</p><button class="btn btn-danger" data-a="borrar-ok">Borrar</button><button class="btn btn-soft" data-a="cerrar">Cancelar</button>`;
   else if (t === 'informe') c = `<h2>Informe</h2><p class="small muted">Si no se ha copiado solo, mantén pulsado el texto para copiarlo.</p><textarea class="field" rows="14" readonly>${esc(S.sheet.extra)}</textarea><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
@@ -1061,6 +1067,284 @@ async function exportar() {
   toast('Copia descargada');
 }
 
+/* =========================================================
+   NUBE: cuentas y casa compartida (Firebase)
+   - Cada persona entra con su correo y contraseña.
+   - La "casa de Susi" solo la pueden leer y escribir sus miembros.
+   - Para entrar en una casa hace falta un código de invitación de un solo uso.
+   - Cada registro se guarda como un documento: se juntan sin pisarse.
+   ========================================================= */
+const FB_CONFIG = { apiKey: 'AIzaSyDKjo5OtUZtATvoEsdf-hNLSUgdGbs0icE', authDomain: 'espatontos-6ca70.firebaseapp.com', projectId: 'espatontos-6ca70', storageBucket: 'espatontos-6ca70.firebasestorage.app', messagingSenderId: '50622095177', appId: '1:50622095177:web:962e7caa4994f1caf48498' };
+const FB_VER = '10.12.2';
+const KEY_SYNC = 'susitio-nube';
+const codigo = n => { const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let r = ''; const b = new Uint8Array(n); crypto.getRandomValues(b); b.forEach(x => r += a[x % a.length]); return r; };
+const SYNC = {
+  fb: null, user: null, unsub: null, status: 'off', err: '', ocupado: false, timer: 0, pendiente: false, ultimo: 0,
+  meta: (() => { try { return JSON.parse(localStorage.getItem(KEY_SYNC)) || {}; } catch (e) { return {}; } })(),
+  guardarMeta() { try { localStorage.setItem(KEY_SYNC, JSON.stringify(this.meta)); } catch (e) {} },
+  async cargar() {
+    if (this.fb) return this.fb;
+    if (window.FBX_MOCK) { this.fb = window.FBX_MOCK; return this.fb; }
+    const base = 'https://www.gstatic.com/firebasejs/' + FB_VER + '/';
+    const [A, Au, F] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+    const app = A.initializeApp(FB_CONFIG, 'susitio'), auth = Au.getAuth(app), db = F.getFirestore(app);
+    auth.languageCode = 'es';
+    const casaRef = c => F.doc(db, 'susitio', c);
+    const rcol = c => F.collection(db, 'susitio', c, 'r');
+    const leer = snap => { const out = []; snap.forEach(d => { const x = d.data(); out.push({ col: x.col, d: x.d, st: x.st ? x.st.toMillis() : 0, local: d.metadata.hasPendingWrites }); }); return out; };
+    this.fb = {
+      onAuth: cb => Au.onAuthStateChanged(auth, u => cb(u ? { uid: u.uid, email: u.email } : null)),
+      entrar: (e, p) => Au.signInWithEmailAndPassword(auth, e, p).then(c => ({ uid: c.user.uid, email: c.user.email })),
+      crear: (e, p) => Au.createUserWithEmailAndPassword(auth, e, p).then(c => ({ uid: c.user.uid, email: c.user.email })),
+      olvido: e => Au.sendPasswordResetEmail(auth, e),
+      salir: () => Au.signOut(auth),
+      miCasa: async uid => { const d = await F.getDoc(F.doc(db, 'susitioUsuarios', uid)); return d.exists() ? d.data().casa : null; },
+      ponerMiCasa: (uid, casa) => F.setDoc(F.doc(db, 'susitioUsuarios', uid), { casa }),
+      soyMiembro: async (casa, uid) => { try { const d = await F.getDoc(F.doc(db, 'susitio', casa, 'miembros', uid)); return d.exists(); } catch (e) { return false; } },
+      crearCasa: async (casa, uid, datos) => { await F.setDoc(casaRef(casa), { owner: uid, t: F.serverTimestamp() }); await F.setDoc(F.doc(db, 'susitio', casa, 'miembros', uid), Object.assign({ t: F.serverTimestamp() }, datos)); },
+      unirse: async (casa, cod, uid, datos) => { await F.setDoc(F.doc(db, 'susitio', casa, 'miembros', uid), Object.assign({ codigo: cod, t: F.serverTimestamp() }, datos)); try { await F.deleteDoc(F.doc(db, 'susitio', casa, 'invitaciones', cod)); } catch (e) {} },
+      invitar: (casa, cod, uid) => F.setDoc(F.doc(db, 'susitio', casa, 'invitaciones', cod), { por: uid, t: F.serverTimestamp() }),
+      miembros: async casa => { const s = await F.getDocs(F.collection(db, 'susitio', casa, 'miembros')); const r = []; s.forEach(d => r.push(Object.assign({ uid: d.id }, d.data()))); return r; },
+      bajar: async (casa, desde) => leer(await F.getDocs(desde ? F.query(rcol(casa), F.where('st', '>', F.Timestamp.fromMillis(desde))) : rcol(casa))),
+      escuchar: (casa, desde, cb, err) => F.onSnapshot(F.query(rcol(casa), F.where('st', '>', F.Timestamp.fromMillis(desde || 0))), s => cb(leer(s)), err),
+      subir: async (casa, lista, uid) => {
+        for (let i = 0; i < lista.length; i += 400) {
+          const b = F.writeBatch(db);
+          lista.slice(i, i + 400).forEach(x => b.set(F.doc(db, 'susitio', casa, 'r', x.col + '~' + x.rec.id), { col: x.col, id: x.rec.id, upd: x.rec.upd || 0, d: JSON.stringify(x.rec), por: uid, st: F.serverTimestamp() }));
+          await b.commit();
+        }
+      }
+    };
+    return this.fb;
+  },
+  /* --- arranque: si ya había sesión, conectar solo --- */
+  async arrancar() {
+    if (!this.meta.uid) return;
+    this.setStatus('conectando');
+    try {
+      const fb = await this.cargar();
+      fb.onAuth(u => {
+        if (u && u.uid === this.meta.uid) { this.user = u; if (this.meta.casa) this.conectar(); else this.setStatus('sin-casa'); }
+        else if (!u) { this.user = null; this.setStatus('off'); }
+      });
+    } catch (e) { this.setStatus('sin-red'); }
+  },
+  setStatus(s, err) {
+    this.status = s; this.err = err || '';
+    if (S.sheet && ['nube', 'casa', 'invitar'].includes(S.sheet.tipo)) pintarSheet();
+    else if (S.tab === 'med' && !S.sheet) repintar();
+  },
+  /* --- marcar un registro para subirlo --- */
+  marcar(col, id) {
+    if (!this.meta.casa || this.aplicando) return;
+    this.meta.pend = this.meta.pend || {};
+    this.meta.pend[col + '~' + id] = 1;
+    this.guardarMeta();
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.subir(), 1200);
+  },
+  async subir() {
+    if (!this.user || !this.meta.casa || this.subiendo) return;
+    const keys = Object.keys(this.meta.pend || {});
+    if (!keys.length) return;
+    this.subiendo = true;
+    try {
+      const lista = keys.map(k => { const i = k.indexOf('~'); const col = k.slice(0, i), id = k.slice(i + 1); const rec = (DB[col] || []).find(r => r.id === id); return rec ? { k, col, rec } : null; }).filter(Boolean);
+      await this.fb.subir(this.meta.casa, lista, this.user.uid);
+      keys.forEach(k => delete this.meta.pend[k]);
+      this.guardarMeta(); this.ultimo = Date.now(); this.setStatus('ok');
+    } catch (e) {
+      this.setStatus('sin-red');
+      clearTimeout(this.timer); this.timer = setTimeout(() => this.subir(), 30000);
+    }
+    this.subiendo = false;
+    if (Object.keys(this.meta.pend || {}).length) { clearTimeout(this.timer); this.timer = setTimeout(() => this.subir(), 1500); }
+  },
+  /* --- aplicar lo que llega de la nube: gana el cambio más reciente --- */
+  aplicar(lista) {
+    let n = 0, max = this.meta.desde || 0;
+    this.aplicando = true;
+    lista.forEach(x => {
+      if (x.local || !x.st) return;
+      if (x.st > max) max = x.st;
+      let r; try { r = JSON.parse(x.d); } catch (e) { return; }
+      if (!r || !r.id || !DB[x.col]) return;
+      const i = DB[x.col].findIndex(y => y.id === r.id);
+      if (i < 0) { DB[x.col].push(r); n++; }
+      else if ((r.upd || 0) > (DB[x.col][i].upd || 0)) { DB[x.col][i] = r; n++; }
+    });
+    this.aplicando = false;
+    this.meta.desde = max; this.guardarMeta();
+    if (n) { guardar(); if (S.sheet) this.pendiente = true; else repintar(); }
+    return n;
+  },
+  /* --- primera vez en este móvil: juntar lo de aquí con lo de la nube --- */
+  async conectar() {
+    if (this.unsub) return;
+    this.setStatus('sincronizando');
+    try {
+      const fb = this.fb, casa = this.meta.casa;
+      if (!this.meta.inicial) {
+        // copia de seguridad de lo que había en el móvil, por si acaso
+        try { localStorage.setItem('susitio-antes-de-la-nube', JSON.stringify(DB)); } catch (e) {}
+        const remoto = await fb.bajar(casa, 0);
+        // la medicación de serie se creó en cada móvil con códigos distintos: se unifica por nombre
+        const medsNube = {};
+        remoto.filter(x => x.col === 'meds').forEach(x => { try { const m = JSON.parse(x.d); medsNube[(m.nombre || '').toLowerCase()] = m.id; } catch (e) {} });
+        const cambio = {};
+        DB.meds.forEach(m => { const otro = medsNube[(m.nombre || '').toLowerCase()]; if (otro && otro !== m.id) cambio[m.id] = otro; });
+        if (Object.keys(cambio).length) {
+          DB.meds = DB.meds.filter(m => !cambio[m.id]);
+          DB.tomas.forEach(t => (t.meds || []).forEach(m => { if (cambio[m.id]) m.id = cambio[m.id]; }));
+          ['semanales', 'diluciones'].forEach(c => DB[c].forEach(r => { if (cambio[r.medId]) r.medId = cambio[r.medId]; }));
+        }
+        const enNube = {};
+        remoto.forEach(x => { try { const r = JSON.parse(x.d); enNube[x.col + '~' + r.id] = r.upd || 0; } catch (e) {} });
+        this.meta.desde = 0;
+        this.aplicar(remoto);
+        // subir todo lo de este móvil que la nube no tiene o tiene más viejo
+        this.meta.pend = this.meta.pend || {};
+        COLS.forEach(c => DB[c].forEach(r => { const k = c + '~' + r.id; if (!(k in enNube) || (r.upd || 0) > enNube[k]) this.meta.pend[k] = 1; }));
+        this.meta.inicial = true; this.guardarMeta(); guardar();
+        // esta toma también vale para los tratamientos que llegaron con otro código
+        if (Object.keys(cambio).length) COLS.forEach(c => DB[c].forEach(r => { if (r.medId && Object.values(cambio).includes(r.medId)) this.meta.pend[c + '~' + r.id] = 1; }));
+      }
+      await this.subir();
+      this.unsub = fb.escuchar(casa, this.meta.desde || 0, lista => { this.aplicar(lista); this.ultimo = Date.now(); if (this.status !== 'ok') this.setStatus('ok'); }, () => { this.unsub = null; this.setStatus('sin-red'); });
+      this.ultimo = Date.now(); this.setStatus('ok');
+      repintar();
+    } catch (e) { this.unsub = null; this.setStatus('sin-red'); }
+  },
+  async entrar(email, pass, nueva) {
+    const fb = await this.cargar();
+    const u = nueva ? await fb.crear(email, pass) : await fb.entrar(email, pass);
+    if (this.meta.uid && this.meta.uid !== u.uid) { this.meta = {}; }
+    this.user = u; this.meta.uid = u.uid; this.meta.email = u.email || email;
+    const casa = await fb.miCasa(u.uid);
+    if (casa && await fb.soyMiembro(casa, u.uid)) { this.meta.casa = casa; this.guardarMeta(); await this.conectar(); return 'conectado'; }
+    this.guardarMeta(); this.setStatus('sin-casa');
+    return 'sin-casa';
+  },
+  async crearCasa() {
+    const fb = this.fb, casa = codigo(6);
+    await fb.crearCasa(casa, this.user.uid, { nombre: yo(), email: this.meta.email });
+    await fb.ponerMiCasa(this.user.uid, casa);
+    this.meta.casa = casa; this.guardarMeta();
+    await this.conectar();
+  },
+  async unirse(cod) {
+    const limpio = (cod || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (limpio.length !== 12) throw { code: 'codigo' };
+    const casa = limpio.slice(0, 6), c = limpio.slice(6);
+    try { await this.fb.unirse(casa, c, this.user.uid, { nombre: yo(), email: this.meta.email }); }
+    catch (e) { throw { code: 'codigo' }; }
+    await this.fb.ponerMiCasa(this.user.uid, casa);
+    this.meta.casa = casa; this.guardarMeta();
+    await this.conectar();
+  },
+  async invitar() {
+    const c = codigo(6);
+    await this.fb.invitar(this.meta.casa, c, this.user.uid);
+    const t = this.meta.casa + c;
+    return t.slice(0, 4) + '-' + t.slice(4, 8) + '-' + t.slice(8);
+  },
+  async salir() {
+    try { if (this.unsub) this.unsub(); } catch (e) {}
+    this.unsub = null;
+    try { await this.fb.salir(); } catch (e) {}
+    this.user = null; this.meta = {}; this.guardarMeta(); this.setStatus('off');
+  }
+};
+function errNube(e) {
+  const c = (e && e.code) || '';
+  return ({
+    'codigo': 'Ese código no vale o ya se ha usado. Pide uno nuevo.',
+    'auth/invalid-email': 'El correo no es válido.', 'auth/missing-password': 'Escribe la contraseña.',
+    'auth/weak-password': 'La contraseña es muy corta: mínimo 6 caracteres.',
+    'auth/email-already-in-use': 'Ya hay una cuenta con ese correo. Pulsa «Entrar».',
+    'auth/invalid-credential': 'Correo o contraseña incorrectos.', 'auth/wrong-password': 'Correo o contraseña incorrectos.',
+    'auth/user-not-found': 'No hay ninguna cuenta con ese correo.', 'auth/too-many-requests': 'Demasiados intentos. Espera un poco.',
+    'auth/network-request-failed': 'No hay conexión a internet.', 'permission-denied': 'Firebase no deja entrar: falta pegar las reglas nuevas.'
+  })[c] || 'No se ha podido. ' + (c ? '(' + String(c).replace('auth/', '') + ')' : 'Comprueba la conexión.');
+}
+function haceCuanto() { if (!SYNC.ultimo) return ''; const s = Math.round((Date.now() - SYNC.ultimo) / 1000); return s < 60 ? 'hace un momento' : s < 3600 ? 'hace ' + Math.round(s / 60) + ' min' : 'hace ' + Math.round(s / 3600) + ' h'; }
+function nubeHTML() {
+  const m = SYNC.meta;
+  if (!m.uid) return `<section class="card col" style="gap:10px;margin-top:6px;border:2px solid var(--teal)"><h2 style="font-size:17px;font-weight:800">Compartir con la nube</h2><p class="small muted">Para que Sena y Sara veáis lo mismo en los dos móviles. Lo que ya hay en este móvil no se pierde: se junta con lo de la nube.</p><button class="btn btn-teal" data-a="nube-abrir">Conectar</button></section>`;
+  const est = { ok: '✓ Sincronizado ' + haceCuanto(), sincronizando: 'Sincronizando…', conectando: 'Conectando…', 'sin-red': 'Sin conexión: se subirá en cuanto vuelva internet', 'sin-casa': 'Falta entrar en la casa de Susi', off: 'Hay que volver a entrar con tu contraseña' }[SYNC.status] || '';
+  const pend = Object.keys(m.pend || {}).length;
+  return `<section class="card col" style="gap:10px;margin-top:6px"><div class="row" style="justify-content:space-between"><h2 style="font-size:17px;font-weight:800">Nube</h2><span class="tiny b" style="color:${SYNC.status === 'ok' ? 'var(--teal-d)' : 'var(--warn)'}">${SYNC.status === 'ok' ? 'Conectado' : SYNC.status === 'sin-red' ? 'Sin conexión' : '…'}</span></div>
+    <span class="small" style="overflow-wrap:anywhere">${esc(m.email || '')}</span>
+    <span class="small ${SYNC.status === 'ok' ? '' : 'b'}" style="color:${SYNC.status === 'ok' ? 'var(--muted)' : 'var(--warn)'}">${est}${pend ? ' · ' + pend + ' por subir' : ''}</span>
+    ${!SYNC.user && SYNC.status === 'off' ? `<button class="btn btn-teal" data-a="nube-abrir">Volver a entrar</button>` : m.casa ? `<div class="grid2"><button class="btn btn-line" data-a="invitar">Invitar a alguien</button><button class="btn btn-soft" data-a="sync-ahora">Sincronizar</button></div>` : `<button class="btn btn-teal" data-a="casa-abrir">Entrar en la casa de Susi</button>`}
+    <button class="btn btn-soft" data-a="nube-salir">Cerrar sesión</button></section>`;
+}
+function vistaSheetNube() {
+  const A = S.au || (S.au = { email: '', pass: '' });
+  return `<h2>Conectar a la nube</h2><p class="small muted">Entra con tu cuenta o crea una. Cada persona usa su propio correo y su contraseña.</p>
+    <div class="form">
+      <label class="lbl">Correo<input class="field" type="email" inputmode="email" autocomplete="username" data-bind="au.email" value="${esc(A.email)}"></label>
+      <label class="lbl">Contraseña<input class="field" type="password" autocomplete="current-password" data-bind="au.pass" value="${esc(A.pass)}" placeholder="Mínimo 6 caracteres"></label>
+      ${A.msg ? `<span class="small b" style="color:${A.ok ? 'var(--teal-d)' : 'var(--bad)'}">${esc(A.msg)}</span>` : ''}
+      <button class="btn btn-teal" data-a="au-entrar">${A.busy ? 'Un momento…' : 'Entrar'}</button>
+      <button class="btn btn-line" data-a="au-crear">Crear cuenta nueva</button>
+      <button class="btn" style="min-height:44px;font-size:15px;color:var(--teal-d)" data-a="au-olvido">He olvidado la contraseña</button>
+      <span class="tiny muted" style="text-align:center">Sena: puedes usar la misma cuenta que en Espatontos.</span>
+    </div>`;
+}
+function vistaSheetCasa() {
+  const A = S.au || (S.au = {});
+  return `<h2>La casa de Susi</h2><p class="small muted">Es el sitio compartido donde se guardan los datos de Susi. Solo entran las personas invitadas.</p>
+    <div class="form">
+      <div class="card col" style="gap:10px"><span class="b">¿Eres el primero?</span><span class="small muted">Créala tú. Luego invitas a la otra persona con un código.</span><button class="btn btn-teal" data-a="casa-crear">${A.busy ? 'Un momento…' : 'Crear la casa de Susi'}</button></div>
+      <div class="card col" style="gap:10px"><span class="b">¿Te han invitado?</span><label class="lbl">Código de invitación<input class="field" data-bind="au.codigo" value="${esc(A.codigo || '')}" placeholder="XXXX-XXXX-XXXX" autocapitalize="characters" style="text-align:center;font-size:20px;letter-spacing:.08em"></label><button class="btn btn-line" data-a="casa-unirse">Entrar con el código</button></div>
+      ${A.msg ? `<span class="small b" style="color:var(--bad)">${esc(A.msg)}</span>` : ''}
+    </div>`;
+}
+function vistaSheetInvitar() {
+  const c = S.sheet.extra;
+  return `<h2>Invitar</h2><p class="small muted">Pásale este código. En su móvil: Medicación › Conectar › «Crear cuenta nueva» con su correo, y luego en «¿Te han invitado?» mete el código. Solo sirve una vez.</p>
+    <div class="card" style="text-align:center;font-size:30px;font-weight:800;letter-spacing:.08em;user-select:all;-webkit-user-select:all">${esc(c)}</div>
+    <button class="btn btn-teal" data-a="invitar-copiar">Copiar código</button><button class="btn btn-soft" data-a="cerrar">Hecho</button>`;
+}
+async function accionNube(a) {
+  const A = S.au || (S.au = {});
+  const em = (A.email || '').trim(), pw = A.pass || '';
+  try {
+    if (a === 'au-entrar' || a === 'au-crear') {
+      if (!em || !pw) { A.msg = 'Escribe tu correo y tu contraseña.'; A.ok = false; pintarSheet(); return; }
+      A.busy = true; A.msg = ''; pintarSheet();
+      const r = await SYNC.entrar(em, pw, a === 'au-crear');
+      A.busy = false; A.pass = '';
+      if (r === 'sin-casa') { A.msg = ''; abrirSheet('casa'); } else { cerrarSheet(); toast('Conectado: datos juntados con la nube'); }
+    } else if (a === 'au-olvido') {
+      if (!em) { A.msg = 'Escribe tu correo arriba y vuelve a pulsar.'; A.ok = false; pintarSheet(); return; }
+      await (await SYNC.cargar()).olvido(em); A.msg = 'Te hemos mandado un correo para cambiar la contraseña (mira en spam).'; A.ok = true; pintarSheet();
+    } else if (a === 'casa-crear') {
+      A.busy = true; pintarSheet(); await SYNC.crearCasa(); A.busy = false; cerrarSheet(); toast('Casa de Susi creada. Ahora invita a Sara.');
+    } else if (a === 'casa-unirse') {
+      A.busy = true; A.msg = ''; pintarSheet(); await SYNC.unirse(A.codigo); A.busy = false; cerrarSheet(); toast('Dentro: datos juntados con la nube');
+    } else if (a === 'invitar') {
+      const c = await SYNC.invitar(); abrirSheet('invitar', c);
+    } else if (a === 'invitar-copiar') {
+      try { await navigator.clipboard.writeText(S.sheet.extra); toast('Código copiado'); } catch (e) { toast('Mantén pulsado el código para copiarlo'); }
+    } else if (a === 'sync-ahora') {
+      if (!SYNC.unsub) await SYNC.conectar(); else await SYNC.subir(); toast(SYNC.status === 'ok' ? 'Sincronizado' : 'Sin conexión: se subirá más tarde');
+    } else if (a === 'nube-salir') {
+      await SYNC.salir(); repintar(); toast('Sesión cerrada. Los datos siguen en este móvil.');
+    }
+  } catch (e) { A.busy = false; A.msg = errNube(e); A.ok = false; if (S.sheet) pintarSheet(); else toast(A.msg); }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const a = b.dataset.a;
+  if (a === 'nube-abrir') { S.au = { email: SYNC.meta.email || '', pass: '' }; abrirSheet(SYNC.meta.uid && SYNC.user ? 'casa' : 'nube'); }
+  else if (a === 'casa-abrir') { S.au = S.au || {}; abrirSheet('casa'); }
+  else if (['au-entrar', 'au-crear', 'au-olvido', 'casa-crear', 'casa-unirse', 'invitar', 'invitar-copiar', 'sync-ahora', 'nube-salir'].includes(a)) accionNube(a);
+});
+addEventListener('online', () => { if (SYNC.user) { if (!SYNC.unsub) SYNC.conectar(); else SYNC.subir(); } });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && SYNC.user) { if (!SYNC.unsub && SYNC.meta.casa) SYNC.conectar(); else SYNC.subir(); } });
+
 /* ---------- Actualizaciones de la app ---------- */
 let swEsperando = null;
 function pintarBanner() {
@@ -1087,6 +1371,7 @@ let ultimoDia = hoy();
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !S.sheet) { if (hoy() !== ultimoDia) { ultimoDia = hoy(); S.hero = {}; S.cacas = null; S.comida = { que: '', g: '' }; } repintar(); } });
 pintar();
 if (!yo()) abrirSheet('quien');
+SYNC.arrancar();
 </script>
 </body>
 </html>
