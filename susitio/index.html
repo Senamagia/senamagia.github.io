@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFF7EC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Susitio">
+<title>Susitio</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF7EC; --card:#FFFFFF; --ink:#2A2320; --muted:#6E625A; --line:#F1E4D4; --soft:#FFF1E0;
+  --teal:#1D6B66; --teal-d:#14524E; --teal-s:#E3F0EE; --teal-t:#CFE7E3;
+  --good:#1D6B66; --reg:#F2B880; --reg-t:#4A2402; --bad:#8A3A06;
+  --or-s:#FFE3C7; --or-t:#5C2800; --or-k:#8A3D00; --pu-s:#EADFFB; --pu-t:#3E1F70; --pu-k:#5B2E9E;
+  --warn:#A04A00;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg)}
+body{font-family:Nunito,system-ui,-apple-system,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0;margin:0}
+input,textarea,select{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+#app{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(118px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px}
+.row{display:flex;align-items:center;gap:12px}
+.col{display:flex;flex-direction:column}
+.grow{flex:1 1 auto;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.tiny{font-size:13px}
+.b{font-weight:800}
+.card{background:var(--card);border-radius:24px;padding:16px}
+.sec-title{font-size:20px;font-weight:800;margin:4px 4px 0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+
+/* Cabecera */
+.top{display:flex;align-items:center;gap:14px}
+.top h1{font-size:26px;font-weight:800;line-height:1.15}
+.avatar-btn{min-width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--teal-d);padding:0 12px}
+.ring{position:relative;width:56px;height:56px;flex:0 0 56px}
+.ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800}
+
+/* Tarjeta principal */
+.hero{background:var(--teal);color:#fff;border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.hero .kicker{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--teal-t)}
+.hero h2{font-size:32px;font-weight:800;line-height:1.1}
+.pill-btn{min-height:40px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.16);font-size:15px;font-weight:800;color:#fff}
+.hero-item{background:rgba(255,255,255,.14);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:56px;border:2px solid transparent}
+.hero-item .n{font-size:16px;font-weight:800}
+.hero-item .d{font-size:14px;color:var(--teal-t)}
+.hero-item[aria-pressed=false]{background:transparent;border:2px dashed rgba(255,255,255,.45)}
+.hero-item[aria-pressed=false] .n{text-decoration:line-through;opacity:.75}
+.hero-peso{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border-radius:16px;padding:8px 8px 8px 14px}
+.hero-peso label{font-size:16px;font-weight:800;flex:1}
+.hero-peso input{width:120px;height:48px;border-radius:12px;border:0;text-align:center;font-size:24px;font-weight:800;color:var(--ink);background:#fff}
+.hero-time{width:120px;height:40px;border-radius:999px;border:0;padding:0 10px;font-size:16px;font-weight:800;background:#fff;color:var(--ink)}
+.btn{min-height:54px;border-radius:16px;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;width:100%;padding:0 16px;text-align:center}
+.btn-big{min-height:62px;font-size:19px;border-radius:18px}
+.btn-white{background:#fff;color:var(--teal-d)}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-line{border:2px solid var(--teal);color:var(--teal-d);background:#fff}
+.btn-danger{border:2px solid #B4591A;color:#7A3A04;background:#fff}
+.btn-soft{background:var(--soft);color:var(--ink)}
+.done-card{background:var(--teal-s);border-radius:28px;padding:18px;display:flex;align-items:center;gap:14px}
+.tick{width:48px;height:48px;border-radius:999px;background:var(--teal);display:flex;align-items:center;justify-content:center;flex:0 0 48px}
+.mini{background:#fff;border-radius:22px;padding:12px 14px;display:flex;align-items:center;gap:12px;width:100%;text-align:left;min-height:64px}
+.mini .ico{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex:0 0 40px}
+
+/* Avisos */
+.aviso{border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:6px;text-align:left}
+.aviso .k{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.aviso .t{font-size:17px;font-weight:800}
+.aviso .s{font-size:14px}
+.aviso.or{background:var(--or-s);color:var(--or-t)} .aviso.or .k{color:var(--or-k)}
+.aviso.pu{background:var(--pu-s);color:var(--pu-t)} .aviso.pu .k{color:var(--pu-k)}
+.aviso .act{margin-top:4px;min-height:44px;border-radius:12px;background:rgba(255,255,255,.75);font-weight:800;font-size:15px;padding:0 12px}
+.aviso .acts{display:flex;flex-wrap:wrap;gap:6px}
+.aviso .acts .act{flex:1 1 auto}
+
+/* Estadísticas */
+.stat{background:#fff;border-radius:22px;padding:14px 12px;display:flex;flex-direction:column;gap:2px;text-align:left;min-height:96px}
+.stat .l{font-size:13px;font-weight:700;color:var(--muted)}
+.stat .v{font-size:22px;font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.stat .v.vacio{font-size:18px;color:var(--teal-d)}
+.stat .s{font-size:13px;color:var(--muted)}
+
+/* Chips y formularios */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 14px;border-radius:999px;border:1.5px solid #D9CBBB;background:#fff;font-weight:700;font-size:15px}
+.chip[aria-pressed=true]{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:800}
+.chip.add{border-style:dashed;border-color:var(--teal);color:var(--teal-d)}
+.seg{display:grid;gap:6px;background:#F6E7D4;border-radius:14px;padding:4px}
+.seg button{min-height:44px;border-radius:10px;font-size:15px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);font-weight:800;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.field{height:52px;border:1.5px solid #D9CBBB;border-radius:14px;padding:0 12px;font-size:17px;width:100%;background:#fff;color:var(--ink);font-weight:600}
+textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
+.lbl{font-size:14px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.form{display:flex;flex-direction:column;gap:14px}
+.dia-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.dia-opts button{min-height:56px;border-radius:16px;font-size:17px;font-weight:800;border:1.5px solid #D9CBBB;background:#fff}
+.dia-opts button[data-v=bueno][aria-pressed=true]{background:var(--good);border-color:var(--good);color:#fff}
+.dia-opts button[data-v=regular][aria-pressed=true]{background:var(--reg);border-color:var(--reg);color:var(--reg-t)}
+.dia-opts button[data-v=malo][aria-pressed=true]{background:var(--bad);border-color:var(--bad);color:#fff}
+.list-row{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 0;border-top:1px solid var(--line);width:100%;text-align:left}
+.list-row:first-child{border-top:0}
+.ini{width:36px;height:36px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:0 0 36px;background:var(--teal);color:#fff}
+.ini.sara{background:var(--reg);color:var(--reg-t)}
+.x-btn{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 44px}
+
+/* Progreso */
+.big3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.big3 div{border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;gap:2px}
+.big3 .n{font-size:38px;font-weight:800;line-height:1}
+.big3 .t{font-size:14px;font-weight:700}
+.bar{display:flex;gap:2px;height:30px}
+.bar span{border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;min-width:22px}
+.bar .g{background:var(--good);color:#fff} .bar .r{background:var(--reg);color:var(--reg-t)} .bar .m{background:var(--bad);color:#fff} .bar .e{border:1.5px dashed #D9CBBB}
+.etapa{border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.week{display:grid;grid-template-columns:64px minmax(0,1fr) 64px;gap:10px;align-items:center;min-height:46px}
+.marker{display:flex;align-items:center;gap:8px;padding:6px 0}
+.marker i{height:2px;flex:1;background:var(--teal)}
+.marker b{font-size:12px;color:#fff;background:var(--teal);border-radius:999px;padding:4px 10px;max-width:75%;text-align:center}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* Barra inferior */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-radius:26px 26px 0 0;box-shadow:0 -4px 18px rgba(42,35,32,.07);padding:8px 10px calc(10px + env(safe-area-inset-bottom))}
+.tabbar .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:50px;justify-content:center;font-size:12px;font-weight:800;color:#8F837A}
+.tab[aria-current=page]{color:var(--teal)}
+.tab-plus{justify-self:center;width:62px;height:62px;margin-top:-28px;border-radius:999px;background:var(--teal);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(29,107,102,.35)}
+.tab-plus[aria-current=page]{background:var(--teal-d)}
+
+/* Hoja inferior */
+.sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(42,35,32,.38);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:520px;border-radius:28px 28px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.sheet .grab{width:44px;height:5px;border-radius:9px;background:#D9CBBB;align-self:center;margin-bottom:4px}
+.sheet h2{font-size:24px;font-weight:800}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom));z-index:60;background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-weight:800;font-size:15px;max-width:90%;text-align:center}
+.banner{background:var(--ink);color:#fff;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.banner button{background:#fff;color:var(--ink);border-radius:12px;min-height:40px;padding:0 12px;font-weight:800}
+.empty{border:1.5px dashed #D9CBBB;border-radius:22px;padding:16px;color:var(--muted);font-size:15px;text-align:center}
+.who{display:flex;flex-direction:column;gap:12px;align-items:stretch;text-align:center;padding:24px 8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="tabbar" aria-label="Secciones"><div class="in" id="tabs"></div></nav>
+<div id="sheet"></div>
+<div id="toast"></div>
+<script>
+'use strict';
+/* =========================================================
+   Susitio · control veterinario de Susi
+   Datos: se guardan en este móvil (localStorage). Cada registro
+   lleva id, autor y "upd" (momento del último cambio), y lo que
+   se borra queda marcado como borrado: así mañana se pueden
+   juntar los datos de Sena y Sara en la nube sin perder nada.
+   ========================================================= */
+const VERSION = '1.0';
+const KEY = 'susitio-datos';
+const KEY_YO = 'susitio-yo';
+
+/* ---------- Fechas ---------- */
+const pad = n => String(n).padStart(2, '0');
+const dstr = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parseD = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return dstr(d); };
+const diffDays = (a, b) => Math.round((parseD(a) - parseD(b)) / 86400000);
+const dow = s => (parseD(s).getDay() + 6) % 7; // lunes = 0
+const nowHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+// El "día de Susi" empieza a las 4:00: una toma de noche dada a las 00:30 cuenta para el día anterior.
+const hoy = () => { const d = new Date(Date.now() - 4 * 3600000); return dstr(d); };
+const horaSusi = () => { const d = new Date(); return (d.getHours() + 20) % 24; }; // horas desde las 4:00
+const DIAS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
+const DIAS_L = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+const DIAS_1 = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const fFecha = s => { const d = parseD(s); return DIAS[dow(s)] + ' ' + d.getDate() + ' ' + MESES[d.getMonth()]; };
+const fCorta = s => { const d = parseD(s); return d.getDate() + ' ' + MESES[d.getMonth()]; };
+const lunes = s => addDays(s, -dow(s));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = v => { if (v == null || v === '') return null; const n = Number(String(v).replace(',', '.')); return isFinite(n) ? n : null; };
+const fNum = n => String(Math.round(n * 100) / 100).replace('.', ',');
+
+/* ---------- Datos ---------- */
+const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones'];
+let DB;
+function vacio() { const o = { v: 1 }; COLS.forEach(c => o[c] = []); return o; }
+function cargar() {
+  try { DB = JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { DB = null; }
+  if (!DB) DB = vacio();
+  COLS.forEach(c => { if (!Array.isArray(DB[c])) DB[c] = []; });
+  if (!DB.meds.length) sembrarMeds();
+}
+function guardar() {
+  try { localStorage.setItem(KEY, JSON.stringify(DB)); }
+  catch (e) { toast('No se ha podido guardar en el móvil'); }
+}
+function sembrarMeds() {
+  const t = Date.now();
+  const m = (o) => Object.assign({ id: uid(), activo: true, upd: t, autor: yo() || 'Sena', desde: hoy() }, o);
+  DB.meds = [
+    m({ nombre: 'Prednisona', dosis: '0,07 ml', tipo: 'diario', momentos: ['manana', 'noche'] }),
+    m({ nombre: 'Pepcid', dosis: '0,2 ml', tipo: 'diario', momentos: ['manana', 'noche'] }),
+    m({ nombre: 'Imurel', dosis: '0,05 ml', tipo: 'diario', momentos: ['noche'], dil: { cada: 4, texto: '1 pastilla en 2 ml de agua' } }),
+    m({ nombre: 'Vitamina B12', dosis: '0,25 ml subcutánea', tipo: 'semanal', dias: [1, 4], aviso: true }),
+    m({ nombre: 'Melena de león', dosis: '1 g', tipo: 'semanal', dias: [] }),
+    m({ nombre: 'Glutamina', dosis: '1 g', tipo: 'semanal', dias: [] }),
+    m({ nombre: 'Maxi Digest', dosis: '1 g', tipo: 'semanal', dias: [] })
+  ];
+  guardar();
+}
+const vivos = c => DB[c].filter(r => !r.borrado);
+function poner(col, rec) {
+  rec.upd = Date.now();
+  if (!rec.autor) rec.autor = yo();
+  const i = DB[col].findIndex(r => r.id === rec.id);
+  if (i >= 0) DB[col][i] = rec; else DB[col].push(rec);
+  guardar();
+}
+function borrar(col, id) {
+  const r = DB[col].find(x => x.id === id);
+  if (r) { r.borrado = true; r.upd = Date.now(); r.por = yo(); guardar(); }
+}
+// Junta dos copias (otro móvil, una copia de seguridad o la nube): gana el cambio más reciente de cada registro.
+function juntar(otro) {
+  let n = 0;
+  COLS.forEach(c => {
+    (otro[c] || []).forEach(r => {
+      if (!r || !r.id) return;
+      const i = DB[c].findIndex(x => x.id === r.id);
+      if (i < 0) { DB[c].push(r); n++; }
+      else if ((r.upd || 0) > (DB[c][i].upd || 0)) { DB[c][i] = r; n++; }
+    });
+  });
+  guardar();
+  return n;
+}
+
+/* ---------- Quién usa el móvil ---------- */
+function yo() { try { return localStorage.getItem(KEY_YO) || ''; } catch (e) { return ''; } }
+function setYo(n) { try { localStorage.setItem(KEY_YO, n); } catch (e) {} }
+
+/* ---------- Consultas ---------- */
+const medsActivos = () => vivos('meds').filter(m => m.activo);
+const medsToma = mom => medsActivos().filter(m => m.tipo === 'diario' && (m.momentos || []).includes(mom));
+const tomaDe = (f, mom) => vivos('tomas').find(t => t.fecha === f && t.momento === mom);
+const cacaDe = f => vivos('cacas').find(c => c.fecha === f);
+const comidasDe = f => vivos('comidas').filter(c => c.fecha === f).sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+const apetitoDe = f => vivos('apetito').find(a => a.fecha === f);
+const ultimaDil = medId => vivos('diluciones').filter(d => d.medId === medId).sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
+const semanalHoy = (medId, f) => vivos('semanales').find(s => s.medId === medId && s.fecha === f);
+const semanalSemana = (medId, f) => { const l = lunes(f), d = addDays(l, 6); return vivos('semanales').filter(s => s.medId === medId && s.fecha >= l && s.fecha <= d).sort((a, b) => a.fecha.localeCompare(b.fecha))[0]; };
+function ultimoPeso(antesDe) {
+  const ts = vivos('tomas').filter(t => t.peso != null && (!antesDe || (t.fecha + (t.momento === 'noche' ? 'b' : 'a')) < antesDe)).sort((a, b) => (a.fecha + (a.momento === 'noche' ? 'b' : 'a')).localeCompare(b.fecha + (b.momento === 'noche' ? 'b' : 'a')));
+  return ts[ts.length - 1];
+}
+const NOMBRE_MOM = { manana: 'mañana', noche: 'noche' };
+const HECES = [['normal', 'Normal'], ['con_forma', 'Con forma'], ['sin_forma', 'Sin forma'], ['pastosa', 'Pastosa'], ['diarrea', 'Diarrea'], ['mucosa', 'Mucosa'], ['alpistada', 'Alpistada'], ['alpistada_sf', 'Alpistada sin forma']];
+const HECES_N = Object.fromEntries(HECES);
+const MALO = ['diarrea', 'mucosa'], REGULAR = ['pastosa', 'sin_forma', 'alpistada', 'alpistada_sf'];
+const sugerirDia = tipos => tipos.some(t => MALO.includes(t)) ? 'malo' : tipos.some(t => REGULAR.includes(t)) ? 'regular' : tipos.length ? 'bueno' : null;
+const DIA_N = { bueno: 'Bueno', regular: 'Regular', malo: 'Malo' };
+const APETITO = [['bien', 'Bien'], ['regular', 'Regular'], ['poco', 'Poco'], ['nada', 'Nada']];
+const TIPOS_CAMBIO = [['dieta', 'Cambio de dieta'], ['dosis', 'Cambio de dosis'], ['medicacion', 'Medicación nueva o retirada'], ['suplemento', 'Suplementos'], ['vet', 'Visita vet'], ['nutri', 'Nutricionista'], ['otro', 'Otro']];
+const TIPO_CAMBIO_N = Object.fromEntries(TIPOS_CAMBIO);
+
+/* ---------- Estado de pantalla ---------- */
+const S = { tab: 'hoy', reg: 'cacas', rango: '30', diarioN: 40, hero: {}, cacas: null, comida: { que: '', g: '' }, cambio: null, form: null, sheet: null };
+
+/* ---------- Iconos ---------- */
+const I = {
+  check: (c = '#fff', s = 26) => `<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>`,
+  chev: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6E625A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  x: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E625A" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  home: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  prog: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
+  med: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg>',
+  diario: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
+  plus: '<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  clock: '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A3D00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+};
+const LOGO = s => `<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 120 120"><rect width="120" height="120" rx="28" fill="#FFFFFF"/><path d="M30 118 C32 100 44 92 60 92 C76 92 88 100 90 118 Z" fill="#1E2528"/><path d="M31 42 C21 38 19 25 28 21 C36 19 42 26 43 33" fill="#FFFFFF" stroke="#1E2528" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M89 42 C99 38 101 25 92 21 C84 19 78 26 77 33" fill="#FFFFFF" stroke="#1E2528" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M60 26 C84 26 100 42 100 62 C100 80 84 96 60 96 C36 96 20 80 20 62 C20 42 36 26 60 26 Z" fill="#FFFFFF" stroke="#1E2528" stroke-width="4"/><path d="M27 60 C30 50 44 48 52 56 L60 61 L68 56 C76 48 90 50 93 60 C92 70 82 76 72 72 L60 69 L48 72 C38 76 28 70 27 60 Z" fill="#1E2528"/><circle cx="41" cy="60" r="3.2" fill="#FFFFFF"/><circle cx="79" cy="60" r="3.2" fill="#FFFFFF"/><path d="M52 73 C54 68 66 68 68 73 C68 79 64 82 60 82 C56 82 52 79 52 73 Z" fill="#C27B72" stroke="#1E2528" stroke-width="3" stroke-linejoin="round"/><path d="M60 82 V86 M60 86 Q56 89 53 87 M60 86 Q64 89 67 87" stroke="#1E2528" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M45 80 L24 76 M45 85 L25 89 M75 80 L96 76 M75 85 L95 89" stroke="#1E2528" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+const ini = n => `<span class="ini ${n === 'Sara' ? 'sara' : ''}">${n === 'Sara' ? 'Sa' : 'Se'}</span>`;
+
+/* =========================================================
+   PANTALLA: HOY
+   ========================================================= */
+function heroMomento(f) {
+  const m = tomaDe(f, 'manana'), n = tomaDe(f, 'noche');
+  if (!m && (horaSusi() < 11 || n)) return 'manana'; // antes de las 15:00
+  if (!n) return 'noche';
+  if (!m) return 'manana';
+  return null;
+}
+function heroForm(f, mom) {
+  const k = f + mom;
+  if (!S.hero[k]) {
+    const meds = medsToma(mom);
+    const up = ultimoPeso();
+    S.hero[k] = { hora: '', peso: '', ref: up ? up.peso : null, sel: Object.fromEntries(meds.map(x => [x.id, true])) };
+  }
+  return S.hero[k];
+}
+function vistaHoy() {
+  const f = hoy();
+  const nombre = yo();
+  const mom = heroMomento(f);
+  // anillo del día
+  const semHoy = medsActivos().filter(m => m.tipo === 'semanal' && (m.dias || []).includes(dow(f)));
+  const total = 2 + 1 + semHoy.length;
+  const hechas = (tomaDe(f, 'manana') ? 1 : 0) + (tomaDe(f, 'noche') ? 1 : 0) + (cacaDe(f) ? 1 : 0) + semHoy.filter(m => semanalHoy(m.id, f)).length;
+  const L = 2 * Math.PI * 23;
+  let h = `<header class="top">
+    ${LOGO(54)}
+    <div class="col grow"><span class="small b muted">Susitio · ${fFecha(f)}</span><h1>Hola, ${esc(nombre)}</h1></div>
+    <div class="ring" role="img" aria-label="${hechas} de ${total} cosas de hoy hechas"><svg aria-hidden="true" width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="23" fill="none" stroke="#F1E2CF" stroke-width="7"/><circle cx="28" cy="28" r="23" fill="none" stroke="#1D6B66" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(L * hechas / total).toFixed(1)} ${L.toFixed(1)}" transform="rotate(-90 28 28)"/></svg><span>${hechas}/${total}</span></div>
+  </header>`;
+  h += `<div id="banner"></div>`;
+  // Tarjeta principal
+  if (mom) {
+    const F = heroForm(f, mom);
+    const meds = medsToma(mom);
+    h += `<section class="hero" aria-label="Toma pendiente">
+      <div class="row" style="justify-content:space-between"><span class="kicker">Ahora toca</span>
+        ${F.editHora ? `<input class="hero-time" type="time" value="${esc(F.hora || nowHM())}" data-hero="hora" aria-label="Hora de la toma">` : `<button class="pill-btn" data-a="hero-hora">Hora: ${F.hora ? esc(F.hora) : 'ahora'}</button>`}
+      </div>
+      <h2>Toma de la ${NOMBRE_MOM[mom]}</h2>
+      <div class="hero-peso"><label for="hpeso">Peso (g)</label><input id="hpeso" inputmode="decimal" placeholder="${F.ref != null ? fNum(F.ref) : '—'}" value="${esc(F.peso)}" data-hero="peso"></div>
+      ${meds.length ? `<div class="grid2">${meds.map(m => `<button class="hero-item" data-a="hero-med" data-id="${m.id}" aria-pressed="${F.sel[m.id] !== false}"><span class="n">${esc(m.nombre)}</span><span class="d">${esc(m.dosis)}</span></button>`).join('')}</div>
+      <span class="tiny" style="color:var(--teal-t)">Toca uno si esta vez no se lo has dado.</span>` : `<span class="small" style="color:var(--teal-t)">No hay medicación en esta toma. Puedes añadirla en Medicación.</span>`}
+      <button class="btn btn-big btn-white" data-a="hero-dar" data-mom="${mom}">Ya se la he dado</button>
+    </section>`;
+  } else {
+    h += `<section class="done-card"><span class="tick">${I.check('#fff', 28)}</span><div class="col grow"><span class="b" style="font-size:20px;color:var(--teal-d)">Tomas de hoy hechas</span><span class="small" style="color:var(--teal-d)">Mañana y noche dadas</span></div></section>`;
+  }
+  // Resto de tomas
+  ['manana', 'noche'].forEach(mm => {
+    if (mm === mom) return;
+    const t = tomaDe(f, mm);
+    if (t) h += `<button class="mini" data-a="toma-edit" data-id="${t.id}"><span class="ico" style="background:var(--teal-s)">${I.check('#1D6B66', 22)}</span><span class="col grow"><span class="b" style="font-size:17px">Toma de la ${NOMBRE_MOM[mm]}</span><span class="small muted">${esc(t.autor)} · ${esc(t.hora)}${t.peso != null ? ' · ' + fNum(t.peso) + ' g' : ''}${faltan(t)}</span></span>${I.chev}</button>`;
+    else h += `<button class="mini" data-a="toma-nueva" data-mom="${mm}"><span class="ico" style="background:var(--or-s)">${I.clock}</span><span class="col grow"><span class="b" style="font-size:17px">Toma de la ${NOMBRE_MOM[mm]}</span><span class="small" style="color:var(--warn)">Pendiente · toca para apuntarla</span></span>${I.chev}</button>`;
+  });
+  // Avisos
+  const av = avisos(f);
+  if (av.length) h += `<section aria-label="Avisos" class="${av.length > 1 ? 'grid2' : 'col'}" style="${av.length > 1 ? '' : 'gap:10px'}">${av.join('')}</section>`;
+  // Suplementos de la semana
+  const sup = medsActivos().filter(m => m.tipo === 'semanal' && !(m.dias || []).length);
+  if (sup.length) {
+    h += `<section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between"><span class="b" style="font-size:17px">Suplementos de la semana</span><span class="small muted">${sup.filter(m => semanalSemana(m.id, f)).length} de ${sup.length}</span></div><div class="chips">${sup.map(m => { const s = semanalSemana(m.id, f); return `<button class="chip" aria-pressed="${!!s}" data-a="sup" data-id="${m.id}">${s ? '✓ ' : ''}${esc(m.nombre)}${s ? ' · ' + DIAS[dow(s.fecha)] : ' · ' + esc(m.dosis)}</button>`; }).join('')}</div></section>`;
+  }
+  // Cómo va hoy
+  const up = ultimoPeso();
+  const prev = up ? ultimoPeso(up.fecha + (up.momento === 'noche' ? 'b' : 'a')) : null;
+  const dif = up && prev ? up.peso - prev.peso : null;
+  const cc = cacaDe(f);
+  const com = comidasDe(f);
+  const gs = com.filter(c => c.g != null);
+  const tot = gs.reduce((a, c) => a + c.g, 0);
+  h += `<section class="col" style="gap:10px"><h2 class="sec-title">Cómo va Susi hoy</h2><div class="grid3">
+    <button class="stat" data-a="tab" data-tab="prog"><span class="l">Peso</span><span class="v">${up ? fNum(up.peso) : '—'}</span><span class="s" style="${dif != null && dif < 0 ? 'color:var(--warn);font-weight:800' : ''}">${dif != null ? (dif > 0 ? '+' : dif < 0 ? '−' : '±') + fNum(Math.abs(dif)) + ' g' : up ? 'gramos' : 'sin datos'}</span></button>
+    <button class="stat" data-a="reg" data-reg="cacas"><span class="l">Cacas</span><span class="v${cc ? '' : ' vacio'}" style="${cc ? (cc.dia === 'bueno' ? 'color:var(--teal)' : cc.dia === 'malo' ? 'color:var(--bad)' : 'color:var(--warn)') : ''}">${cc ? DIA_N[cc.dia] || '—' : 'Apuntar'}</span><span class="s">${cc ? esc(cc.autor) : 'cómo han sido'}</span></button>
+    <button class="stat" data-a="reg" data-reg="comida"><span class="l">Comida</span><span class="v${com.length ? '' : ' vacio'}">${com.length ? (gs.length ? fNum(tot) + ' g' : com.length) : 'Apuntar'}</span><span class="s">${com.length ? (com.length - gs.length ? '+' + (com.length - gs.length) + ' sin pesar' : com.length + ' veces') : 'qué ha comido'}</span></button>
+  </div></section>`;
+  return h;
+}
+function faltan(t) {
+  const esper = medsToma(t.momento).map(m => m.id);
+  const dados = (t.meds || []).map(m => m.id);
+  const f = esper.filter(id => !dados.includes(id));
+  return f.length ? ' · sin ' + f.map(id => (DB.meds.find(m => m.id === id) || {}).nombre).join(', ') : '';
+}
+function avisos(f) {
+  const out = [];
+  medsActivos().forEach(m => {
+    if (m.tipo === 'diario' && m.dil && m.dil.cada) {
+      const u = ultimaDil(m.id);
+      if (!u) {
+        out.push(`<div class="aviso or" style="grid-column:1/-1"><span class="k">${esc(m.nombre)}</span><span class="t">¿Cuándo preparaste la dilución?</span><span class="s">Así te aviso cada ${m.dil.cada} días</span><div class="acts">${[0, 1, 2, 3].map(d => `<button class="act" data-a="dil" data-id="${m.id}" data-d="${d}">${d === 0 ? 'Hoy' : d === 1 ? 'Ayer' : 'Hace ' + d + ' días'}</button>`).join('')}</div></div>`);
+      } else {
+        const dias = diffDays(f, u.fecha);
+        if (dias >= m.dil.cada) out.push(`<div class="aviso or" style="grid-column:1/-1"><span class="k">Hoy toca</span><span class="t">Preparar ${esc(m.nombre)}</span><span class="s">${esc(m.dil.texto || '')}${dias > m.dil.cada ? ' · lleva ' + dias + ' días' : ''}</span><button class="act" data-a="dil" data-id="${m.id}" data-d="0">Ya está preparada</button></div>`);
+        else if (dias === m.dil.cada - 1) out.push(`<div class="aviso or"><span class="k">Mañana</span><span class="t">Preparar ${esc(m.nombre)}</span><span class="s">Esta es del día ${dias + 1} de ${m.dil.cada}</span></div>`);
+      }
+    }
+    if (m.tipo === 'semanal' && m.aviso && (m.dias || []).length) {
+      const hoyToca = m.dias.includes(dow(f));
+      const dado = semanalHoy(m.id, f);
+      if (hoyToca && !dado) out.push(`<div class="aviso pu"><span class="k">Hoy toca</span><span class="t">${esc(m.nombre)}</span><span class="s">${esc(m.dosis)}</span><button class="act" data-a="sem-dar" data-id="${m.id}">Hecha</button></div>`);
+      else if (hoyToca && dado) out.push(`<button class="aviso pu" data-a="sem-quitar" data-id="${dado.id}"><span class="k">Hecha hoy ✓</span><span class="t">${esc(m.nombre)}</span><span class="s">${esc(dado.autor)} · ${esc(dado.hora)} · toca para deshacer</span></button>`);
+      else {
+        let k = 1; while (k < 8 && !m.dias.includes(dow(addDays(f, k)))) k++;
+        out.push(`<div class="aviso pu"><span class="k">${k === 1 ? 'Mañana' : DIAS_L[dow(addDays(f, k))]}</span><span class="t">${esc(m.nombre)}</span><span class="s">${esc(m.dosis)}</span></div>`);
+      }
+    }
+  });
+  return out;
+}
+
+/* =========================================================
+   PANTALLA: REGISTRAR
+   ========================================================= */
+function vistaReg() {
+  const tabs = [['cacas', 'Cacas'], ['comida', 'Comida'], ['cambio', 'Cambio']];
+  let h = `<header class="col" style="gap:12px"><h1 style="font-size:30px;font-weight:800">Registrar</h1>
+    <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${tabs.map(([k, l]) => `<button data-a="reg" data-reg="${k}" aria-pressed="${S.reg === k}">${l}</button>`).join('')}</div></header>`;
+  if (S.reg === 'cacas') h += formCacas();
+  if (S.reg === 'comida') h += formComida();
+  if (S.reg === 'cambio') h += formCambio();
+  return h;
+}
+function cacasForm() {
+  if (!S.cacas) S.cacas = { fecha: hoy() };
+  const F = S.cacas;
+  if (F.cargada !== F.fecha) {
+    const r = cacaDe(F.fecha);
+    F.tipos = r ? r.tipos.slice() : [];
+    F.dia = r ? r.dia : null;
+    F.manual = r ? !!r.manual : false;
+    F.cargada = F.fecha;
+  }
+  return F;
+}
+function formCacas() {
+  const F = cacasForm();
+  const sug = sugerirDia(F.tipos);
+  const dia = F.manual ? F.dia : sug;
+  const r = cacaDe(F.fecha);
+  return `<section class="card form">
+    <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cacas del día, en general</h2><span class="small muted">Marca cómo han sido la mayoría. Puedes cambiarlo durante el día.</span></div>
+    ${fechaPicker('cacas', F.fecha)}
+    <div class="chips">${HECES.map(([k, l]) => `<button class="chip" data-a="caca-tipo" data-k="${k}" aria-pressed="${F.tipos.includes(k)}">${l}</button>`).join('')}</div>
+    <div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:14px">
+      <span class="b" style="font-size:16px">El día ha sido…</span>
+      <div class="dia-opts">${['bueno', 'regular', 'malo'].map(k => `<button data-a="caca-dia" data-v="${k}" aria-pressed="${dia === k}">${DIA_N[k]}</button>`).join('')}</div>
+      <span class="tiny muted">${F.manual ? 'Elegido a mano.' : sug ? 'Propuesto por lo que has marcado; tócalo si no estás de acuerdo.' : 'Marca arriba cómo han sido.'}</span>
+    </div>
+    <button class="btn btn-teal" data-a="caca-guardar">${r ? 'Actualizar' : 'Guardar'}</button>
+    ${r ? `<span class="tiny muted" style="text-align:center">Apuntado por ${esc(r.autor)}. Al guardar se cambia por lo que marques ahora.</span>` : ''}
+  </section>`;
+}
+function fechaPicker(qual, f) {
+  const h = hoy();
+  const opts = [[h, 'Hoy'], [addDays(h, -1), 'Ayer']];
+  const otra = f !== h && f !== addDays(h, -1);
+  return `<div class="row" style="gap:8px;flex-wrap:wrap">${opts.map(([v, l]) => `<button class="chip" data-a="fecha" data-q="${qual}" data-f="${v}" aria-pressed="${f === v}">${l}</button>`).join('')}
+    <input class="field" type="date" style="width:auto;flex:1;min-width:150px;height:44px;${otra ? 'border-color:var(--teal);border-width:2px' : ''}" value="${f}" max="${h}" data-fecha="${qual}" aria-label="Otra fecha"></div>`;
+}
+function formComida() {
+  if (!S.comida.fecha) S.comida.fecha = hoy();
+  const F = S.comida;
+  const lista = comidasDe(F.fecha);
+  const gs = lista.filter(c => c.g != null);
+  const tot = gs.reduce((a, c) => a + c.g, 0);
+  const ap = apetitoDe(F.fecha);
+  // las que más se apuntan
+  const cuenta = {};
+  vivos('comidas').forEach(c => { const k = (c.que || '').trim(); if (k) cuenta[k] = (cuenta[k] || 0) + 1; });
+  let rap = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a]).slice(0, 6);
+  ['Papilla', 'Pienso', 'Carne', 'Premio'].forEach(x => { if (rap.length < 6 && !rap.includes(x)) rap.push(x); });
+  return `<section class="card form">
+    <div class="row" style="justify-content:space-between;align-items:baseline"><h2 style="font-size:19px;font-weight:800">Comida</h2><span class="b" style="color:var(--teal-d)">${lista.length ? (gs.length ? fNum(tot) + ' g' : '') + (lista.length - gs.length ? (gs.length ? ' + ' : '') + (lista.length - gs.length) + ' sin pesar' : '') : ''}</span></div>
+    ${fechaPicker('comida', F.fecha)}
+    ${lista.length ? `<div class="col">${lista.map(c => `<div class="list-row"><span class="small b muted" style="width:46px">${esc(c.hora)}</span><span class="col grow"><span class="b">${esc(c.que)}</span><span class="tiny muted">${c.g != null ? fNum(c.g) + ' g' : 'sin pesar'} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Quitar ${esc(c.que)}" data-a="comida-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Aún no hay nada apuntado ${F.fecha === hoy() ? 'hoy' : 'ese día'}.</div>`}
+    <div class="col" style="gap:10px;border-top:1px solid var(--line);padding-top:14px">
+      <span class="b">Añadir</span>
+      <div class="chips">${rap.map(x => `<button class="chip add" data-a="comida-rapida" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:8px">
+        <input class="field" id="c-que" placeholder="Qué ha comido" value="${esc(F.que)}" data-bind="comida.que" aria-label="Qué ha comido">
+        <input class="field" id="c-g" placeholder="g" inputmode="decimal" value="${esc(F.g)}" data-bind="comida.g" aria-label="Gramos, si los sabes" style="text-align:center">
+      </div>
+      <button class="btn btn-teal" data-a="comida-add">Añadir</button>
+      <span class="tiny muted">Los gramos solo si los sabes. Se apunta con la hora de ahora.</span>
+    </div>
+    <div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:14px">
+      <span class="b">Apetito en general</span>
+      <div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))">${APETITO.map(([k, l]) => `<button data-a="apetito" data-v="${k}" aria-pressed="${ap && ap.valor === k}">${l}</button>`).join('')}</div>
+    </div>
+  </section>`;
+}
+function formCambio() {
+  if (!S.cambio) S.cambio = { fecha: hoy(), tipo: 'dieta', texto: '' };
+  const F = S.cambio;
+  const lista = vivos('cambios').sort((a, b) => b.fecha.localeCompare(a.fecha));
+  return `<section class="card form">
+    <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cambio u observación</h2><span class="small muted">Cada cambio empieza una etapa nueva en Progreso, para comparar antes y después.</span></div>
+    <div class="chips">${TIPOS_CAMBIO.map(([k, l]) => `<button class="chip" data-a="cambio-tipo" data-v="${k}" aria-pressed="${F.tipo === k}">${l}</button>`).join('')}</div>
+    <label class="lbl">Qué ha cambiado<textarea class="field" rows="3" data-bind="cambio.texto" placeholder="Ej.: empezamos la dieta nueva de la nutricionista">${esc(F.texto)}</textarea></label>
+    <label class="lbl">Desde qué día<input class="field" type="date" value="${F.fecha}" data-bind="cambio.fecha"></label>
+    <button class="btn btn-teal" data-a="cambio-guardar">Guardar cambio</button>
+  </section>
+  <section class="col" style="gap:8px"><h2 class="sec-title">Cambios apuntados</h2>
+    ${lista.length ? `<div class="card" style="padding:4px 16px">${lista.map(c => `<div class="list-row"><span class="col grow"><span class="b">${esc(c.texto || TIPO_CAMBIO_N[c.tipo])}</span><span class="tiny muted">${fFecha(c.fecha)} · ${esc(TIPO_CAMBIO_N[c.tipo] || '')} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Borrar cambio" data-a="cambio-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Apunta aquí cuándo empezasteis los suplementos, para que Progreso compare desde ese día.</div>`}
+  </section>`;
+}
+
+/* =========================================================
+   PANTALLA: PROGRESO
+   ========================================================= */
+function primerDia() {
+  let m = null;
+  ['tomas', 'cacas', 'comidas', 'cambios'].forEach(c => vivos(c).forEach(r => { if (r.fecha && (!m || r.fecha < m)) m = r.fecha; }));
+  return m;
+}
+function datosDia() {
+  const map = {};
+  const get = f => map[f] || (map[f] = { pesos: [], dia: null });
+  vivos('tomas').forEach(t => { if (t.peso != null) get(t.fecha).pesos.push(t.peso); });
+  vivos('cacas').forEach(c => { if (c.dia) get(c.fecha).dia = c.dia; });
+  return map;
+}
+function etapas(desde, hasta) {
+  const cs = vivos('cambios').filter(c => c.fecha <= hasta).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const out = [];
+  const ini0 = primerDia() || desde;
+  if (!cs.length || cs[0].fecha > ini0) out.push({ nombre: cs.length ? 'Antes de: ' + (cs[0].texto || TIPO_CAMBIO_N[cs[0].tipo]) : 'Desde el principio', desde: ini0, cambio: null });
+  cs.forEach(c => out.push({ nombre: c.texto || TIPO_CAMBIO_N[c.tipo], desde: c.fecha, cambio: c }));
+  out.forEach((e, i) => { e.hasta = i + 1 < out.length ? addDays(out[i + 1].desde, -1) : hasta; });
+  return out.filter(e => e.hasta >= desde && e.desde <= e.hasta);
+}
+function resumen(desde, hasta, map) {
+  const r = { g: 0, r: 0, m: 0, pesos: [] };
+  for (let f = desde; f <= hasta; f = addDays(f, 1)) {
+    const d = map[f]; if (!d) continue;
+    if (d.dia === 'bueno') r.g++; else if (d.dia === 'regular') r.r++; else if (d.dia === 'malo') r.m++;
+    r.pesos.push(...d.pesos);
+  }
+  r.peso = r.pesos.length ? r.pesos.reduce((a, b) => a + b, 0) / r.pesos.length : null;
+  r.tot = r.g + r.r + r.m;
+  return r;
+}
+const barra = (g, r, m, vacios) => `<div class="bar">${g ? `<span class="g" style="flex:${g} 1 0">${g}</span>` : ''}${r ? `<span class="r" style="flex:${r} 1 0">${r}</span>` : ''}${m ? `<span class="m" style="flex:${m} 1 0">${m}</span>` : ''}${vacios ? `<span class="e" style="flex:${vacios} 1 0"></span>` : ''}${!g && !r && !m && !vacios ? '<span class="e" style="flex:1"></span>' : ''}</div>`;
+function rangoProg() {
+  const h = hoy();
+  const p = primerDia() || h;
+  let desde = S.rango === '30' ? addDays(h, -29) : S.rango === '90' ? addDays(h, -89) : p;
+  if (desde < p) desde = p;
+  return { desde, hasta: h };
+}
+function vistaProg() {
+  const { desde, hasta } = rangoProg();
+  const map = datosDia();
+  const R = resumen(desde, hasta, map);
+  let h = `<header class="col" style="gap:12px"><h1 style="font-size:30px;font-weight:800">Progreso</h1>
+    <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[['30', '30 días'], ['90', '3 meses'], ['todo', 'Todo']].map(([k, l]) => `<button data-a="rango" data-v="${k}" aria-pressed="${S.rango === k}">${l}</button>`).join('')}</div>
+    <span class="small muted">Del ${fCorta(desde)} al ${fCorta(hasta)}</span></header>`;
+  if (!primerDia()) return h + `<div class="empty">Cuando empecéis a apuntar tomas con peso y cacas, aquí verás cómo va Susi.</div>`;
+  h += `<section class="big3" aria-label="Días buenos, regulares y malos">
+    <div style="background:var(--good);color:#fff"><span class="n">${R.g}</span><span class="t">días buenos</span></div>
+    <div style="background:var(--reg);color:var(--reg-t)"><span class="n">${R.r}</span><span class="t">regulares</span></div>
+    <div style="background:var(--bad);color:#fff"><span class="n">${R.m}</span><span class="t">malos</span></div></section>`;
+  // Etapas
+  const E = etapas(desde, hasta);
+  const ER = E.map(e => Object.assign({}, e, resumen(e.desde < desde ? desde : e.desde, e.hasta, map)));
+  h += `<section class="card col" style="gap:14px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Antes y después de cada cambio</h2><span class="tiny muted">Cada etapa empieza con un cambio apuntado en Registrar › Cambio</span></div>
+    ${ER.map((e, i) => `<div class="etapa" style="background:${i % 2 ? 'var(--teal-s)' : 'var(--soft)'}">
+      <div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><span class="b" style="font-size:16px">${esc(e.nombre)}</span><span class="tiny muted" style="white-space:nowrap">${fCorta(e.desde)} – ${e.hasta === hasta ? 'hoy' : fCorta(e.hasta)}</span></div>
+      ${barra(e.g, e.r, e.m, 0)}
+      <div class="grid2"><div class="col"><span style="font-size:24px;font-weight:800">${e.tot ? Math.round(e.g * 100 / e.tot) + ' %' : '—'}</span><span class="tiny muted">de días buenos</span></div><div class="col"><span style="font-size:24px;font-weight:800">${e.peso != null ? Math.round(e.peso) + ' g' : '—'}</span><span class="tiny muted">peso medio</span></div></div>
+    </div>`).join('')}
+    ${conclusion(ER)}
+  </section>`;
+  h += graficaPeso(desde, hasta, map, E);
+  h += semanas(desde, hasta, map);
+  h += `<section class="card col" style="gap:10px"><h2 style="font-size:18px;font-weight:800">Informe para la vet</h2><p class="small muted">Este resumen en texto, para mandarlo por WhatsApp a la vet o a la nutricionista.</p><button class="btn btn-line" data-a="informe">Copiar informe</button></section>`;
+  return h;
+}
+function conclusion(ER) {
+  if (ER.length < 2) return '';
+  const a = ER[ER.length - 2], b = ER[ER.length - 1];
+  if (!a.tot || !b.tot) return '';
+  const pa = a.g / a.tot, pb = b.g / b.tot;
+  const dp = a.peso != null && b.peso != null ? b.peso - a.peso : null;
+  let t = 'Desde el último cambio: ';
+  t += pb > pa + 0.05 ? 'más días buenos (' + Math.round(pb * 100) + ' % frente a ' + Math.round(pa * 100) + ' %)' : pb < pa - 0.05 ? 'menos días buenos (' + Math.round(pb * 100) + ' % frente a ' + Math.round(pa * 100) + ' %)' : 'los días buenos se mantienen';
+  if (dp != null) t += ' y ' + (Math.abs(dp) < 3 ? 'el peso estable' : (dp > 0 ? Math.round(dp) + ' g más' : Math.round(-dp) + ' g menos') + ' de media');
+  return `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b" style="color:var(--teal-d)">${t}.</span></div>`;
+}
+function graficaPeso(desde, hasta, map, E) {
+  const N = diffDays(hasta, desde) + 1;
+  const pts = [];
+  for (let i = 0; i < N; i++) { const f = addDays(desde, i); const d = map[f]; if (d && d.pesos.length) pts.push([i, d.pesos.reduce((a, b) => a + b, 0) / d.pesos.length]); }
+  const ult = pts.length ? pts[pts.length - 1][1] : null;
+  const dif = pts.length > 1 ? ult - pts[0][1] : null;
+  let h = `<section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between;align-items:flex-end"><div class="col"><h2 style="font-size:19px;font-weight:800">Peso</h2><span class="tiny muted">Media de mañana y noche de cada día</span></div>
+    ${ult != null ? `<div class="col" style="align-items:flex-end"><span style="font-size:28px;font-weight:800;line-height:1">${Math.round(ult)} g</span>${dif != null ? `<span class="tiny b" style="color:${dif < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${dif > 0 ? '+' : dif < 0 ? '−' : '±'}${Math.round(Math.abs(dif))} g en el periodo</span>` : ''}</div>` : ''}</div>`;
+  if (pts.length < 2) return h + `<div class="empty">Hacen falta al menos dos días con peso para dibujar la gráfica.</div></section>`;
+  const W = 326, H = 200, x0 = 34, x1 = W - 4, yT = 26, yB = 172;
+  let lo = Math.min(...pts.map(p => p[1])), hi = Math.max(...pts.map(p => p[1]));
+  const pad_ = Math.max(4, (hi - lo) * 0.15); lo -= pad_; hi += pad_;
+  const X = i => N === 1 ? (x0 + x1) / 2 : x0 + i * (x1 - x0) / (N - 1);
+  const Y = v => yB - (v - lo) * (yB - yT) / (hi - lo);
+  let s = `<svg role="img" aria-label="Gráfica del peso de Susi del ${fCorta(desde)} al ${fCorta(hasta)}" width="100%" viewBox="0 0 ${W} ${H}" style="display:block">`;
+  E.forEach((e, i) => {
+    const a = X(Math.max(0, diffDays(e.desde, desde))), b = X(Math.min(N - 1, diffDays(e.hasta, desde)));
+    s += `<rect x="${a.toFixed(1)}" y="0" width="${Math.max(1, b - a).toFixed(1)}" height="${yB + 4}" fill="${i % 2 ? '#E3F0EE' : '#F6EEE3'}"/>`;
+    if (i > 0) s += `<line x1="${a.toFixed(1)}" x2="${a.toFixed(1)}" y1="0" y2="${yB + 4}" stroke="#1D6B66" stroke-width="2"/>`;
+    if (b - a > 60) s += `<text x="${(a + 6).toFixed(1)}" y="16" font-size="11" font-weight="800" fill="${i % 2 ? '#14524E' : '#6E625A'}">${esc(((n, k) => n.length > k ? n.slice(0, k - 1) + '…' : n)(e.nombre || '', Math.floor((b - a) / 7)))}</text>`;
+  });
+  const ticks = 3;
+  for (let k = 0; k < ticks; k++) {
+    const v = lo + (hi - lo) * (0.2 + 0.3 * k);
+    s += `<line x1="${x0}" x2="${x1}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#D9D0C4" stroke-dasharray="2 4"/><text x="${x0 - 6}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#6E625A">${Math.round(v)}</text>`;
+  }
+  s += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ')}" fill="none" stroke="#2A2320" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (pts.length < 40) pts.forEach(p => { s += `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" fill="#2A2320"/>`; });
+  const lp = pts[pts.length - 1];
+  s += `<circle cx="${X(lp[0]).toFixed(1)}" cy="${Y(lp[1]).toFixed(1)}" r="5.5" fill="#2A2320"/>`;
+  s += `<text x="${x0}" y="${H - 6}" font-size="11" fill="#6E625A">${fCorta(desde)}</text><text x="${x1}" y="${H - 6}" text-anchor="end" font-size="11" fill="#6E625A">hoy</text></svg>`;
+  return h + s + '</section>';
+}
+function semanas(desde, hasta, map) {
+  const cambios = vivos('cambios');
+  const rows = [];
+  let l = lunes(hasta);
+  let prevPeso = null;
+  const lista = [];
+  while (addDays(l, 6) >= desde) { lista.push(l); l = addDays(l, -7); }
+  const res = lista.map(l => { const a = l < desde ? desde : l, b = addDays(l, 6) > hasta ? hasta : addDays(l, 6); const r = resumen(a, b, map); r.l = l; r.dias = diffDays(addDays(l, 6), a) + 1; r.cambios = cambios.filter(c => c.fecha >= l && c.fecha <= addDays(l, 6)); return r; });
+  res.forEach((r, i) => {
+    const prev = res[i + 1];
+    const d = prev && prev.peso != null && r.peso != null ? r.peso - prev.peso : null;
+    const vac = Math.max(0, r.dias - r.tot);
+    rows.push(`<div class="week"><span class="small b">${fCorta(r.l)}</span>${barra(r.g, r.r, r.m, vac)}<span class="col" style="align-items:flex-end"><span class="small b">${r.peso != null ? Math.round(r.peso) + ' g' : '—'}</span><span class="tiny b" style="color:${d != null && d < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${d == null ? '' : (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.round(Math.abs(d)) + ' g'}</span></span></div>`);
+    r.cambios.sort((a, b) => b.fecha.localeCompare(a.fecha)).forEach(c => rows.push(`<div class="marker"><i></i><b>${esc(c.texto || TIPO_CAMBIO_N[c.tipo])} · ${fCorta(c.fecha)}</b><i></i></div>`));
+  });
+  return `<section class="card col" style="gap:4px"><div class="col" style="gap:2px;padding-bottom:8px"><h2 style="font-size:19px;font-weight:800">Semana a semana</h2><span class="tiny muted">Días buenos, regulares y malos, y peso medio</span></div>${rows.join('')}
+    <div class="legend" style="padding-top:8px"><span><i style="background:var(--good)"></i>Bueno</span><span><i style="background:var(--reg)"></i>Regular</span><span><i style="background:var(--bad)"></i>Malo</span><span><i style="border:1.5px dashed #D9CBBB"></i>Sin apuntar</span></div></section>`;
+}
+function textoInforme() {
+  const { desde, hasta } = rangoProg();
+  const map = datosDia();
+  const R = resumen(desde, hasta, map);
+  const L = [];
+  L.push('Susi · informe del ' + fCorta(desde) + ' al ' + fCorta(hasta));
+  L.push('');
+  L.push('Cacas (días): ' + R.g + ' buenos, ' + R.r + ' regulares, ' + R.m + ' malos' + (R.tot ? ' (' + Math.round(R.g * 100 / R.tot) + ' % buenos)' : ''));
+  if (R.pesos.length) L.push('Peso: media ' + Math.round(R.peso) + ' g · mínimo ' + fNum(Math.min(...R.pesos)) + ' g · máximo ' + fNum(Math.max(...R.pesos)) + ' g');
+  const tipos = {};
+  vivos('cacas').filter(c => c.fecha >= desde && c.fecha <= hasta).forEach(c => c.tipos.forEach(t => tipos[t] = (tipos[t] || 0) + 1));
+  const tk = Object.keys(tipos).sort((a, b) => tipos[b] - tipos[a]);
+  if (tk.length) L.push('Tipos más frecuentes: ' + tk.map(t => HECES_N[t] + ' (' + tipos[t] + ' días)').join(', '));
+  const E = etapas(desde, hasta);
+  if (E.length > 1) { L.push(''); L.push('Por etapas:'); E.forEach(e => { const r = resumen(e.desde < desde ? desde : e.desde, e.hasta, map); L.push('· ' + e.nombre + ' (' + fCorta(e.desde) + ' – ' + (e.hasta === hasta ? 'hoy' : fCorta(e.hasta)) + '): ' + r.g + '/' + r.r + '/' + r.m + ' días buenos/regulares/malos' + (r.peso != null ? ', peso medio ' + Math.round(r.peso) + ' g' : '')); }); }
+  const N = diffDays(hasta, desde) + 1;
+  const esperadas = N * 2, dadas = vivos('tomas').filter(t => t.fecha >= desde && t.fecha <= hasta).length;
+  L.push(''); L.push('Tomas apuntadas: ' + dadas + ' de ' + esperadas);
+  L.push('Medicación actual: ' + medsActivos().map(m => m.nombre + ' ' + m.dosis + (m.tipo === 'diario' ? ' (' + (m.momentos || []).map(x => NOMBRE_MOM[x]).join(' y ') + ')' : (m.dias || []).length ? ' (' + m.dias.map(d => DIAS_L[d]).join(' y ') + ')' : ' (semanal)')).join('; '));
+  const cs = vivos('cambios').filter(c => c.fecha >= desde && c.fecha <= hasta).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (cs.length) { L.push(''); L.push('Cambios:'); cs.forEach(c => L.push('· ' + fCorta(c.fecha) + ': ' + (c.texto || TIPO_CAMBIO_N[c.tipo]))); }
+  return L.join('\n');
+}
+
+/* =========================================================
+   PANTALLA: MEDICACIÓN
+   ========================================================= */
+function vistaMed() {
+  const act = medsActivos();
+  const grupo = (tit, l) => l.length ? `<h2 class="sec-title" style="font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">${tit}</h2>${l.map(m => `<button class="mini" data-a="med-edit" data-id="${m.id}" style="min-height:72px"><span class="col grow"><span class="b" style="font-size:17px">${esc(m.nombre)}</span><span class="small muted">${esc(m.dosis)} · ${pauta(m)}</span>${m.dil ? `<span class="tiny b" style="color:var(--warn)">Aviso de dilución cada ${m.dil.cada} días</span>` : ''}${m.aviso && (m.dias || []).length ? `<span class="tiny b" style="color:var(--pu-k)">Con aviso</span>` : ''}</span>${I.chev}</button>`).join('')}` : '';
+  const viejos = vivos('meds').filter(m => !m.activo);
+  return `<header class="row" style="justify-content:space-between"><h1 style="font-size:30px;font-weight:800">Medicación</h1><button class="btn btn-teal" style="width:auto;min-height:46px;border-radius:999px" data-a="med-nuevo">+ Añadir</button></header>
+    <p class="small muted" style="margin:0 4px">Lo que pongas aquí es lo que sale en las tomas de Hoy. Toca uno para cambiar la dosis o dejar de dárselo.</p>
+    ${grupo('Cada día', act.filter(m => m.tipo === 'diario'))}
+    ${grupo('Cada semana', act.filter(m => m.tipo === 'semanal'))}
+    ${viejos.length ? `<h2 class="sec-title" style="font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Ya no se le da</h2><div class="card" style="padding:4px 16px">${viejos.map(m => `<div class="list-row"><span class="col grow"><span class="b">${esc(m.nombre)}</span><span class="tiny muted">${esc(m.dosis)}${m.hasta ? ' · hasta el ' + fCorta(m.hasta) : ''}</span></span><button class="chip" data-a="med-volver" data-id="${m.id}">Volver a dar</button></div>`).join('')}</div>` : ''}
+    <section class="card col" style="gap:10px;margin-top:6px"><h2 style="font-size:17px;font-weight:800">Ajustes y copia de seguridad</h2>
+      <p class="small muted">Ahora los datos se guardan en este móvil. Haz una copia de vez en cuando hasta que conectemos la nube.</p>
+      <div class="grid2"><button class="btn btn-line" data-a="exportar">Hacer copia</button><button class="btn btn-soft" data-a="importar">Cargar copia</button></div>
+      <button class="btn btn-soft" data-a="quien">Este móvil es de: ${esc(yo())} · cambiar</button>
+      <span class="tiny muted" style="text-align:center">Susitio ${VERSION}</span>
+    </section>`;
+}
+function pauta(m) {
+  if (m.tipo === 'diario') { const mm = m.momentos || []; return mm.length === 2 ? 'mañana y noche' : mm.length ? 'por la ' + NOMBRE_MOM[mm[0]] : 'sin toma asignada'; }
+  const d = m.dias || []; return d.length ? d.map(x => DIAS_L[x]).join(' y ') : 'una vez a la semana';
+}
+function sheetMed(id) {
+  const m = id ? DB.meds.find(x => x.id === id) : null;
+  S.form = m ? JSON.parse(JSON.stringify(m)) : { id: uid(), nombre: '', dosis: '', tipo: 'diario', momentos: ['manana', 'noche'], dias: [], activo: true, nuevo: true };
+  if (!S.form.dil) S.form.dil = null;
+  abrirSheet('med');
+}
+function vistaSheetMed() {
+  const F = S.form;
+  return `<h2>${F.nuevo ? 'Añadir' : esc(F.nombre)}</h2>
+    <div class="form">
+      <label class="lbl">Nombre<input class="field" data-bind="form.nombre" value="${esc(F.nombre)}" placeholder="Ej.: Prednisona"></label>
+      <label class="lbl">Dosis<input class="field" data-bind="form.dosis" value="${esc(F.dosis)}" placeholder="Ej.: 0,07 ml"></label>
+      <div class="lbl">Cada cuánto<div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button data-a="f-tipo" data-v="diario" aria-pressed="${F.tipo === 'diario'}">Cada día</button><button data-a="f-tipo" data-v="semanal" aria-pressed="${F.tipo === 'semanal'}">Cada semana</button></div></div>
+      ${F.tipo === 'diario' ? `
+        <div class="lbl">En qué toma<div class="chips">${['manana', 'noche'].map(k => `<button class="chip" data-a="f-mom" data-v="${k}" aria-pressed="${(F.momentos || []).includes(k)}">${k === 'manana' ? 'Mañana' : 'Noche'}</button>`).join('')}</div></div>
+        <div class="card col" style="gap:10px;background:var(--soft)">
+          <button class="row" data-a="f-dil" style="justify-content:space-between;min-height:44px;text-align:left"><span class="b">Avisar para preparar la dilución</span>${sw(!!F.dil)}</button>
+          ${F.dil ? `<label class="lbl">Cada cuántos días<input class="field" inputmode="numeric" data-bind="form.dil.cada" value="${esc(F.dil.cada)}"></label><label class="lbl">Cómo se prepara<input class="field" data-bind="form.dil.texto" value="${esc(F.dil.texto || '')}" placeholder="Ej.: 1 pastilla en 2 ml de agua"></label>` : ''}
+        </div>` : `
+        <div class="lbl">Qué días (opcional)<div class="chips">${DIAS_1.map((d, i) => `<button class="chip" style="min-width:44px;padding:0" data-a="f-dia" data-v="${i}" aria-pressed="${(F.dias || []).includes(i)}">${d}</button>`).join('')}</div><span class="tiny muted" style="font-weight:600">Sin días, sale en "Suplementos de la semana" para marcarlo cuando se dé.</span></div>
+        ${(F.dias || []).length ? `<button class="card row" data-a="f-aviso" style="justify-content:space-between;background:var(--soft);min-height:56px;text-align:left"><span class="b">Avisar los días que toca</span>${sw(!!F.aviso)}</button>` : ''}`}
+      <button class="btn btn-teal" data-a="med-guardar">Guardar</button>
+      ${F.nuevo ? '' : `<button class="btn btn-danger" data-a="med-dejar">Dejar de dárselo</button>`}
+      ${F.nuevo ? '' : `<span class="tiny muted" style="text-align:center">Si cambias la dosis queda apuntado como cambio en Progreso.</span>`}
+    </div>`;
+}
+const sw = on => `<span aria-hidden="true" style="width:50px;height:30px;border-radius:999px;background:${on ? 'var(--teal)' : '#CFC3B5'};display:flex;align-items:center;justify-content:${on ? 'flex-end' : 'flex-start'};padding:3px;flex:0 0 50px"><span style="width:24px;height:24px;border-radius:999px;background:#fff;display:block"></span></span>`;
+
+/* =========================================================
+   PANTALLA: DIARIO
+   ========================================================= */
+function eventos() {
+  const ev = [];
+  vivos('tomas').forEach(t => ev.push({ f: t.fecha, h: t.hora, autor: t.autor, t: 'Toma de la ' + NOMBRE_MOM[t.momento], d: [t.peso != null ? fNum(t.peso) + ' g' : null, (t.meds || []).map(m => m.nombre).join(', ') || 'sin medicación'].filter(Boolean).join(' · '), a: 'toma-edit', id: t.id }));
+  vivos('semanales').forEach(s => { const m = DB.meds.find(x => x.id === s.medId) || {}; ev.push({ f: s.fecha, h: s.hora, autor: s.autor, t: m.nombre || 'Semanal', d: s.dosis || m.dosis || '', a: 'borrar', col: 'semanales', id: s.id }); });
+  vivos('cacas').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Cacas: ' + (DIA_N[c.dia] || '—').toLowerCase(), d: c.tipos.map(t => HECES_N[t]).join(', '), a: 'reg-caca', id: c.id, fecha: c.fecha }));
+  vivos('comidas').forEach(c => ev.push({ f: c.fecha, h: c.hora, autor: c.autor, t: 'Comida', d: c.que + (c.g != null ? ' ' + fNum(c.g) + ' g' : ''), a: 'borrar', col: 'comidas', id: c.id }));
+  vivos('apetito').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Apetito: ' + (Object.fromEntries(APETITO)[c.valor] || '').toLowerCase(), d: '', a: 'borrar', col: 'apetito', id: c.id }));
+  vivos('cambios').forEach(c => ev.push({ f: c.fecha, h: '', autor: c.autor, t: 'Cambio: ' + (TIPO_CAMBIO_N[c.tipo] || ''), d: c.texto || '', a: 'borrar', col: 'cambios', id: c.id }));
+  vivos('diluciones').forEach(c => { const m = DB.meds.find(x => x.id === c.medId) || {}; ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Dilución nueva de ' + (m.nombre || ''), d: '', a: 'borrar', col: 'diluciones', id: c.id }); });
+  const k = e => e.f + ((e.h || '') < '04' && e.h ? '2' + e.h : '1' + (e.h || ''));
+  return ev.sort((a, b) => k(b).localeCompare(k(a)));
+}
+function vistaDiario() {
+  const ev = eventos();
+  let h = `<header class="col" style="gap:4px"><h1 style="font-size:30px;font-weight:800">Diario</h1><span class="small muted">Todo lo apuntado, de Sena y de Sara. Toca algo para cambiarlo o borrarlo.</span></header>`;
+  if (!ev.length) return h + `<div class="empty">Aún no hay nada apuntado.</div>`;
+  const grupos = [];
+  ev.slice(0, S.diarioN).forEach(e => { let g = grupos[grupos.length - 1]; if (!g || g.f !== e.f) { g = { f: e.f, l: [] }; grupos.push(g); } g.l.push(e); });
+  const hh = hoy();
+  grupos.forEach(g => {
+    h += `<section class="col" style="gap:8px"><h2 class="sec-title" style="font-size:16px;color:var(--muted)">${g.f === hh ? 'Hoy · ' : g.f === addDays(hh, -1) ? 'Ayer · ' : ''}${fFecha(g.f)}</h2><div class="card" style="padding:4px 14px">${g.l.map(e => `<button class="list-row" data-a="${e.a}" data-id="${e.id}" ${e.col ? `data-col="${e.col}"` : ''} ${e.fecha ? `data-f="${e.fecha}"` : ''}>${ini(e.autor)}<span class="col grow"><span class="b" style="font-size:16px">${esc(e.t)}</span>${e.d ? `<span class="small muted">${esc(e.d)}</span>` : ''}</span><span class="small b muted">${esc(e.h || '')}</span></button>`).join('')}</div></section>`;
+  });
+  if (ev.length > S.diarioN) h += `<button class="btn btn-soft" data-a="diario-mas">Ver más</button>`;
+  return h;
+}
+
+/* =========================================================
+   HOJA: EDITAR TOMA
+   ========================================================= */
+function sheetToma(t, mom) {
+  const f = hoy();
+  if (t) S.form = { id: t.id, fecha: t.fecha, momento: t.momento, hora: t.hora, peso: t.peso != null ? fNum(t.peso) : '', sel: Object.fromEntries((t.meds || []).map(m => [m.id, true])), autor: t.autor, existe: true };
+  else S.form = { id: 'toma-' + f + '-' + mom, fecha: f, momento: mom, hora: nowHM(), peso: '', sel: Object.fromEntries(medsToma(mom).map(m => [m.id, true])), existe: false };
+  abrirSheet('toma');
+}
+function vistaSheetToma() {
+  const F = S.form;
+  const ids = new Set(medsToma(F.momento).map(m => m.id).concat(Object.keys(F.sel)));
+  const meds = [...ids].map(id => DB.meds.find(m => m.id === id)).filter(Boolean);
+  return `<h2>Toma de la ${NOMBRE_MOM[F.momento]}</h2><span class="small muted" style="margin-top:-8px">${fFecha(F.fecha)}${F.existe ? ' · apuntada por ' + esc(F.autor) : ''}</span>
+    <div class="form">
+      <div class="grid2"><label class="lbl">Hora<input class="field" type="time" data-bind="form.hora" value="${esc(F.hora)}"></label><label class="lbl">Peso (g)<input class="field" inputmode="decimal" data-bind="form.peso" value="${esc(F.peso)}" placeholder="—"></label></div>
+      <div class="lbl">Qué se le dio<div class="chips">${meds.map(m => `<button class="chip" data-a="f-sel" data-id="${m.id}" aria-pressed="${!!F.sel[m.id]}">${esc(m.nombre)} · ${esc(m.dosis)}</button>`).join('')}</div></div>
+      <button class="btn btn-teal" data-a="toma-guardar">Guardar</button>
+      ${F.existe ? `<button class="btn btn-danger" data-a="toma-borrar">Borrar esta toma</button>` : ''}
+    </div>`;
+}
+
+/* =========================================================
+   Pintar
+   ========================================================= */
+function abrirSheet(tipo, extra) { S.sheet = { tipo, extra }; pintarSheet(); }
+function cerrarSheet() { S.sheet = null; S.form = null; pintarSheet(); }
+function pintarSheet() {
+  const el = document.getElementById('sheet');
+  if (!S.sheet) { el.innerHTML = ''; return; }
+  let c = '';
+  const t = S.sheet.tipo;
+  if (t === 'med') c = vistaSheetMed();
+  else if (t === 'toma') c = vistaSheetToma();
+  else if (t === 'quien') c = `<div class="who">${LOGO(88).replace('<svg', '<svg style="align-self:center"')}<h2>¿Quién usa este móvil?</h2><p class="muted">Así cada cosa que apuntes saldrá con tu nombre.</p><button class="btn btn-big btn-teal" data-a="soy" data-v="Sena">Soy Sena</button><button class="btn btn-big btn-line" data-a="soy" data-v="Sara">Soy Sara</button></div>`;
+  else if (t === 'borrar') c = `<h2>¿Borrar?</h2><p class="muted">${esc(S.sheet.extra.texto)}</p><button class="btn btn-danger" data-a="borrar-ok">Borrar</button><button class="btn btn-soft" data-a="cerrar">Cancelar</button>`;
+  else if (t === 'informe') c = `<h2>Informe</h2><p class="small muted">Si no se ha copiado solo, mantén pulsado el texto para copiarlo.</p><textarea class="field" rows="14" readonly>${esc(S.sheet.extra)}</textarea><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
+  const fijo = t === 'quien';
+  el.innerHTML = `<div class="sheet-bg" ${fijo ? '' : 'data-a="cerrar-fondo"'}><div class="sheet" role="dialog" aria-modal="true">${fijo ? '' : '<span class="grab"></span>'}${c}</div></div>`;
+}
+function pintar() {
+  const app = document.getElementById('app');
+  const y = window.scrollY;
+  let h = '';
+  if (S.tab === 'hoy') h = vistaHoy();
+  else if (S.tab === 'reg') h = vistaReg();
+  else if (S.tab === 'prog') h = vistaProg();
+  else if (S.tab === 'med') h = vistaMed();
+  else if (S.tab === 'diario') h = vistaDiario();
+  app.innerHTML = h;
+  document.getElementById('tabs').innerHTML = [
+    ['hoy', 'Hoy', I.home], ['prog', 'Progreso', I.prog], ['reg', '', ''], ['med', 'Medicación', I.med], ['diario', 'Diario', I.diario]
+  ].map(([k, l, ic]) => k === 'reg'
+    ? `<button class="tab-plus" data-a="tab" data-tab="reg" aria-label="Registrar" ${S.tab === k ? 'aria-current="page"' : ''}>${I.plus}</button>`
+    : `<button class="tab" data-a="tab" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic}${l}</button>`).join('');
+  if (S.keepScroll) window.scrollTo(0, y);
+  S.keepScroll = false;
+  pintarBanner();
+  pintarSheet();
+}
+function repintar() { S.keepScroll = true; pintar(); }
+let toastT;
+function toast(t) { const el = document.getElementById('toast'); el.innerHTML = `<div class="toast" role="status">${esc(t)}</div>`; clearTimeout(toastT); toastT = setTimeout(() => el.innerHTML = '', 2400); }
+
+/* =========================================================
+   Acciones
+   ========================================================= */
+function setPath(path, v) {
+  const p = path.split('.');
+  let o = S;
+  for (let i = 0; i < p.length - 1; i++) { if (o[p[i]] == null) o[p[i]] = {}; o = o[p[i]]; }
+  o[p[p.length - 1]] = v;
+}
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.bind) setPath(t.dataset.bind, t.value);
+  if (t.dataset.hero) { const f = hoy(), mom = heroMomento(f); if (mom) heroForm(f, mom)[t.dataset.hero] = t.value; }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.fecha && t.value) {
+    const q = t.dataset.fecha;
+    if (q === 'cacas') S.cacas.fecha = t.value; else S.comida.fecha = t.value;
+    repintar();
+  }
+  if (t.id === 'file-in' && t.files[0]) {
+    const r = new FileReader();
+    r.onload = () => { try { const o = JSON.parse(r.result); const n = juntar(o); toast(n ? 'Copia cargada: ' + n + ' registros' : 'No había nada nuevo'); repintar(); } catch (err) { toast('Ese archivo no es una copia de Susitio'); } };
+    r.readAsText(t.files[0]);
+    t.value = '';
+  }
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]');
+  if (!b) return;
+  const a = b.dataset.a, d = b.dataset;
+  if (a === 'cerrar-fondo') { if (e.target === b) cerrarSheet(); return; }
+  const f = hoy();
+  switch (a) {
+    case 'tab': S.tab = d.tab; window.scrollTo(0, 0); pintar(); break;
+    case 'reg': S.tab = 'reg'; S.reg = d.reg; if (d.reg === 'cacas') S.cacas = null; pintar(); break;
+    case 'cerrar': cerrarSheet(); break;
+    case 'soy': setYo(d.v); cerrarSheet(); repintar(); toast('Hola, ' + d.v); break;
+    case 'quien': abrirSheet('quien'); break;
+
+    /* Hoy */
+    case 'hero-hora': { const mom = heroMomento(f); const F = heroForm(f, mom); F.editHora = true; F.hora = F.hora || nowHM(); repintar(); const i = document.querySelector('.hero-time'); if (i) i.focus(); break; }
+    case 'hero-med': { const mom = heroMomento(f); const F = heroForm(f, mom); F.sel[d.id] = F.sel[d.id] === false; repintar(); break; }
+    case 'hero-dar': {
+      const mom = d.mom; const F = heroForm(f, mom);
+      const peso = num(F.peso);
+      const meds = medsToma(mom).filter(m => F.sel[m.id] !== false).map(m => ({ id: m.id, nombre: m.nombre, dosis: m.dosis }));
+      poner('tomas', { id: 'toma-' + f + '-' + mom, fecha: f, momento: mom, hora: F.editHora && F.hora ? F.hora : nowHM(), peso, meds, autor: yo() });
+      delete S.hero[f + mom];
+      toast('Toma de la ' + NOMBRE_MOM[mom] + ' apuntada' + (peso == null ? ' (sin peso)' : ''));
+      window.scrollTo(0, 0); pintar(); break;
+    }
+    case 'toma-edit': { const t = DB.tomas.find(x => x.id === d.id); if (t) sheetToma(t); break; }
+    case 'toma-nueva': sheetToma(null, d.mom); break;
+    case 'f-sel': S.form.sel[d.id] = !S.form.sel[d.id]; pintarSheet(); break;
+    case 'toma-guardar': {
+      const F = S.form;
+      const meds = Object.keys(F.sel).filter(k => F.sel[k]).map(id => { const m = DB.meds.find(x => x.id === id) || {}; return { id, nombre: m.nombre, dosis: m.dosis }; });
+      const prev = DB.tomas.find(x => x.id === F.id);
+      poner('tomas', { id: F.id, fecha: F.fecha, momento: F.momento, hora: F.hora || nowHM(), peso: num(F.peso), meds, autor: prev && !prev.borrado ? prev.autor : yo(), editadoPor: prev ? yo() : undefined });
+      cerrarSheet(); repintar(); toast('Guardado'); break;
+    }
+    case 'toma-borrar': borrar('tomas', S.form.id); cerrarSheet(); repintar(); toast('Toma borrada'); break;
+    case 'dil': poner('diluciones', { id: uid(), medId: d.id, fecha: addDays(f, -Number(d.d || 0)), hora: d.d === '0' ? nowHM() : '', autor: yo() }); repintar(); toast('Apuntado'); break;
+    case 'sem-dar': { const m = DB.meds.find(x => x.id === d.id); poner('semanales', { id: uid(), medId: d.id, fecha: f, hora: nowHM(), dosis: m && m.dosis, autor: yo() }); repintar(); toast((m ? m.nombre : '') + ' apuntada'); break; }
+    case 'sem-quitar': borrar('semanales', d.id); repintar(); break;
+    case 'sup': { const s = semanalSemana(d.id, f); if (s) { abrirSheet('borrar', { col: 'semanales', id: s.id, texto: 'Quitar que se le dio ' + ((DB.meds.find(x => x.id === d.id) || {}).nombre || '') + ' el ' + fFecha(s.fecha) + '.' }); } else { const m = DB.meds.find(x => x.id === d.id); poner('semanales', { id: uid(), medId: d.id, fecha: f, hora: nowHM(), dosis: m && m.dosis, autor: yo() }); repintar(); toast((m ? m.nombre : '') + ' apuntado'); } break; }
+
+    /* Registrar */
+    case 'fecha': if (d.q === 'cacas') S.cacas.fecha = d.f; else S.comida.fecha = d.f; repintar(); break;
+    case 'caca-tipo': { const F = cacasForm(); const i = F.tipos.indexOf(d.k); if (i >= 0) F.tipos.splice(i, 1); else F.tipos.push(d.k); repintar(); break; }
+    case 'caca-dia': { const F = cacasForm(); F.dia = d.v; F.manual = true; repintar(); break; }
+    case 'caca-guardar': {
+      const F = cacasForm();
+      const dia = F.manual ? F.dia : sugerirDia(F.tipos);
+      if (!dia) { toast('Marca cómo han sido o elige cómo ha ido el día'); break; }
+      poner('cacas', { id: 'caca-' + F.fecha, fecha: F.fecha, tipos: F.tipos.slice(), dia, manual: F.manual, hora: nowHM(), autor: yo() });
+      F.cargada = null; toast('Cacas apuntadas: día ' + DIA_N[dia].toLowerCase()); repintar(); break;
+    }
+    case 'comida-rapida': { S.comida.que = d.v; const i = document.getElementById('c-que'); if (i) i.value = d.v; const g = document.getElementById('c-g'); if (g) g.focus(); break; }
+    case 'comida-add': {
+      const que = (S.comida.que || '').trim();
+      if (!que) { toast('Escribe qué ha comido'); break; }
+      const g = num(S.comida.g);
+      const fe = S.comida.fecha || f;
+      poner('comidas', { id: uid(), fecha: fe, hora: fe === f ? nowHM() : '', que, g, autor: yo() });
+      S.comida.que = ''; S.comida.g = ''; repintar(); toast('Añadido'); break;
+    }
+    case 'comida-borrar': borrar('comidas', d.id); repintar(); break;
+    case 'apetito': { const fe = S.comida.fecha || f; const ex = apetitoDe(fe); if (ex && ex.valor === d.v) borrar('apetito', ex.id); else poner('apetito', { id: 'apetito-' + fe, fecha: fe, valor: d.v, hora: nowHM(), autor: yo() }); repintar(); break; }
+    case 'cambio-tipo': S.cambio.tipo = d.v; repintar(); break;
+    case 'cambio-guardar': {
+      const F = S.cambio;
+      if (!F.texto.trim() && F.tipo === 'otro') { toast('Escribe qué ha cambiado'); break; }
+      poner('cambios', { id: uid(), fecha: F.fecha || f, tipo: F.tipo, texto: F.texto.trim(), autor: yo() });
+      S.cambio = null; repintar(); toast('Cambio guardado'); break;
+    }
+    case 'cambio-borrar': abrirSheet('borrar', { col: 'cambios', id: d.id, texto: 'Este cambio dejará de separar etapas en Progreso.' }); break;
+    case 'reg-caca': S.tab = 'reg'; S.reg = 'cacas'; S.cacas = { fecha: d.f }; window.scrollTo(0, 0); pintar(); break;
+
+    /* Progreso */
+    case 'rango': S.rango = d.v; repintar(); break;
+    case 'informe': {
+      const t = textoInforme();
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast('Informe copiado'), () => abrirSheet('informe', t));
+      else abrirSheet('informe', t);
+      break;
+    }
+
+    /* Medicación */
+    case 'med-edit': sheetMed(d.id); break;
+    case 'med-nuevo': sheetMed(null); break;
+    case 'f-tipo': S.form.tipo = d.v; pintarSheet(); break;
+    case 'f-mom': { const l = S.form.momentos || (S.form.momentos = []); const i = l.indexOf(d.v); if (i >= 0) l.splice(i, 1); else l.push(d.v); pintarSheet(); break; }
+    case 'f-dia': { const l = S.form.dias || (S.form.dias = []); const v = Number(d.v); const i = l.indexOf(v); if (i >= 0) l.splice(i, 1); else l.push(v); l.sort(); pintarSheet(); break; }
+    case 'f-dil': S.form.dil = S.form.dil ? null : { cada: 4, texto: '' }; pintarSheet(); break;
+    case 'f-aviso': S.form.aviso = !S.form.aviso; pintarSheet(); break;
+    case 'med-guardar': {
+      const F = S.form;
+      if (!F.nombre.trim()) { toast('Pon el nombre'); break; }
+      const viejo = DB.meds.find(m => m.id === F.id);
+      const rec = Object.assign({}, F); delete rec.nuevo;
+      rec.nombre = rec.nombre.trim(); rec.dosis = (rec.dosis || '').trim();
+      if (rec.dil) { rec.dil.cada = Math.max(1, parseInt(rec.dil.cada, 10) || 4); }
+      if (rec.tipo === 'diario') { delete rec.dias; delete rec.aviso; } else { delete rec.momentos; delete rec.dil; if (!(rec.dias || []).length) rec.aviso = false; }
+      if (!viejo) { rec.desde = f; poner('meds', rec); poner('cambios', { id: uid(), fecha: f, tipo: 'medicacion', texto: 'Empieza ' + rec.nombre + (rec.dosis ? ' ' + rec.dosis : ''), autor: yo() }); }
+      else {
+        poner('meds', rec);
+        if (viejo.dosis !== rec.dosis) poner('cambios', { id: uid(), fecha: f, tipo: 'dosis', texto: rec.nombre + ': ' + (viejo.dosis || '—') + ' → ' + (rec.dosis || '—'), autor: yo() });
+      }
+      cerrarSheet(); repintar(); toast('Guardado'); break;
+    }
+    case 'med-dejar': {
+      const m = DB.meds.find(x => x.id === S.form.id);
+      if (m) { const r = Object.assign({}, m, { activo: false, hasta: f }); poner('meds', r); poner('cambios', { id: uid(), fecha: f, tipo: 'medicacion', texto: 'Se deja ' + m.nombre, autor: yo() }); }
+      cerrarSheet(); repintar(); toast('Quitado de las tomas'); break;
+    }
+    case 'med-volver': { const m = DB.meds.find(x => x.id === d.id); if (m) { const r = Object.assign({}, m, { activo: true, desde: f }); delete r.hasta; poner('meds', r); poner('cambios', { id: uid(), fecha: f, tipo: 'medicacion', texto: 'Vuelve ' + m.nombre, autor: yo() }); } repintar(); break; }
+    case 'exportar': exportar(); break;
+    case 'importar': { let i = document.getElementById('file-in'); if (!i) { i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json'; i.id = 'file-in'; i.style.display = 'none'; document.body.appendChild(i); } i.click(); break; }
+
+    /* Diario */
+    case 'diario-mas': S.diarioN += 40; repintar(); break;
+    case 'borrar': { const r = DB[d.col].find(x => x.id === d.id); abrirSheet('borrar', { col: d.col, id: d.id, texto: 'Se quitará del diario' + (r && r.fecha ? ' del ' + fFecha(r.fecha) : '') + '.' }); break; }
+    case 'borrar-ok': { const x = S.sheet.extra; borrar(x.col, x.id); cerrarSheet(); repintar(); toast('Borrado'); break; }
+  }
+});
+async function exportar() {
+  const txt = JSON.stringify(DB);
+  const nombre = 'susitio-copia-' + hoy() + '.json';
+  try {
+    const file = new File([txt], nombre, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Copia de Susitio' }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' }));
+  a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+  toast('Copia descargada');
+}
+
+/* ---------- Actualizaciones de la app ---------- */
+let swEsperando = null;
+function pintarBanner() {
+  const b = document.getElementById('banner');
+  if (b) b.innerHTML = swEsperando ? `<div class="banner"><span class="grow b">Hay una versión nueva de Susitio</span><button data-a="actualizar">Actualizar</button></div>` : '';
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-a="actualizar"]') && swEsperando) swEsperando.postMessage('skipWaiting'); });
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    const vigilar = w => w && w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) { swEsperando = w; pintarBanner(); } });
+    if (reg.waiting && navigator.serviceWorker.controller) { swEsperando = reg.waiting; pintarBanner(); }
+    reg.addEventListener('updatefound', () => vigilar(reg.installing));
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  }).catch(() => {});
+  let recargando = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!recargando) { recargando = true; location.reload(); } });
+}
+
+/* ---------- Arranque ---------- */
+cargar();
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+// Al volver a la app (otro día u otra hora) se actualiza lo que toca
+let ultimoDia = hoy();
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !S.sheet) { if (hoy() !== ultimoDia) { ultimoDia = hoy(); S.hero = {}; S.cacas = null; S.comida = { que: '', g: '' }; } repintar(); } });
+pintar();
+if (!yo()) abrirSheet('quien');
+</script>
+</body>
+</html>
