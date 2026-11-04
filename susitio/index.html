@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '1.3';
+const VERSION = '1.4';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -383,6 +383,13 @@ function vistaHoy() {
   if (sup.length) {
     h += `<section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between"><span class="b" style="font-size:17px">Suplementos de la semana</span><span class="small muted">${sup.filter(m => semanalSemana(m.id, f)).length} de ${sup.length}</span></div><div class="chips">${sup.map(m => { const s = semanalSemana(m.id, f); return `<button class="chip" aria-pressed="${!!s}" data-a="sup" data-id="${m.id}">${s ? '✓ ' : ''}${esc(m.nombre)}${s ? ' · ' + DIAS[dow(s.fecha)] : ' · ' + esc(m.dosis)}</button>`; }).join('')}</div></section>`;
   }
+  // Dieta actual
+  const da = dietaActual();
+  if (da && da.alimento) {
+    const n = diffDays(f, da.fecha) + 1;
+    const mp = datosDia(); const r = resumen(da.fecha, f, mp);
+    h += `<button class="mini" data-a="tab" data-tab="prog"><span class="ico" style="background:var(--teal-s);font-size:18px;font-weight:800;color:var(--teal-d)">${n}</span><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Dieta actual · día ${n}</span><span class="b" style="font-size:17px">Solo ${esc(da.alimento)}</span><span class="small muted">${r.tot ? r.g + ' días buenos de ' + r.tot : 'Aún sin días apuntados'}${r.peso != null ? ' · peso medio ' + Math.round(r.peso) + ' g' : ''}</span></span>${I.chev}</button>`;
+  }
   // Cómo va hoy
   const up = ultimoPeso();
   const prev = up ? ultimoPeso(up.fecha + (up.momento === 'noche' ? 'b' : 'a')) : null;
@@ -492,6 +499,8 @@ function formComida() {
   const cuenta = {};
   vivos('comidas').forEach(c => { const k = (c.que || '').trim(); if (k) cuenta[k] = (cuenta[k] || 0) + 1; });
   let rap = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a]).slice(0, 6);
+  const da = dietaActual();
+  if (da && da.alimento) { rap = rap.filter(x => x.toLowerCase() !== da.alimento.toLowerCase()); rap.unshift(da.alimento); rap = rap.slice(0, 6); }
   ['Papilla', 'Pienso', 'Carne', 'Premio'].forEach(x => { if (rap.length < 6 && !rap.includes(x)) rap.push(x); });
   return `<section class="card form">
     <div class="row" style="justify-content:space-between;align-items:baseline"><h2 style="font-size:19px;font-weight:800">Comida</h2><span class="b" style="color:var(--teal-d)">${lista.length ? (gs.length ? fNum(tot) + ' g' : '') + (lista.length - gs.length ? (gs.length ? ' + ' : '') + (lista.length - gs.length) + ' sin pesar' : '') : ''}</span></div>
@@ -523,12 +532,13 @@ function formCambio() {
   return `<section class="card form">
     <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cambio u observación</h2><span class="small muted">Los cambios de dieta y de medicación salen marcados en la gráfica de peso y empiezan una etapa nueva en Progreso. Las visitas y notas quedan en el Diario.</span></div>
     <div class="chips">${TIPOS_CAMBIO.map(([k, l]) => `<button class="chip" data-a="cambio-tipo" data-v="${k}" aria-pressed="${F.tipo === k}">${l}</button>`).join('')}</div>
-    <label class="lbl">Qué ha cambiado<textarea class="field" rows="3" data-bind="cambio.texto" placeholder="Ej.: empezamos la dieta nueva de la nutricionista">${esc(F.texto)}</textarea></label>
+    ${F.tipo === 'dieta' ? `<label class="lbl">Qué come ahora<input class="field" data-bind="cambio.alimento" value="${esc(F.alimento || '')}" placeholder="Ej.: papilla de pollo"><span class="tiny muted" style="font-weight:600">Solo eso hasta ver cómo le sienta. Saldrá como etapa en Progreso y como botón rápido en Comida.</span></label>` : ''}
+    <label class="lbl">${F.tipo === 'dieta' ? 'Notas (opcional)' : 'Qué ha cambiado'}<textarea class="field" rows="3" data-bind="cambio.texto" placeholder="${F.tipo === 'dieta' ? 'Ej.: indicado por la nutricionista' : 'Ej.: Prednisona baja a 0,05 ml'}">${esc(F.texto)}</textarea></label>
     <label class="lbl">Desde qué día<input class="field" type="date" value="${F.fecha}" data-bind="cambio.fecha"></label>
     <button class="btn btn-teal" data-a="cambio-guardar">Guardar cambio</button>
   </section>
   <section class="col" style="gap:8px"><h2 class="sec-title">Cambios apuntados</h2>
-    ${lista.length ? `<div class="card" style="padding:4px 16px">${lista.map(c => `<div class="list-row"><span class="col grow"><span class="b">${esc(c.texto || TIPO_CAMBIO_N[c.tipo])}</span><span class="tiny muted">${fFecha(c.fecha)} · ${esc(TIPO_CAMBIO_N[c.tipo] || '')} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Borrar cambio" data-a="cambio-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Apunta aquí cuándo empezasteis los suplementos, para que Progreso compare desde ese día.</div>`}
+    ${lista.length ? `<div class="card" style="padding:4px 16px">${lista.map(c => `<div class="list-row"><span class="col grow"><span class="b">${esc(nombreCambio(c))}</span><span class="tiny muted">${fFecha(c.fecha)} · ${esc(TIPO_CAMBIO_N[c.tipo] || '')} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Borrar cambio" data-a="cambio-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Apunta aquí cuándo empezasteis los suplementos, para que Progreso compare desde ese día.</div>`}
   </section>`;
 }
 
@@ -551,8 +561,8 @@ function etapas(desde, hasta) {
   const cs = vivos('cambios').filter(c => c.fecha <= hasta && (ES_DIETA(c) || ES_MED(c))).sort((a, b) => a.fecha.localeCompare(b.fecha));
   const out = [];
   const ini0 = primerDia() || desde;
-  if (!cs.length || cs[0].fecha > ini0) out.push({ nombre: cs.length ? 'Antes de: ' + (cs[0].texto || TIPO_CAMBIO_N[cs[0].tipo]) : 'Desde el principio', desde: ini0, cambio: null });
-  cs.forEach(c => out.push({ nombre: c.texto || TIPO_CAMBIO_N[c.tipo], desde: c.fecha, cambio: c }));
+  if (!cs.length || cs[0].fecha > ini0) out.push({ nombre: cs.length ? 'Antes de: ' + nombreCambio(cs[0]) : 'Desde el principio', desde: ini0, cambio: null });
+  cs.forEach(c => out.push({ nombre: nombreCambio(c), desde: c.fecha, cambio: c }));
   out.forEach((e, i) => { e.hasta = i + 1 < out.length ? addDays(out[i + 1].desde, -1) : hasta; });
   return out.filter(e => e.hasta >= desde && e.desde <= e.hasta);
 }
@@ -615,6 +625,8 @@ function conclusion(ER) {
   return `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b" style="color:var(--teal-d)">${t}.</span></div>`;
 }
 const ES_DIETA = c => c.tipo === 'dieta';
+const nombreCambio = c => c.tipo === 'dieta' && c.alimento ? 'Solo ' + c.alimento : (c.texto || TIPO_CAMBIO_N[c.tipo] || '');
+function dietaActual() { const d = vivos('cambios').filter(c => c.tipo === 'dieta' && c.fecha <= hoy()).sort((a, b) => a.fecha.localeCompare(b.fecha)).pop(); return d || null; }
 const ES_MED = c => ['dosis', 'medicacion', 'suplemento'].includes(c.tipo);
 function graficaPeso(desde, hasta, map) {
   const N = diffDays(hasta, desde) + 1;
@@ -640,8 +652,8 @@ function graficaPeso(desde, hasta, map) {
   s += `<text x="0" y="${yD + 15}" font-size="10" font-weight="800" fill="#6E625A">DIETA</text>`;
   const tramos = [];
   const antes = dietas.filter(c => c.fecha <= desde).pop();
-  tramos.push({ desde, nombre: antes ? (antes.texto || 'Dieta') : 'Dieta de antes' });
-  dietas.filter(c => c.fecha > desde && c.fecha <= hasta).forEach(c => tramos.push({ desde: c.fecha, nombre: c.texto || 'Dieta nueva', cambio: true }));
+  tramos.push({ desde, nombre: antes ? nombreCambio(antes) : 'Dieta de antes' });
+  dietas.filter(c => c.fecha > desde && c.fecha <= hasta).forEach(c => tramos.push({ desde: c.fecha, nombre: nombreCambio(c), cambio: true }));
   const COLD = ['#F6E7D4', '#CFE7E3', '#F2D4B5', '#B9DCD6'];
   tramos.forEach((t, i) => {
     const a = XF(t.desde), b = i + 1 < tramos.length ? XF(tramos[i + 1].desde) : x1;
@@ -669,7 +681,7 @@ function graficaPeso(desde, hasta, map) {
   const media = (a, b) => { const v = []; for (let f = a; f <= b; f = addDays(f, 1)) { const d = map[f]; if (d) v.push(...d.pesos); } return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
   const efecto = f => { const a = media(addDays(f, -7), addDays(f, -1)), b = media(f, addDays(f, 6)); if (a == null || b == null) return ''; const d = b - a; return ` · <b style="color:${d < -2 ? 'var(--warn)' : 'var(--teal-d)'}">${Math.abs(d) < 2 ? 'peso igual' : (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'}</b> la semana siguiente`; };
   const filas = [];
-  dietas.filter(c => c.fecha > desde && c.fecha <= hasta).forEach(c => filas.push({ f: c.fecha, html: `<span style="width:22px;height:22px;border-radius:6px;background:#1D6B66;flex:0 0 22px"></span><span class="small"><b>${fCorta(c.fecha)} · ${esc(c.texto || 'Dieta nueva')}</b>${efecto(c.fecha)}</span>` }));
+  dietas.filter(c => c.fecha > desde && c.fecha <= hasta).forEach(c => filas.push({ f: c.fecha, html: `<span style="width:22px;height:22px;border-radius:6px;background:#1D6B66;flex:0 0 22px"></span><span class="small"><b>${fCorta(c.fecha)} · ${esc(nombreCambio(c))}</b>${efecto(c.fecha)}</span>` }));
   meds.forEach((c, i) => filas.push({ f: c.fecha, html: `<span style="width:22px;height:22px;border-radius:999px;background:#F2B880;color:#4A2402;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 22px">${i + 1}</span><span class="small"><b>${fCorta(c.fecha)} · ${esc(c.texto || TIPO_CAMBIO_N[c.tipo])}</b>${efecto(c.fecha)}</span>` }));
   filas.sort((a, b) => a.f.localeCompare(b.f));
   h += s;
@@ -690,7 +702,7 @@ function semanas(desde, hasta, map) {
     const d = prev && prev.peso != null && r.peso != null ? r.peso - prev.peso : null;
     const vac = Math.max(0, r.dias - r.tot);
     rows.push(`<div class="week"><span class="small b">${fCorta(r.l)}</span>${barra(r.g, r.r, r.m, vac)}<span class="col" style="align-items:flex-end"><span class="small b">${r.peso != null ? Math.round(r.peso) + ' g' : '—'}</span><span class="tiny b" style="color:${d != null && d < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${d == null ? '' : (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.round(Math.abs(d)) + ' g'}</span></span></div>`);
-    r.cambios.sort((a, b) => b.fecha.localeCompare(a.fecha)).forEach(c => rows.push(`<div class="marker"><i></i><b>${esc(c.texto || TIPO_CAMBIO_N[c.tipo])} · ${fCorta(c.fecha)}</b><i></i></div>`));
+    r.cambios.sort((a, b) => b.fecha.localeCompare(a.fecha)).forEach(c => rows.push(`<div class="marker"><i></i><b>${esc(nombreCambio(c))} · ${fCorta(c.fecha)}</b><i></i></div>`));
   });
   return `<section class="card col" style="gap:4px"><div class="col" style="gap:2px;padding-bottom:8px"><h2 style="font-size:19px;font-weight:800">Semana a semana</h2><span class="tiny muted">Días buenos, regulares y malos, y peso medio</span></div>${rows.join('')}
     <div class="legend" style="padding-top:8px"><span><i style="background:var(--good)"></i>Bueno</span><span><i style="background:var(--reg)"></i>Regular</span><span><i style="background:var(--bad)"></i>Malo</span><span><i style="border:1.5px dashed #D9CBBB"></i>Sin apuntar</span></div></section>`;
@@ -715,7 +727,7 @@ function textoInforme() {
   L.push(''); L.push('Tomas apuntadas: ' + dadas + ' de ' + esperadas);
   L.push('Medicación actual: ' + medsActivos().map(m => m.nombre + ' ' + m.dosis + (m.tipo === 'diario' ? ' (' + ((m.momentos || []).length ? m.momentos.map(x => NOMBRE_MOM[x]).join(' y ') : 'cada día') + ')' : (m.dias || []).length ? ' (' + m.dias.map(d => DIAS_L[d]).join(' y ') + ')' : ' (semanal)')).join('; '));
   const cs = vivos('cambios').filter(c => c.fecha >= desde && c.fecha <= hasta).sort((a, b) => a.fecha.localeCompare(b.fecha));
-  if (cs.length) { L.push(''); L.push('Cambios:'); cs.forEach(c => L.push('· ' + fCorta(c.fecha) + ': ' + (c.texto || TIPO_CAMBIO_N[c.tipo]))); }
+  if (cs.length) { L.push(''); L.push('Cambios:'); cs.forEach(c => L.push('· ' + fCorta(c.fecha) + ': ' + nombreCambio(c) + (c.tipo === 'dieta' && c.texto ? ' (' + c.texto + ')' : ''))); }
   return L.join('\n');
 }
 
@@ -780,7 +792,7 @@ function eventos() {
   vivos('cacas').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Cacas: ' + (DIA_N[c.dia] || '—').toLowerCase(), d: c.tipos.map(t => HECES_N[t]).join(', '), a: 'reg-caca', id: c.id, fecha: c.fecha }));
   vivos('comidas').forEach(c => ev.push({ f: c.fecha, h: c.hora, autor: c.autor, t: 'Comida', d: c.que + (c.g != null ? ' ' + fNum(c.g) + ' g' : ''), a: 'comida-edit', id: c.id }));
   vivos('apetito').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Apetito: ' + (Object.fromEntries(APETITO)[c.valor] || '').toLowerCase(), d: '', a: 'borrar', col: 'apetito', id: c.id }));
-  vivos('cambios').forEach(c => ev.push({ f: c.fecha, h: '', autor: c.autor, t: 'Cambio: ' + (TIPO_CAMBIO_N[c.tipo] || ''), d: c.texto || '', a: 'borrar', col: 'cambios', id: c.id }));
+  vivos('cambios').forEach(c => ev.push({ f: c.fecha, h: '', autor: c.autor, t: 'Cambio: ' + (TIPO_CAMBIO_N[c.tipo] || ''), d: nombreCambio(c), a: 'borrar', col: 'cambios', id: c.id }));
   vivos('diluciones').forEach(c => { const m = DB.meds.find(x => x.id === c.medId) || {}; ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Preparado ' + (m.nombre || ''), d: '', a: 'borrar', col: 'diluciones', id: c.id }); });
   const k = e => e.f + ((e.h || '') < '04' && e.h ? '2' + e.h : '1' + (e.h || ''));
   return ev.sort((a, b) => k(b).localeCompare(k(a)));
@@ -967,8 +979,9 @@ document.addEventListener('click', e => {
     case 'cambio-tipo': S.cambio.tipo = d.v; repintar(); break;
     case 'cambio-guardar': {
       const F = S.cambio;
-      if (!F.texto.trim() && F.tipo === 'otro') { toast('Escribe qué ha cambiado'); break; }
-      poner('cambios', { id: uid(), fecha: F.fecha || f, tipo: F.tipo, texto: F.texto.trim(), autor: yo() });
+      if (F.tipo === 'dieta' && !(F.alimento || '').trim()) { toast('Escribe qué come ahora'); break; }
+      if (!F.texto.trim() && F.tipo !== 'dieta') { toast('Escribe qué ha cambiado'); break; }
+      poner('cambios', { id: uid(), fecha: F.fecha || f, tipo: F.tipo, alimento: F.tipo === 'dieta' ? F.alimento.trim() : undefined, texto: F.texto.trim(), autor: yo() });
       S.cambio = null; repintar(); toast('Cambio guardado'); break;
     }
     case 'cambio-borrar': abrirSheet('borrar', { col: 'cambios', id: d.id, texto: 'Este cambio dejará de separar etapas en Progreso.' }); break;
