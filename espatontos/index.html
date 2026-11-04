@@ -404,7 +404,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='1.7';
+const APP_VERSION='1.8';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -478,7 +478,7 @@ function seed(){
   return d;
 }
 let D;
-function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);const d=defaults();o.set=Object.assign(d.set,o.set||{});return Object.assign(d,o)}}catch(e){}return null}
+function load(){let r=null;try{r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);const d=defaults();o.set=Object.assign(d.set,o.set||{});return Object.assign(d,o)}}catch(e){try{if(r&&!localStorage.getItem(KEY+'-rescate'))localStorage.setItem(KEY+'-rescate',r)}catch(e2){}}return null}
 function save(quiet){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast('No se ha podido guardar')}if(!quiet&&window.__sync)window.__sync.dirty()}
 D=load()||defaults();
 
@@ -943,7 +943,7 @@ function settingsHTML(){
    ${accountSettingsHTML()}
    ${ctaSettingsHTML()}
    <div><div class="fl">Copia de seguridad</div><div class="act">
-     <button data-a="exportData">Exportar copia</button><button data-a="importData">Importar copia</button>
+     <button data-a="exportData">Exportar copia</button><button data-a="importData">Importar copia</button><button data-a="snapOpen">Copias automáticas (últimos 7 días)</button>
      ${hasSample?'<button class="d" data-a="delSample">Borrar datos de ejemplo</button>':''}</div>
      <div class="note">La copia es un archivo con todos tus números, shows y ajustes. Guárdalo en Google Drive o mándaselo a quien quieras: al importarlo puedes reemplazarlo todo o añadir sus números a los tuyos.</div></div>
    <div class="note" style="text-align:center;padding:10px 0 0">Espatontos · La trastienda del mago · versión ${APP_VERSION}</div>
@@ -1787,13 +1787,39 @@ setInterval(()=>{if(SYNC.user)SYNC.flushQueue()},2000);
 
 window.__sync=SYNC;
 
+
+/* ============ protección de datos: copias automáticas y aviso de la nube ============ */
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
+const SNAP={db:null,t:0,
+  open(){if(this.db)return Promise.resolve(this.db);return new Promise((ok,ko)=>{try{const q=indexedDB.open('espatontos-copias',1);q.onupgradeneeded=()=>q.result.createObjectStore('snaps');q.onsuccess=()=>{this.db=q.result;ok(this.db)};q.onerror=()=>ko(q.error)}catch(e){ko(e)}})},
+  async put(){try{if(!hasLocalData())return;const db=await this.open(),day=todayStr(),j=JSON.stringify(D);
+    await new Promise(ok=>{const tx=db.transaction('snaps','readwrite'),st=tx.objectStore('snaps');st.put({day,t:Date.now(),j},day);
+      const k=st.getAllKeys();k.onsuccess=()=>{k.result.sort().reverse().slice(7).forEach(x=>st.delete(x))};tx.oncomplete=ok;tx.onerror=ok})}catch(e){}},
+  async list(){try{const db=await this.open();return await new Promise(ok=>{const q=db.transaction('snaps').objectStore('snaps').getAll();q.onsuccess=()=>ok(q.result.sort((a,b)=>b.t-a.t));q.onerror=()=>ok([])})}catch(e){return []}},
+  soon(){clearTimeout(this.t);this.t=setTimeout(()=>this.put(),5000)}};
+const _save0=save;save=function(q){_save0(q);SNAP.soon()};
+let SNAPS=[];
+function snapSummary(j){try{const o=JSON.parse(j);return pl((o.nums||[]).length,'número','números')+' · '+pl((o.shows||[]).length,'show','shows')+' · '+pl((o.bolos||[]).length,'bolo','bolos')+' · '+pl(((o.ideas||{}).notes||[]).length,'nota','notas')}catch(e){return ''}}
+S.snapOpen=async()=>{SNAPS=await SNAP.list();openSheet({title:'Copias automáticas',left:'Cerrar',body:()=>`<div class="f"><div class="note" style="padding:0 4px">La app guarda sola una copia al día de los últimos 7 días en este dispositivo. Si borras algo sin querer, puedes volver a como estaba.</div>
+  ${SNAPS.length?`<div class="group">${SNAPS.map((s,i)=>`<button class="li" data-a="snapUse" data-i="${i}"><span class="tx"><b>${fdate(s.day)} · ${new Date(s.t).toTimeString().slice(0,5)}</b><small>${esc(snapSummary(s.j))}</small></span><span class="chev">›</span></button>`).join('')}</div>`:'<div class="note">Todavía no hay copias. Se crean solas mientras usas la app.</div>'}
+  <div class="note">Ojo: estas copias viven en este dispositivo. Para no perder nada si le pasa algo al móvil, crea una cuenta o usa «Exportar copia».</div></div>`})};
+S.snapUse=el=>{const s=SNAPS[+el.dataset.i];openSheet({title:'Volver a esta copia',body:()=>`<div class="f"><div class="note" style="padding:0 4px">${fdate(s.day)} · ${esc(snapSummary(s.j))}. Lo que tienes ahora se sustituirá por esta copia. Podrás deshacerlo justo después.</div><div class="act"><button data-a="snapOk" style="color:var(--accent);font-weight:600">Recuperar esta copia</button><button data-a="snapOpen">Cancelar</button></div></div>`});
+  S.snapOk=()=>{closeSheet();withUndo('Copia recuperada',()=>{const o=JSON.parse(s.j),d=defaults();o.set=Object.assign(d.set,o.set||{},{tab:D.set.tab,seenGuide:true});D=Object.assign(d,o)})}};
+function cloudNudge(){if(!SYNC.enabled())return;const m=SYNC.loadMeta();if(m.uid||!hasLocalData())return;
+  let last=0;try{last=+localStorage.getItem('espatontos-aviso-nube')||0}catch(e){}if(Date.now()-last<3*864e5)return;
+  try{localStorage.setItem('espatontos-aviso-nube',String(Date.now()))}catch(e){}
+  openSheet({title:'Protege tus datos',left:'Ahora no',body:()=>`<div class="f"><div class="note" style="padding:0 4px;font-size:15px;line-height:21px;color:var(--text)">Ahora mismo todo lo que apuntas está guardado <b>solo en este dispositivo</b>. Si el iPhone borra los datos de la app o la desinstalas, se pierde.</div>
+   <div class="note" style="padding:0 4px">Con una cuenta gratuita se guarda también en la nube y puedes abrirlo desde cualquier dispositivo.</div>
+   <div class="act"><button data-a="authOpen" style="background:var(--accent);color:var(--onAccent);font-weight:600">Crear cuenta o entrar</button><button data-a="exportData">Prefiero exportar una copia</button></div></div>`})}
+
 /* ============ arranque ============ */
 addEventListener('resize',()=>{if(tab==='mon')render()});
 render();
 $('#splashVer').textContent='Versión '+APP_VERSION;
 S.hideSplash=()=>{const sp=$('#splash');if(sp&&!sp.classList.contains('off')){sp.classList.add('off');setTimeout(()=>sp.remove(),500)}};
 setTimeout(S.hideSplash,1500);
-if(!D.set.seenGuide){D.set.seenGuide=true;save();setTimeout(openGuide,1900)}
+if(!D.set.seenGuide){D.set.seenGuide=true;save();setTimeout(openGuide,1900)}else setTimeout(()=>{if(!SH)cloudNudge()},1900);
+SNAP.soon();
 SYNC.start();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
