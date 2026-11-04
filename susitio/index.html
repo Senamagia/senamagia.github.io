@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '1.4';
+const VERSION = '1.5';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -195,7 +195,8 @@ const num = v => { if (v == null || v === '') return null; const n = Number(Stri
 const fNum = n => String(Math.round(n * 100) / 100).replace('.', ',');
 
 /* ---------- Datos ---------- */
-const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones'];
+const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones', 'ajustes'];
+const metaComida = () => { const r = (DB.ajustes || []).find(x => x.id === 'meta-comida' && !x.borrado); return r && r.g > 0 ? r.g : 100; };
 let DB;
 function vacio() { const o = { v: 1 }; COLS.forEach(c => o[c] = []); return o; }
 function cargar() {
@@ -401,7 +402,7 @@ function vistaHoy() {
   h += `<section class="col" style="gap:10px"><h2 class="sec-title">Cómo va Susi hoy</h2><div class="grid3">
     <button class="stat" data-a="tab" data-tab="prog"><span class="l">Peso</span><span class="v">${up ? fNum(up.peso) : '—'}</span><span class="s" style="${dif != null && dif < 0 ? 'color:var(--warn);font-weight:800' : ''}">${dif != null ? (dif > 0 ? '+' : dif < 0 ? '−' : '±') + fNum(Math.abs(dif)) + ' g' : up ? 'gramos' : 'sin datos'}</span></button>
     <button class="stat" data-a="reg" data-reg="cacas"><span class="l">Cacas</span><span class="v${cc ? '' : ' vacio'}" style="${cc ? (cc.dia === 'bueno' ? 'color:var(--teal)' : cc.dia === 'malo' ? 'color:var(--bad)' : 'color:var(--warn)') : ''}">${cc ? DIA_N[cc.dia] || '—' : 'Apuntar'}</span><span class="s">${cc ? esc(cc.autor) : 'cómo han sido'}</span></button>
-    <button class="stat" data-a="reg" data-reg="comida"><span class="l">Comida</span><span class="v${com.length ? '' : ' vacio'}">${com.length ? (gs.length ? fNum(tot) + ' g' : com.length) : 'Apuntar'}</span><span class="s">${com.length ? (com.length - gs.length ? '+' + (com.length - gs.length) + ' sin pesar' : com.length + ' veces') : 'qué ha comido'}</span></button>
+    <button class="stat" data-a="reg" data-reg="comida"><span class="l">Comida</span><span class="v${com.length ? '' : ' vacio'}">${com.length ? fNum(tot) + ' g' : 'Apuntar'}</span><span class="s" style="${com.length && tot >= metaComida() ? 'color:var(--teal-d);font-weight:800' : ''}">${com.length ? (tot >= metaComida() ? '✓ meta ' + fNum(metaComida()) + ' g' : 'de ' + fNum(metaComida()) + ' g') : 'meta ' + fNum(metaComida()) + ' g'}</span><span style="display:block;height:6px;border-radius:9px;background:#F1E2CF;margin-top:4px;overflow:hidden"><span style="display:block;height:100%;width:${Math.min(100, Math.round(tot * 100 / metaComida()))}%;background:var(--teal)"></span></span></button>
   </div></section>`;
   return h;
 }
@@ -503,7 +504,8 @@ function formComida() {
   if (da && da.alimento) { rap = rap.filter(x => x.toLowerCase() !== da.alimento.toLowerCase()); rap.unshift(da.alimento); rap = rap.slice(0, 6); }
   ['Papilla', 'Pienso', 'Carne', 'Premio'].forEach(x => { if (rap.length < 6 && !rap.includes(x)) rap.push(x); });
   return `<section class="card form">
-    <div class="row" style="justify-content:space-between;align-items:baseline"><h2 style="font-size:19px;font-weight:800">Comida</h2><span class="b" style="color:var(--teal-d)">${lista.length ? (gs.length ? fNum(tot) + ' g' : '') + (lista.length - gs.length ? (gs.length ? ' + ' : '') + (lista.length - gs.length) + ' sin pesar' : '') : ''}</span></div>
+    <div class="row" style="justify-content:space-between;align-items:baseline"><h2 style="font-size:19px;font-weight:800">Comida</h2><button class="chip" style="min-height:38px" data-a="meta">Meta: ${fNum(metaComida())} g</button></div>
+    ${metaBarra(tot, lista.length - gs.length)}
     ${fechaPicker('comida', F.fecha)}
     ${lista.length ? `<div class="col">${lista.map(c => `<div class="list-row"><button class="row grow" style="text-align:left;min-height:48px" data-a="comida-edit" data-id="${c.id}"><span class="small b muted" style="width:46px">${esc(c.hora || '—')}</span><span class="col grow"><span class="b">${esc(c.que)}</span><span class="tiny muted">${c.g != null ? fNum(c.g) + ' g' : 'sin pesar'} · ${esc(c.autor)}</span></span></button><button class="x-btn" aria-label="Quitar ${esc(c.que)}" data-a="comida-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Aún no hay nada apuntado ${F.fecha === hoy() ? 'hoy' : 'ese día'}.</div>`}
     <div class="col" style="gap:10px;border-top:1px solid var(--line);padding-top:14px">
@@ -524,6 +526,13 @@ function formComida() {
       <div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))">${APETITO.map(([k, l]) => `<button data-a="apetito" data-v="${k}" aria-pressed="${ap && ap.valor === k}">${l}</button>`).join('')}</div>
     </div>
   </section>`;
+}
+function metaBarra(tot, sinPesar) {
+  const meta = metaComida();
+  const pct = Math.min(100, Math.round(tot * 100 / meta));
+  const falta = meta - tot;
+  return `<div class="col" style="gap:6px"><div class="row" style="justify-content:space-between;align-items:baseline"><span style="font-size:26px;font-weight:800">${fNum(Math.round(tot * 10) / 10)} <span class="small muted">de ${fNum(meta)} g</span></span><span class="small b" style="color:${falta <= 0 ? 'var(--teal-d)' : 'var(--muted)'}">${falta <= 0 ? '✓ Meta cumplida' : 'Faltan ' + fNum(Math.round(falta * 10) / 10) + ' g'}</span></div>
+    <span style="display:block;height:12px;border-radius:9px;background:#F1E2CF;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:var(--teal);border-radius:9px"></span></span>${sinPesar ? `<span class="tiny muted">+ ${sinPesar} sin pesar, no cuentan en el total</span>` : ''}</div>`;
 }
 function formCambio() {
   if (!S.cambio) S.cambio = { fecha: hoy(), tipo: 'dieta', texto: '' };
@@ -758,6 +767,7 @@ function sheetMed(id) {
   const m = id ? DB.meds.find(x => x.id === id) : null;
   S.form = m ? JSON.parse(JSON.stringify(m)) : { id: uid(), nombre: '', dosis: '', tipo: 'diario', momentos: ['manana', 'noche'], dias: [], activo: true, nuevo: true };
   if (!S.form.dil) S.form.dil = null;
+  if (m) { const u = ultimaDil(m.id); S.form.ultPrep = u ? u.fecha : ''; S.form.ultPrep0 = S.form.ultPrep; }
   abrirSheet('med');
 }
 function vistaSheetMed() {
@@ -771,6 +781,7 @@ function vistaSheetMed() {
         <div class="lbl">En qué toma<span class="tiny muted" style="font-weight:600">Si no marcas ninguna, sale aparte en Hoy para marcarlo una vez al día.</span><div class="chips">${['manana', 'noche'].map(k => `<button class="chip" data-a="f-mom" data-v="${k}" aria-pressed="${(F.momentos || []).includes(k)}">${k === 'manana' ? 'Mañana' : 'Noche'}</button>`).join('')}</div></div>
         <div class="card col" style="gap:10px;background:var(--soft)">
           <button class="row" data-a="f-dil" style="justify-content:space-between;min-height:44px;text-align:left"><span class="b">Avisar para preparar (dilución o dosis nueva)</span>${sw(!!F.dil)}</button>
+          ${F.dil && !F.nuevo ? `<label class="lbl">Última vez que se preparó<input class="field" type="date" max="${hoy()}" data-bind="form.ultPrep" value="${esc(F.ultPrep || '')}"><span class="tiny muted" style="font-weight:600">${F.ultPrep ? 'Si te equivocaste, cámbiala aquí. Te avisará contando desde esta fecha.' : 'Aún no está apuntada: ponla o te lo preguntará en Hoy.'}</span></label>` : ''}
           ${F.dil ? `<label class="lbl">Cada cuántos días<input class="field" inputmode="numeric" data-bind="form.dil.cada" value="${esc(F.dil.cada)}"></label><label class="lbl">Cómo se prepara<input class="field" data-bind="form.dil.texto" value="${esc(F.dil.texto || '')}" placeholder="Ej.: 1 pastilla en 2 ml de agua · 1 g para la semana"></label>` : ''}
         </div>` : `
         <div class="lbl">Qué días (opcional)<div class="chips">${DIAS_1.map((d, i) => `<button class="chip" style="min-width:44px;padding:0" data-a="f-dia" data-v="${i}" aria-pressed="${(F.dias || []).includes(i)}">${d}</button>`).join('')}</div><span class="tiny muted" style="font-weight:600">Sin días, sale en Hoy para marcarlo una vez en la semana.</span></div>
@@ -794,12 +805,11 @@ function eventos() {
   vivos('apetito').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Apetito: ' + (Object.fromEntries(APETITO)[c.valor] || '').toLowerCase(), d: '', a: 'borrar', col: 'apetito', id: c.id }));
   vivos('cambios').forEach(c => ev.push({ f: c.fecha, h: '', autor: c.autor, t: 'Cambio: ' + (TIPO_CAMBIO_N[c.tipo] || ''), d: nombreCambio(c), a: 'borrar', col: 'cambios', id: c.id }));
   vivos('diluciones').forEach(c => { const m = DB.meds.find(x => x.id === c.medId) || {}; ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Preparado ' + (m.nombre || ''), d: '', a: 'borrar', col: 'diluciones', id: c.id }); });
-  const k = e => e.f + ((e.h || '') < '04' && e.h ? '2' + e.h : '1' + (e.h || ''));
-  return ev.sort((a, b) => k(b).localeCompare(k(a)));
+  return ev.sort((a, b) => b.f.localeCompare(a.f) || hk(a.h).localeCompare(hk(b.h)));
 }
 function vistaDiario() {
   const ev = eventos();
-  let h = `<header class="col" style="gap:4px"><h1 style="font-size:30px;font-weight:800">Diario</h1><span class="small muted">Todo lo apuntado, de Sena y de Sara. Toca algo para cambiarlo o borrarlo.</span></header>`;
+  let h = `<header class="col" style="gap:4px"><h1 style="font-size:30px;font-weight:800">Diario</h1><span class="small muted">Todo lo apuntado, de Sena y de Sara, en el orden del día. Toca algo para cambiarlo o borrarlo.</span></header>`;
   if (!ev.length) return h + `<div class="empty">Aún no hay nada apuntado.</div>`;
   const grupos = [];
   ev.slice(0, S.diarioN).forEach(e => { let g = grupos[grupos.length - 1]; if (!g || g.f !== e.f) { g = { f: e.f, l: [] }; grupos.push(g); } g.l.push(e); });
@@ -847,6 +857,7 @@ function pintarSheet() {
   else if (t === 'toma') c = vistaSheetToma();
   else if (t === 'quien') c = `<div class="who">${LOGO(88).replace('<svg', '<svg style="align-self:center"')}<h2>¿Quién usa este móvil?</h2><p class="muted">Así cada cosa que apuntes saldrá con tu nombre.</p><button class="btn btn-big btn-teal" data-a="soy" data-v="Sena">Soy Sena</button><button class="btn btn-big btn-line" data-a="soy" data-v="Sara">Soy Sara</button></div>`;
   else if (t === 'comida') c = `<h2>Comida</h2><div class="form"><label class="lbl">Qué<input class="field" data-bind="form.que" value="${esc(S.form.que)}"></label><div class="grid2"><label class="lbl">Hora<input class="field" type="time" data-bind="form.hora" value="${esc(S.form.hora)}"></label><label class="lbl">Gramos<input class="field" inputmode="decimal" data-bind="form.g" value="${esc(S.form.g)}" placeholder="—"></label></div><button class="btn btn-teal" data-a="comida-guardar">Guardar</button><button class="btn btn-danger" data-a="comida-borrar-sheet">Borrar</button></div>`;
+  else if (t === 'meta') c = `<h2>Meta de comida</h2><p class="small muted">Los gramos que debería comer al día. Se puede cambiar cuando quieras y vale para los dos móviles.</p><div class="form"><label class="lbl">Gramos al día<input class="field" id="meta-in" inputmode="decimal" value="${fNum(metaComida())}" style="font-size:24px;text-align:center;font-weight:800"></label><button class="btn btn-teal" data-a="meta-guardar">Guardar</button></div>`;
   else if (t === 'borrar') c = `<h2>¿Borrar?</h2><p class="muted">${esc(S.sheet.extra.texto)}</p><button class="btn btn-danger" data-a="borrar-ok">Borrar</button><button class="btn btn-soft" data-a="cerrar">Cancelar</button>`;
   else if (t === 'informe') c = `<h2>Informe</h2><p class="small muted">Si no se ha copiado solo, mantén pulsado el texto para copiarlo.</p><textarea class="field" rows="14" readonly>${esc(S.sheet.extra)}</textarea><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
   const fijo = t === 'quien';
@@ -975,6 +986,8 @@ document.addEventListener('click', e => {
     case 'comida-edit': { const c = DB.comidas.find(x => x.id === d.id); if (c) { S.form = { id: c.id, que: c.que, hora: c.hora || '', g: c.g != null ? fNum(c.g) : '' }; abrirSheet('comida'); } break; }
     case 'comida-guardar': { const c = DB.comidas.find(x => x.id === S.form.id); if (c) { const r = Object.assign({}, c, { que: (S.form.que || '').trim() || c.que, hora: S.form.hora, g: num(S.form.g) }); poner('comidas', r); } cerrarSheet(); repintar(); toast('Guardado'); break; }
     case 'comida-borrar-sheet': borrar('comidas', S.form.id); cerrarSheet(); repintar(); toast('Borrado'); break;
+    case 'meta': abrirSheet('meta'); break;
+    case 'meta-guardar': { const v = num(document.getElementById('meta-in').value); if (v == null || v <= 0) { toast('Pon los gramos de la meta'); break; } poner('ajustes', { id: 'meta-comida', g: v, autor: yo() }); cerrarSheet(); repintar(); toast('Meta: ' + fNum(v) + ' g al día'); break; }
     case 'apetito': { const fe = S.comida.fecha || f; const ex = apetitoDe(fe); if (ex && ex.valor === d.v) borrar('apetito', ex.id); else poner('apetito', { id: 'apetito-' + fe, fecha: fe, valor: d.v, hora: nowHM(), autor: yo() }); repintar(); break; }
     case 'cambio-tipo': S.cambio.tipo = d.v; repintar(); break;
     case 'cambio-guardar': {
@@ -1008,7 +1021,8 @@ document.addEventListener('click', e => {
       const F = S.form;
       if (!F.nombre.trim()) { toast('Pon el nombre'); break; }
       const viejo = DB.meds.find(m => m.id === F.id);
-      const rec = Object.assign({}, F); delete rec.nuevo;
+      const rec = Object.assign({}, F); delete rec.nuevo; delete rec.ultPrep; delete rec.ultPrep0;
+      if (rec.dil && F.ultPrep !== F.ultPrep0) { vivos('diluciones').filter(x => x.medId === F.id).forEach(x => borrar('diluciones', x.id)); if (F.ultPrep) poner('diluciones', { id: uid(), medId: F.id, fecha: F.ultPrep, hora: '', autor: yo() }); }
       rec.nombre = rec.nombre.trim(); rec.dosis = (rec.dosis || '').trim();
       if (rec.dil) { rec.dil.cada = Math.max(1, parseInt(rec.dil.cada, 10) || 4); }
       if (rec.tipo === 'diario') { delete rec.dias; delete rec.aviso; } else { delete rec.momentos; delete rec.dil; if (!(rec.dias || []).length) rec.aviso = false; }
