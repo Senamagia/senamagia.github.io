@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '1.1';
+const VERSION = '1.2';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -274,7 +274,8 @@ const medsToma = mom => medsActivos().filter(m => m.tipo === 'diario' && (m.mome
 const medsSueltos = () => medsActivos().filter(m => m.tipo === 'diario' && !(m.momentos || []).length);
 const tomaDe = (f, mom) => vivos('tomas').find(t => t.fecha === f && t.momento === mom);
 const cacaDe = f => vivos('cacas').find(c => c.fecha === f);
-const comidasDe = f => vivos('comidas').filter(c => c.fecha === f).sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+const hk = h => !h ? '0' : (h < '04' ? '2' : '1') + h; // las horas de madrugada van al final del día
+const comidasDe = f => vivos('comidas').filter(c => c.fecha === f).sort((a, b) => hk(a.hora).localeCompare(hk(b.hora)));
 const apetitoDe = f => vivos('apetito').find(a => a.fecha === f);
 const ultimaDil = medId => vivos('diluciones').filter(d => d.medId === medId).sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
 const semanalHoy = (medId, f) => vivos('semanales').find(s => s.medId === medId && s.fecha === f);
@@ -482,6 +483,7 @@ function fechaPicker(qual, f) {
 function formComida() {
   if (!S.comida.fecha) S.comida.fecha = hoy();
   const F = S.comida;
+  if (!F.horas || !F.horas.length) F.horas = [F.fecha === hoy() ? nowHM() : ''];
   const lista = comidasDe(F.fecha);
   const gs = lista.filter(c => c.g != null);
   const tot = gs.reduce((a, c) => a + c.g, 0);
@@ -494,16 +496,19 @@ function formComida() {
   return `<section class="card form">
     <div class="row" style="justify-content:space-between;align-items:baseline"><h2 style="font-size:19px;font-weight:800">Comida</h2><span class="b" style="color:var(--teal-d)">${lista.length ? (gs.length ? fNum(tot) + ' g' : '') + (lista.length - gs.length ? (gs.length ? ' + ' : '') + (lista.length - gs.length) + ' sin pesar' : '') : ''}</span></div>
     ${fechaPicker('comida', F.fecha)}
-    ${lista.length ? `<div class="col">${lista.map(c => `<div class="list-row"><span class="small b muted" style="width:46px">${esc(c.hora)}</span><span class="col grow"><span class="b">${esc(c.que)}</span><span class="tiny muted">${c.g != null ? fNum(c.g) + ' g' : 'sin pesar'} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Quitar ${esc(c.que)}" data-a="comida-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Aún no hay nada apuntado ${F.fecha === hoy() ? 'hoy' : 'ese día'}.</div>`}
+    ${lista.length ? `<div class="col">${lista.map(c => `<div class="list-row"><button class="row grow" style="text-align:left;min-height:48px" data-a="comida-edit" data-id="${c.id}"><span class="small b muted" style="width:46px">${esc(c.hora || '—')}</span><span class="col grow"><span class="b">${esc(c.que)}</span><span class="tiny muted">${c.g != null ? fNum(c.g) + ' g' : 'sin pesar'} · ${esc(c.autor)}</span></span></button><button class="x-btn" aria-label="Quitar ${esc(c.que)}" data-a="comida-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Aún no hay nada apuntado ${F.fecha === hoy() ? 'hoy' : 'ese día'}.</div>`}
     <div class="col" style="gap:10px;border-top:1px solid var(--line);padding-top:14px">
       <span class="b">Añadir</span>
       <div class="chips">${rap.map(x => `<button class="chip add" data-a="comida-rapida" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
-      <div style="display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:8px">
-        <input class="field" id="c-que" placeholder="Qué ha comido" value="${esc(F.que)}" data-bind="comida.que" aria-label="Qué ha comido">
-        <input class="field" id="c-g" placeholder="g" inputmode="decimal" value="${esc(F.g)}" data-bind="comida.g" aria-label="Gramos, si los sabes" style="text-align:center">
+      <input class="field" id="c-que" placeholder="Qué ha comido" value="${esc(F.que)}" data-bind="comida.que" aria-label="Qué ha comido">
+      <div class="lbl">${F.horas.length > 1 ? 'A qué horas comió' : 'A qué hora comió'}
+        <div class="col" style="gap:8px">${F.horas.map((hh, i) => `<div class="row" style="gap:8px"><input class="field" type="time" value="${esc(hh)}" data-bind="comida.horas.${i}" aria-label="Hora ${i + 1}" style="flex:1">${F.horas.length > 1 ? `<button class="x-btn" aria-label="Quitar esta hora" data-a="comida-hora-quitar" data-i="${i}">${I.x}</button>` : ''}</div>`).join('')}</div>
+        <button class="chip add" style="align-self:flex-start" data-a="comida-hora-mas">+ Otra hora (comió varias veces)</button>
       </div>
+      <label class="lbl">${F.horas.length > 1 ? 'Gramos en total (si los sabes)' : 'Gramos (si los sabes)'}<input class="field" id="c-g" placeholder="—" inputmode="decimal" value="${esc(F.g)}" data-bind="comida.g" data-repinta="1"></label>
+      ${F.horas.length > 1 && num(F.g) != null ? `<span class="small b" style="color:var(--teal-d)">Se reparte a partes iguales: ${fNum(Math.round(num(F.g) / F.horas.length * 10) / 10)} g en cada una de las ${F.horas.length} veces.</span>` : ''}
       <button class="btn btn-teal" data-a="comida-add">Añadir</button>
-      <span class="tiny muted">Los gramos solo si los sabes. Se apunta con la hora de ahora.</span>
+      <span class="tiny muted">Si lo viste por la cámara, pon la hora a la que comió de verdad.</span>
     </div>
     <div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:14px">
       <span class="b">Apetito en general</span>
@@ -743,7 +748,7 @@ function eventos() {
   vivos('tomas').forEach(t => ev.push({ f: t.fecha, h: t.hora, autor: t.autor, t: 'Toma de la ' + NOMBRE_MOM[t.momento], d: [t.peso != null ? fNum(t.peso) + ' g' : null, (t.meds || []).map(m => m.nombre).join(', ') || 'sin medicación'].filter(Boolean).join(' · '), a: 'toma-edit', id: t.id }));
   vivos('semanales').forEach(s => { const m = DB.meds.find(x => x.id === s.medId) || {}; ev.push({ f: s.fecha, h: s.hora, autor: s.autor, t: m.nombre || 'Semanal', d: s.dosis || m.dosis || '', a: 'borrar', col: 'semanales', id: s.id }); });
   vivos('cacas').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Cacas: ' + (DIA_N[c.dia] || '—').toLowerCase(), d: c.tipos.map(t => HECES_N[t]).join(', '), a: 'reg-caca', id: c.id, fecha: c.fecha }));
-  vivos('comidas').forEach(c => ev.push({ f: c.fecha, h: c.hora, autor: c.autor, t: 'Comida', d: c.que + (c.g != null ? ' ' + fNum(c.g) + ' g' : ''), a: 'borrar', col: 'comidas', id: c.id }));
+  vivos('comidas').forEach(c => ev.push({ f: c.fecha, h: c.hora, autor: c.autor, t: 'Comida', d: c.que + (c.g != null ? ' ' + fNum(c.g) + ' g' : ''), a: 'comida-edit', id: c.id }));
   vivos('apetito').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Apetito: ' + (Object.fromEntries(APETITO)[c.valor] || '').toLowerCase(), d: '', a: 'borrar', col: 'apetito', id: c.id }));
   vivos('cambios').forEach(c => ev.push({ f: c.fecha, h: '', autor: c.autor, t: 'Cambio: ' + (TIPO_CAMBIO_N[c.tipo] || ''), d: c.texto || '', a: 'borrar', col: 'cambios', id: c.id }));
   vivos('diluciones').forEach(c => { const m = DB.meds.find(x => x.id === c.medId) || {}; ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Preparado ' + (m.nombre || ''), d: '', a: 'borrar', col: 'diluciones', id: c.id }); });
@@ -799,6 +804,7 @@ function pintarSheet() {
   if (t === 'med') c = vistaSheetMed();
   else if (t === 'toma') c = vistaSheetToma();
   else if (t === 'quien') c = `<div class="who">${LOGO(88).replace('<svg', '<svg style="align-self:center"')}<h2>¿Quién usa este móvil?</h2><p class="muted">Así cada cosa que apuntes saldrá con tu nombre.</p><button class="btn btn-big btn-teal" data-a="soy" data-v="Sena">Soy Sena</button><button class="btn btn-big btn-line" data-a="soy" data-v="Sara">Soy Sara</button></div>`;
+  else if (t === 'comida') c = `<h2>Comida</h2><div class="form"><label class="lbl">Qué<input class="field" data-bind="form.que" value="${esc(S.form.que)}"></label><div class="grid2"><label class="lbl">Hora<input class="field" type="time" data-bind="form.hora" value="${esc(S.form.hora)}"></label><label class="lbl">Gramos<input class="field" inputmode="decimal" data-bind="form.g" value="${esc(S.form.g)}" placeholder="—"></label></div><button class="btn btn-teal" data-a="comida-guardar">Guardar</button><button class="btn btn-danger" data-a="comida-borrar-sheet">Borrar</button></div>`;
   else if (t === 'borrar') c = `<h2>¿Borrar?</h2><p class="muted">${esc(S.sheet.extra.texto)}</p><button class="btn btn-danger" data-a="borrar-ok">Borrar</button><button class="btn btn-soft" data-a="cerrar">Cancelar</button>`;
   else if (t === 'informe') c = `<h2>Informe</h2><p class="small muted">Si no se ha copiado solo, mantén pulsado el texto para copiarlo.</p><textarea class="field" rows="14" readonly>${esc(S.sheet.extra)}</textarea><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
   const fijo = t === 'quien';
@@ -846,9 +852,10 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.dataset.fecha && t.value) {
     const q = t.dataset.fecha;
-    if (q === 'cacas') S.cacas.fecha = t.value; else S.comida.fecha = t.value;
+    if (q === 'cacas') S.cacas.fecha = t.value; else { S.comida.fecha = t.value; S.comida.horas = null; }
     repintar();
   }
+  if (t.dataset.repinta && S.tab === 'reg' && (S.comida.horas || []).length > 1) repintar();
   if (t.id === 'file-in' && t.files[0]) {
     const r = new FileReader();
     r.onload = () => { try { const o = JSON.parse(r.result); const n = juntar(o); toast(n ? 'Copia cargada: ' + n + ' registros' : 'No había nada nuevo'); repintar(); } catch (err) { toast('Ese archivo no es una copia de Susitio'); } };
@@ -898,7 +905,7 @@ document.addEventListener('click', e => {
     case 'sup': { const s = semanalSemana(d.id, f); if (s) { abrirSheet('borrar', { col: 'semanales', id: s.id, texto: 'Quitar que se le dio ' + ((DB.meds.find(x => x.id === d.id) || {}).nombre || '') + ' el ' + fFecha(s.fecha) + '.' }); } else { const m = DB.meds.find(x => x.id === d.id); poner('semanales', { id: uid(), medId: d.id, fecha: f, hora: nowHM(), dosis: m && m.dosis, autor: yo() }); repintar(); toast((m ? m.nombre : '') + ' apuntado'); } break; }
 
     /* Registrar */
-    case 'fecha': if (d.q === 'cacas') S.cacas.fecha = d.f; else S.comida.fecha = d.f; repintar(); break;
+    case 'fecha': if (d.q === 'cacas') S.cacas.fecha = d.f; else { S.comida.fecha = d.f; S.comida.horas = null; } repintar(); break;
     case 'caca-tipo': { const F = cacasForm(); const i = F.tipos.indexOf(d.k); if (i >= 0) F.tipos.splice(i, 1); else F.tipos.push(d.k); repintar(); break; }
     case 'caca-dia': { const F = cacasForm(); F.dia = d.v; F.manual = true; repintar(); break; }
     case 'caca-guardar': {
@@ -914,10 +921,18 @@ document.addEventListener('click', e => {
       if (!que) { toast('Escribe qué ha comido'); break; }
       const g = num(S.comida.g);
       const fe = S.comida.fecha || f;
-      poner('comidas', { id: uid(), fecha: fe, hora: fe === f ? nowHM() : '', que, g, autor: yo() });
-      S.comida.que = ''; S.comida.g = ''; repintar(); toast('Añadido'); break;
+      let horas = (S.comida.horas || []).filter(Boolean);
+      if (!horas.length) horas = [''];
+      const parte = g == null ? null : Math.round(g / horas.length * 10) / 10;
+      horas.forEach(hh => poner('comidas', { id: uid(), fecha: fe, hora: hh, que, g: parte, autor: yo() }));
+      S.comida.que = ''; S.comida.g = ''; S.comida.horas = null; repintar(); toast(horas.length > 1 ? 'Añadido en ' + horas.length + ' veces' : 'Añadido'); break;
     }
     case 'comida-borrar': borrar('comidas', d.id); repintar(); break;
+    case 'comida-hora-mas': S.comida.horas.push(''); repintar(); break;
+    case 'comida-hora-quitar': S.comida.horas.splice(Number(d.i), 1); repintar(); break;
+    case 'comida-edit': { const c = DB.comidas.find(x => x.id === d.id); if (c) { S.form = { id: c.id, que: c.que, hora: c.hora || '', g: c.g != null ? fNum(c.g) : '' }; abrirSheet('comida'); } break; }
+    case 'comida-guardar': { const c = DB.comidas.find(x => x.id === S.form.id); if (c) { const r = Object.assign({}, c, { que: (S.form.que || '').trim() || c.que, hora: S.form.hora, g: num(S.form.g) }); poner('comidas', r); } cerrarSheet(); repintar(); toast('Guardado'); break; }
+    case 'comida-borrar-sheet': borrar('comidas', S.form.id); cerrarSheet(); repintar(); toast('Borrado'); break;
     case 'apetito': { const fe = S.comida.fecha || f; const ex = apetitoDe(fe); if (ex && ex.valor === d.v) borrar('apetito', ex.id); else poner('apetito', { id: 'apetito-' + fe, fecha: fe, valor: d.v, hora: nowHM(), autor: yo() }); repintar(); break; }
     case 'cambio-tipo': S.cambio.tipo = d.v; repintar(); break;
     case 'cambio-guardar': {

@@ -1,6 +1,6 @@
 // Guarda Susitio en el móvil para que funcione sin internet.
 // Cada versión nueva cambia VERSION; la app avisa y se actualiza cuando se pulsa «Actualizar».
-const VERSION = 'susitio-v2';
+const VERSION = 'susitio-v3';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
