@@ -404,7 +404,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='1.6';
+const APP_VERSION='1.7';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -1652,7 +1652,7 @@ Object.assign(SI,{
 document.addEventListener('keydown',e=>{const el=e.target;if(e.key==='Enter'&&el&&el.dataset&&el.dataset.enter&&!e.isComposing){e.preventDefault();const f=A[el.dataset.enter]||S[el.dataset.enter];if(f)f(el)}});
 
 /* ============ cuenta y sincronización (Firebase) ============ */
-const FB_CONFIG=null; /* se rellena con la configuración del proyecto de Firebase */
+const FB_CONFIG={apiKey:"AIzaSyDKjo5OtUZtATvoEsdf-hNLSUgdGbs0icE",authDomain:"espatontos-6ca70.firebaseapp.com",projectId:"espatontos-6ca70",storageBucket:"espatontos-6ca70.firebasestorage.app",messagingSenderId:"50622095177",appId:"1:50622095177:web:962e7caa4994f1caf48498"};
 const FB_VER='10.12.2';
 const SYNC_KEY='espatontos-sync';
 const PARTS={repertorio:['nums','emos','tiposPropios'],shows:['shows','cur'],bolos:['bolos'],gastos:['gastos'],ideas:['ideas'],ajustes:['set']};
