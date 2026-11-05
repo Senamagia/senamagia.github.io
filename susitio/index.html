@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.1';
+const VERSION = '2.2';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -195,7 +195,7 @@ const num = v => { if (v == null || v === '') return null; const n = Number(Stri
 const fNum = n => String(Math.round(n * 100) / 100).replace('.', ',');
 
 /* ---------- Datos ---------- */
-const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones', 'ajustes'];
+const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones', 'ajustes', 'sintomas'];
 const metaComida = () => { const r = (DB.ajustes || []).find(x => x.id === 'meta-comida' && !x.borrado); return r && r.g > 0 ? r.g : 100; };
 let DB;
 function vacio() { const o = { v: 1 }; COLS.forEach(c => o[c] = []); return o; }
@@ -293,6 +293,13 @@ const HECES_N = Object.fromEntries(HECES);
 const MALO = ['diarrea', 'mucosa'], REGULAR = ['pastosa', 'sin_forma', 'alpistada', 'alpistada_sf'];
 const sugerirDia = tipos => tipos.some(t => MALO.includes(t)) ? 'malo' : tipos.some(t => REGULAR.includes(t)) ? 'regular' : tipos.length ? 'bueno' : null;
 const DIA_N = { bueno: 'Bueno', regular: 'Regular', malo: 'Malo' };
+const SINTOMAS = [['vomito', 'Vómito'], ['arcada', 'Arcadas sin vomitar'], ['sangre', 'Sangre en las heces'], ['decaida', 'Decaída, sin energía'], ['no_come', 'No quiere comer'], ['otro', 'Otro']];
+const SINTOMA_N = Object.fromEntries(SINTOMAS);
+const ASPECTO = [['sin_digerir', 'Comida sin digerir'], ['bilis', 'Amarillo (bilis)'], ['espuma', 'Espuma'], ['liquido', 'Líquido'], ['sangre', 'Con sangre'], ['pelo', 'Bola de pelo']];
+const ASPECTO_N = Object.fromEntries(ASPECTO);
+const CANTIDAD = [['poco', 'Poco'], ['normal', 'Normal'], ['mucho', 'Mucho']];
+const sintomasDe = f => vivos('sintomas').filter(x => x.fecha === f).sort((a, b) => hk(a.hora).localeCompare(hk(b.hora)));
+const textoSintoma = x => SINTOMA_N[x.tipo] + (x.aspecto && x.aspecto.length ? ' · ' + x.aspecto.map(k => ASPECTO_N[k]).join(', ') : '') + (x.cantidad ? ' · ' + (Object.fromEntries(CANTIDAD)[x.cantidad] || '').toLowerCase() : '');
 const APETITO = [['bien', 'Bien'], ['regular', 'Regular'], ['poco', 'Poco'], ['nada', 'Nada']];
 const TIPOS_CAMBIO = [['dieta', 'Cambio de dieta'], ['dosis', 'Cambio de dosis'], ['medicacion', 'Medicación nueva o retirada'], ['suplemento', 'Suplementos'], ['vet', 'Visita vet'], ['nutri', 'Nutricionista'], ['otro', 'Otro']];
 const TIPO_CAMBIO_N = Object.fromEntries(TIPOS_CAMBIO);
@@ -372,6 +379,10 @@ function vistaHoy() {
   } else {
     h += `<section class="done-card"><span class="tick">${I.check('#fff', 28)}</span><div class="col grow"><span class="b" style="font-size:20px;color:var(--teal-d)">Tomas de hoy hechas</span><span class="small" style="color:var(--teal-d)">Mañana y noche dadas</span></div></section>`;
   }
+  // Síntomas de hoy y aviso si se repiten
+  const sh = sintomasDe(f);
+  const v7 = vivos('sintomas').filter(x => x.tipo === 'vomito' && x.fecha > addDays(f, -7)).length;
+  if (sh.length) h += `<button class="mini" data-a="reg" data-reg="sintoma" style="background:#FCE8E6"><span class="ico" style="background:#B3261E;color:#fff;font-weight:800;font-size:20px">!</span><span class="col grow"><span class="tiny b" style="color:#8C1D18;text-transform:uppercase;letter-spacing:.05em">Hoy</span>${sh.map(x => `<span class="b" style="font-size:16px;color:#5C1410">${esc(x.hora || '')} ${esc(textoSintoma(x))}</span>`).join('')}${v7 > 1 ? `<span class="small b" style="color:#8C1D18">${v7} vómitos en los últimos 7 días</span>` : ''}</span>${I.chev}</button>`;
   // Resto de tomas
   ['manana', 'noche'].forEach(mm => {
     if (mm === mom) return;
@@ -450,11 +461,12 @@ function avisos(f) {
    PANTALLA: REGISTRAR
    ========================================================= */
 function vistaReg() {
-  const tabs = [['cacas', 'Cacas'], ['comida', 'Comida'], ['cambio', 'Cambio']];
+  const tabs = [['cacas', 'Cacas'], ['comida', 'Comida'], ['sintoma', 'Síntoma'], ['cambio', 'Cambio']];
   let h = `<header class="col" style="gap:12px"><h1 style="font-size:30px;font-weight:800">Registrar</h1>
-    <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${tabs.map(([k, l]) => `<button data-a="reg" data-reg="${k}" aria-pressed="${S.reg === k}">${l}</button>`).join('')}</div></header>`;
+    <div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))">${tabs.map(([k, l]) => `<button data-a="reg" data-reg="${k}" aria-pressed="${S.reg === k}">${l}</button>`).join('')}</div></header>`;
   if (S.reg === 'cacas') h += formCacas();
   if (S.reg === 'comida') h += formComida();
+  if (S.reg === 'sintoma') h += formSintoma();
   if (S.reg === 'cambio') h += formCambio();
   return h;
 }
@@ -541,6 +553,25 @@ function metaBarra(tot, sinPesar) {
   return `<div class="col" style="gap:6px"><div class="row" style="justify-content:space-between;align-items:baseline"><span style="font-size:26px;font-weight:800">${fNum(Math.round(tot * 10) / 10)} <span class="small muted">de ${fNum(meta)} g</span></span><span class="small b" style="color:${falta <= 0 ? 'var(--teal-d)' : 'var(--muted)'}">${falta <= 0 ? '✓ Meta cumplida' : 'Faltan ' + fNum(Math.round(falta * 10) / 10) + ' g'}</span></div>
     <span style="display:block;height:12px;border-radius:9px;background:#F1E2CF;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:var(--teal);border-radius:9px"></span></span>${sinPesar ? `<span class="tiny muted">+ ${sinPesar} sin pesar, no cuentan en el total</span>` : ''}</div>`;
 }
+function formSintoma() {
+  if (!S.sint) S.sint = { fecha: hoy(), hora: nowHM(), tipo: 'vomito', aspecto: [], cantidad: '', nota: '' };
+  const F = S.sint;
+  const lista = vivos('sintomas').sort((a, b) => b.fecha.localeCompare(a.fecha) || hk(b.hora).localeCompare(hk(a.hora)));
+  const ultV = lista.find(x => x.tipo === 'vomito');
+  return `<section class="card form">
+    <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Síntoma</h2><span class="small muted">Vómitos y otras cosas a vigilar. Salen en Hoy, en el diario y marcados en Progreso.</span></div>
+    <div class="chips">${SINTOMAS.map(([k, l]) => `<button class="chip" data-a="sint-tipo" data-v="${k}" aria-pressed="${F.tipo === k}">${l}</button>`).join('')}</div>
+    ${F.tipo === 'vomito' ? `<div class="lbl">Cómo era (puedes marcar varias)<div class="chips">${ASPECTO.map(([k, l]) => `<button class="chip" data-a="sint-asp" data-v="${k}" aria-pressed="${F.aspecto.includes(k)}">${l}</button>`).join('')}</div></div>
+    <div class="lbl">Cantidad<div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${CANTIDAD.map(([k, l]) => `<button data-a="sint-cant" data-v="${k}" aria-pressed="${F.cantidad === k}">${l}</button>`).join('')}</div></div>` : ''}
+    <div class="grid2"><label class="lbl">Día<input class="field" type="date" max="${hoy()}" data-bind="sint.fecha" value="${esc(F.fecha)}"></label><label class="lbl">Hora<input class="field" type="time" data-bind="sint.hora" value="${esc(F.hora)}"></label></div>
+    <label class="lbl">Notas (opcional)<textarea class="field" rows="2" data-bind="sint.nota" placeholder="Ej.: justo después de la toma de la noche">${esc(F.nota)}</textarea></label>
+    <button class="btn btn-teal" data-a="sint-guardar">${F.id ? 'Guardar cambios' : 'Guardar'}</button>
+    ${F.id ? `<button class="btn btn-danger" data-a="sint-borrar">Borrar</button><button class="btn btn-soft" data-a="sint-nuevo">Apuntar uno nuevo</button>` : ''}
+  </section>
+  <section class="col" style="gap:8px"><div class="row" style="justify-content:space-between;margin:4px 4px 0"><h2 class="sec-title" style="margin:0">Apuntados</h2>${ultV ? `<span class="small b muted">Último vómito: ${diffDays(hoy(), ultV.fecha) === 0 ? 'hoy' : 'hace ' + diffDays(hoy(), ultV.fecha) + ' día' + (diffDays(hoy(), ultV.fecha) > 1 ? 's' : '')}</span>` : ''}</div>
+    ${lista.length ? `<div class="card" style="padding:4px 16px">${lista.slice(0, 30).map(x => `<button class="list-row" data-a="sintoma-edit" data-id="${x.id}"><span class="col grow"><span class="b">${esc(textoSintoma(x))}</span><span class="tiny muted">${fFecha(x.fecha)}${x.hora ? ' · ' + esc(x.hora) : ''} · ${esc(x.autor)}${x.nota ? ' · ' + esc(x.nota) : ''}</span></span>${I.chev}</button>`).join('')}</div>` : `<div class="empty">Nada apuntado todavía.</div>`}
+  </section>`;
+}
 function formCambio() {
   if (!S.cambio) S.cambio = { fecha: hoy(), tipo: 'dieta', texto: '' };
   const F = S.cambio;
@@ -568,9 +599,10 @@ function primerDia() {
 }
 function datosDia() {
   const map = {};
-  const get = f => map[f] || (map[f] = { pesos: [], dia: null });
+  const get = f => map[f] || (map[f] = { pesos: [], dia: null, vomitos: 0 });
   vivos('tomas').forEach(t => { if (t.peso != null) get(t.fecha).pesos.push(t.peso); });
   vivos('cacas').forEach(c => { if (c.dia) get(c.fecha).dia = c.dia; });
+  vivos('sintomas').forEach(x => { const d = get(x.fecha); if (x.tipo === 'vomito') d.vomitos = (d.vomitos || 0) + 1; else d.otros = (d.otros || 0) + 1; });
   return map;
 }
 function etapas(desde, hasta) {
@@ -583,11 +615,12 @@ function etapas(desde, hasta) {
   return out.filter(e => e.hasta >= desde && e.desde <= e.hasta);
 }
 function resumen(desde, hasta, map) {
-  const r = { g: 0, r: 0, m: 0, pesos: [] };
+  const r = { g: 0, r: 0, m: 0, pesos: [], vomitos: 0 };
   for (let f = desde; f <= hasta; f = addDays(f, 1)) {
     const d = map[f]; if (!d) continue;
     if (d.dia === 'bueno') r.g++; else if (d.dia === 'regular') r.r++; else if (d.dia === 'malo') r.m++;
     r.pesos.push(...d.pesos);
+    r.vomitos += d.vomitos || 0;
   }
   r.peso = r.pesos.length ? r.pesos.reduce((a, b) => a + b, 0) / r.pesos.length : null;
   r.tot = r.g + r.r + r.m;
@@ -689,6 +722,7 @@ function graficaPeso(desde, hasta, map) {
     s += `<line x1="${x0}" x2="${x1}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#E2D8CB" stroke-dasharray="2 4"/><text x="${x0 - 6}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#6E625A">${Math.round(v)}</text>`;
   }
   s += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ')}" fill="none" stroke="#2A2320" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+  for (let i = 0; i < N; i++) { const d = map[addDays(desde, i)]; if (d && d.vomitos) { const x = X(i); s += `<path d="M${(x - 6).toFixed(1)} ${yB - 2} L${(x + 6).toFixed(1)} ${yB - 2} L${x.toFixed(1)} ${yB - 13} Z" fill="#B3261E"/>`; } }
   if (pts.length < 40) pts.forEach(p => { s += `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" fill="#2A2320"/>`; });
   const lp = pts[pts.length - 1];
   s += `<circle cx="${X(lp[0]).toFixed(1)}" cy="${Y(lp[1]).toFixed(1)}" r="5.5" fill="#2A2320"/>`;
@@ -703,6 +737,7 @@ function graficaPeso(desde, hasta, map) {
   h += s;
   h += filas.length ? `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px">${filas.map(r => `<div class="row" style="gap:10px;align-items:flex-start">${r.html}</div>`).join('')}</div>`
     : `<span class="tiny muted">Cuando apuntes un cambio de dieta o de medicación en Registrar › Cambio, saldrá marcado aquí con su efecto en el peso.</span>`;
+  if (Object.keys(map).some(f => f >= desde && map[f].vomitos)) h += `<span class="tiny" style="display:flex;align-items:center;gap:6px"><svg aria-hidden="true" width="14" height="12" viewBox="0 0 14 12"><path d="M1 11 L13 11 L7 1 Z" fill="#B3261E"/></svg>Día con vómito</span>`;
   return h + '</section>';
 }
 function semanas(desde, hasta, map) {
@@ -717,7 +752,7 @@ function semanas(desde, hasta, map) {
     const prev = res[i + 1];
     const d = prev && prev.peso != null && r.peso != null ? r.peso - prev.peso : null;
     const vac = Math.max(0, r.dias - r.tot);
-    rows.push(`<div class="week"><span class="small b">${fCorta(r.l)}</span>${barra(r.g, r.r, r.m, vac)}<span class="col" style="align-items:flex-end"><span class="small b">${r.peso != null ? Math.round(r.peso) + ' g' : '—'}</span><span class="tiny b" style="color:${d != null && d < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${d == null ? '' : (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.round(Math.abs(d)) + ' g'}</span></span></div>`);
+    rows.push(`<div class="week"><span class="small b">${fCorta(r.l)}</span>${barra(r.g, r.r, r.m, vac)}<span class="col" style="align-items:flex-end"><span class="small b">${r.peso != null ? Math.round(r.peso) + ' g' : '—'}</span>${r.vomitos ? `<span class="tiny b" style="color:var(--bad)">${r.vomitos} vómito${r.vomitos > 1 ? 's' : ''}</span>` : ''}<span class="tiny b" style="color:${d != null && d < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${d == null ? '' : (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.round(Math.abs(d)) + ' g'}</span></span></div>`);
     r.cambios.sort((a, b) => b.fecha.localeCompare(a.fecha)).forEach(c => rows.push(`<div class="marker"><i></i><b>${esc(nombreCambio(c))} · ${fCorta(c.fecha)}</b><i></i></div>`));
   });
   return `<section class="card col" style="gap:4px"><div class="col" style="gap:2px;padding-bottom:8px"><h2 style="font-size:19px;font-weight:800">Semana a semana</h2><span class="tiny muted">Días buenos, regulares y malos, y peso medio</span></div>${rows.join('')}
@@ -740,6 +775,8 @@ function textoInforme() {
   if (E.length > 1) { L.push(''); L.push('Por etapas:'); E.forEach(e => { const r = resumen(e.desde < desde ? desde : e.desde, e.hasta, map); L.push('· ' + e.nombre + ' (' + fCorta(e.desde) + ' – ' + (e.hasta === hasta ? 'hoy' : fCorta(e.hasta)) + '): ' + r.g + '/' + r.r + '/' + r.m + ' días buenos/regulares/malos' + (r.peso != null ? ', peso medio ' + Math.round(r.peso) + ' g' : '')); }); }
   const N = diffDays(hasta, desde) + 1;
   const esperadas = N * 2, dadas = vivos('tomas').filter(t => t.fecha >= desde && t.fecha <= hasta).length;
+  const vs = vivos('sintomas').filter(x => x.fecha >= desde && x.fecha <= hasta).sort((a, b) => a.fecha.localeCompare(b.fecha) || hk(a.hora).localeCompare(hk(b.hora)));
+  if (vs.length) { L.push(''); L.push('Síntomas:'); vs.forEach(x => L.push('· ' + fCorta(x.fecha) + (x.hora ? ' ' + x.hora : '') + ': ' + textoSintoma(x) + (x.nota ? ' (' + x.nota + ')' : ''))); }
   L.push(''); L.push('Tomas apuntadas: ' + dadas + ' de ' + esperadas);
   L.push('Medicación actual: ' + medsActivos().map(m => m.nombre + ' ' + m.dosis + (m.tipo === 'diario' ? ' (' + ((m.momentos || []).length ? m.momentos.map(x => NOMBRE_MOM[x]).join(' y ') : 'cada día') + ')' : (m.dias || []).length ? ' (' + m.dias.map(d => DIAS_L[d]).join(' y ') + ')' : ' (semanal)')).join('; '));
   const cs = vivos('cambios').filter(c => c.fecha >= desde && c.fecha <= hasta).sort((a, b) => a.fecha.localeCompare(b.fecha));
@@ -812,6 +849,7 @@ function eventos() {
   vivos('comidas').forEach(c => ev.push({ f: c.fecha, h: c.hora, autor: c.autor, t: 'Comida', d: c.que + (c.g != null ? ' ' + fNum(c.g) + ' g' : ''), a: 'comida-edit', id: c.id }));
   vivos('apetito').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Apetito: ' + (Object.fromEntries(APETITO)[c.valor] || '').toLowerCase(), d: '', a: 'borrar', col: 'apetito', id: c.id }));
   vivos('cambios').forEach(c => ev.push({ f: c.fecha, h: '', autor: c.autor, t: 'Cambio: ' + (TIPO_CAMBIO_N[c.tipo] || ''), d: nombreCambio(c), a: 'borrar', col: 'cambios', id: c.id }));
+  vivos('sintomas').forEach(x => ev.push({ f: x.fecha, h: x.hora || '', autor: x.autor, t: '⚠️ ' + SINTOMA_N[x.tipo], d: [textoSintoma(x).split(' · ').slice(1).join(' · '), x.nota].filter(Boolean).join(' · '), a: 'sintoma-edit', id: x.id }));
   vivos('diluciones').forEach(c => { const m = DB.meds.find(x => x.id === c.medId) || {}; ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Preparado ' + (m.nombre || ''), d: '', a: 'borrar', col: 'diluciones', id: c.id }); });
   return ev.sort((a, b) => b.f.localeCompare(a.f) || hk(a.h).localeCompare(hk(b.h)));
 }
@@ -1000,6 +1038,17 @@ document.addEventListener('click', e => {
     case 'meta': abrirSheet('meta'); break;
     case 'meta-guardar': { const v = num(document.getElementById('meta-in').value); if (v == null || v <= 0) { toast('Pon los gramos de la meta'); break; } poner('ajustes', { id: 'meta-comida', g: v, autor: yo() }); cerrarSheet(); repintar(); toast('Meta: ' + fNum(v) + ' g al día'); break; }
     case 'apetito': { const fe = S.comida.fecha || f; const ex = apetitoDe(fe); if (ex && ex.valor === d.v) borrar('apetito', ex.id); else poner('apetito', { id: 'apetito-' + fe, fecha: fe, valor: d.v, hora: nowHM(), autor: yo() }); repintar(); break; }
+    case 'sint-nuevo': S.sint = null; repintar(); break;
+    case 'sint-tipo': S.sint.tipo = d.v; repintar(); break;
+    case 'sint-asp': { const l = S.sint.aspecto; const i = l.indexOf(d.v); if (i >= 0) l.splice(i, 1); else l.push(d.v); repintar(); break; }
+    case 'sint-cant': S.sint.cantidad = S.sint.cantidad === d.v ? '' : d.v; repintar(); break;
+    case 'sint-guardar': {
+      const F = S.sint;
+      const rec = { id: F.id || uid(), fecha: F.fecha || f, hora: F.hora || '', tipo: F.tipo, aspecto: F.tipo === 'vomito' ? F.aspecto.slice() : [], cantidad: F.tipo === 'vomito' ? F.cantidad : '', nota: (F.nota || '').trim(), autor: F.autor || yo() };
+      poner('sintomas', rec); S.sint = null; repintar(); toast(SINTOMA_N[rec.tipo] + ' apuntado'); break;
+    }
+    case 'sintoma-edit': { const x = DB.sintomas.find(y => y.id === d.id); if (x) { S.sint = { id: x.id, fecha: x.fecha, hora: x.hora || '', tipo: x.tipo, aspecto: (x.aspecto || []).slice(), cantidad: x.cantidad || '', nota: x.nota || '', autor: x.autor }; S.tab = 'reg'; S.reg = 'sintoma'; window.scrollTo(0, 0); pintar(); toast('Cambia lo que quieras y pulsa Guardar'); } break; }
+    case 'sint-borrar': if (S.sint && S.sint.id) { borrar('sintomas', S.sint.id); S.sint = null; repintar(); toast('Borrado'); } break;
     case 'cambio-tipo': S.cambio.tipo = d.v; repintar(); break;
     case 'cambio-guardar': {
       const F = S.cambio;
