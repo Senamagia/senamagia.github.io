@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.3';
+const VERSION = '2.4';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -195,7 +195,7 @@ const num = v => { if (v == null || v === '') return null; const n = Number(Stri
 const fNum = n => String(Math.round(n * 100) / 100).replace('.', ',');
 
 /* ---------- Datos ---------- */
-const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones', 'ajustes', 'sintomas'];
+const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones', 'ajustes', 'sintomas', 'sospechas'];
 const metaComida = () => { const r = (DB.ajustes || []).find(x => x.id === 'meta-comida' && !x.borrado); return r && r.g > 0 ? r.g : 100; };
 let DB;
 function vacio() { const o = { v: 1 }; COLS.forEach(c => o[c] = []); return o; }
@@ -394,6 +394,8 @@ function vistaHoy() {
   const sh = sintomasDe(f);
   const v7 = vivos('sintomas').filter(x => x.tipo === 'vomito' && x.fecha > addDays(f, -7)).length;
   if (sh.length) h += `<button class="mini" data-a="reg" data-reg="sintoma" style="background:#FCE8E6"><span class="ico" style="background:#B3261E;color:#fff;font-weight:800;font-size:20px">!</span><span class="col grow"><span class="tiny b" style="color:#8C1D18;text-transform:uppercase;letter-spacing:.05em">Hoy</span>${sh.map(x => `<span class="b" style="font-size:16px;color:#5C1410">${esc(x.hora || '')} ${esc(textoSintoma(x))}</span>`).join('')}${v7 > 1 ? `<span class="small b" style="color:#8C1D18">${v7} vómitos en los últimos 7 días</span>` : ''}</span>${I.chev}</button>`;
+  if (esMalo(f)) h += pistasHTML(f, 'Posibles pistas de hoy');
+  else if (esMalo(addDays(f, -1))) h += pistasHTML(addDays(f, -1), 'Ayer fue un día malo: posibles pistas');
   // Resto de tomas
   ['manana', 'noche'].forEach(mm => {
     if (mm === mom) return;
@@ -657,6 +659,7 @@ function vistaProg() {
     <div style="background:var(--good);color:#fff"><span class="n">${R.g}</span><span class="t">días buenos</span></div>
     <div style="background:var(--reg);color:var(--reg-t)"><span class="n">${R.r}</span><span class="t">regulares</span></div>
     <div style="background:var(--bad);color:#fff"><span class="n">${R.m}</span><span class="t">malos</span></div></section>`;
+  h += patronesHTML();
   h += graficaPeso(desde, hasta, map);
   // Etapas
   const E = etapas(desde, hasta);
@@ -796,6 +799,127 @@ function textoInforme() {
 }
 
 /* =========================================================
+   PISTAS: qué pasó antes de un día malo
+   No son diagnósticos: solo coincidencias en las 48 horas anteriores.
+   ========================================================= */
+const SOSPECHAS = [['suelo', 'Comió algo distinto o del suelo'], ['estres', 'Estrés o cambios en casa'], ['bano', 'Baño'], ['vet', 'Visita al veterinario'], ['arena', 'Cambio de arena o cama'], ['juego', 'Mucho ejercicio o se escapó'], ['calor', 'Mucho calor o frío'], ['otra', 'Otra cosa']];
+const SOSPECHA_N = Object.fromEntries(SOSPECHAS);
+const FACTOR_N = {
+  comida_mucha: 'Comió más de lo habitual el día antes', comida_poca: 'Comió menos de lo habitual el día antes', comida_nueva: 'Comió algo nuevo o que no comía hacía tiempo',
+  madrugada: 'Comió varias veces de madrugada', apetito: 'Tenía poco apetito', cambio: 'Hubo un cambio de dieta o medicación en los 3 días anteriores',
+  toma_incompleta: 'Faltó algo en una toma', toma_falta: 'No está apuntada alguna toma', toma_tarde: 'Pasaron más de 13 h y media entre dos tomas',
+  tanda: 'Se preparó una tanda o dilución nueva', peso_baja: 'Bajó de peso', sintoma_previo: 'Tuvo otro síntoma antes'
+};
+SOSPECHAS.forEach(([k, l]) => FACTOR_N['sosp_' + k] = 'Sospecha: ' + l.charAt(0).toLowerCase() + l.slice(1));
+const sospechaDe = f => vivos('sospechas').find(x => x.fecha === f);
+const gramosDia = f => { const l = vivos('comidas').filter(c => c.fecha === f && c.g != null); return l.length ? l.reduce((a, c) => a + c.g, 0) : null; };
+const pesoDia = f => { const l = vivos('tomas').filter(t => t.fecha === f && t.peso != null).map(t => t.peso); return l.length ? l.reduce((a, b) => a + b, 0) / l.length : null; };
+function esMalo(f) { const c = cacaDe(f); return !!(c && c.dia === 'malo') || vivos('sintomas').some(x => x.fecha === f && x.tipo === 'vomito'); }
+function tieneDatos(f) { return !!cacaDe(f) || vivos('sintomas').some(x => x.fecha === f && x.tipo === 'vomito'); }
+function factores(f) {
+  const out = [];
+  const ayer = addDays(f, -1), dias = [ayer, f];
+  const add = (k, texto) => { if (!out.some(x => x.k === k)) out.push({ k, texto }); };
+  // comida
+  const base = []; for (let i = 2; i <= 15; i++) { const g = gramosDia(addDays(f, -i)); if (g != null) base.push(g); }
+  const gA = gramosDia(ayer);
+  if (gA != null && base.length >= 3) {
+    const m = base.reduce((a, b) => a + b, 0) / base.length;
+    if (gA > m * 1.3) add('comida_mucha', 'Ayer comió ' + fNum(Math.round(gA)) + ' g (lo habitual son ' + Math.round(m) + ' g)');
+    else if (gA < m * 0.7) add('comida_poca', 'Ayer comió ' + fNum(Math.round(gA)) + ' g (lo habitual son ' + Math.round(m) + ' g)');
+  }
+  const antes = new Set(vivos('comidas').filter(c => c.fecha < ayer && c.fecha >= addDays(f, -16)).map(c => (c.que || '').trim().toLowerCase()));
+  vivos('comidas').filter(c => dias.includes(c.fecha)).forEach(c => { const q = (c.que || '').trim().toLowerCase(); if (q && antes.size && !antes.has(q)) add('comida_nueva', 'Comió ' + c.que + ' (no lo comía en las 2 semanas anteriores)'); });
+  const madr = vivos('comidas').filter(c => dias.includes(c.fecha) && c.hora && c.hora < '04').length;
+  if (madr >= 2) add('madrugada', 'Comió ' + madr + ' veces de madrugada');
+  dias.forEach(d => { const a = apetitoDe(d); if (a && (a.valor === 'poco' || a.valor === 'nada')) add('apetito', (d === f ? 'Hoy' : 'Ayer') + ' tenía ' + (a.valor === 'nada' ? 'nada de' : 'poco') + ' apetito'); });
+  // cambios de dieta o medicación
+  vivos('cambios').filter(c => (ES_DIETA(c) || ES_MED(c)) && c.fecha >= addDays(f, -3) && c.fecha <= f).forEach(c => add('cambio', (c.fecha === f ? 'Hoy' : 'El ' + fCorta(c.fecha)) + ': ' + nombreCambio(c)));
+  // tomas
+  dias.forEach(d => ['manana', 'noche'].forEach(mom => {
+    if (d === f && mom === 'noche') return;
+    const t = tomaDe(d, mom);
+    if (!t) { if (d === ayer) add('toma_falta', 'No está apuntada la toma de la ' + NOMBRE_MOM[mom] + ' de ayer'); return; }
+    const falta = medsToma(mom).filter(m => !(t.meds || []).some(x => x.id === m.id));
+    if (falta.length) add('toma_incompleta', 'En la toma de la ' + NOMBRE_MOM[mom] + (d === f ? ' de hoy' : ' de ayer') + ' faltó ' + falta.map(m => m.nombre).join(', '));
+  }));
+  const ts = vivos('tomas').filter(t => t.hora && t.fecha >= addDays(f, -2) && t.fecha <= f).sort((a, b) => tomaMs(a) - tomaMs(b));
+  for (let i = 1; i < ts.length; i++) { const h = (tomaMs(ts[i]) - tomaMs(ts[i - 1])) / 3600000; if (h > 13.5 && ts[i].fecha >= ayer) { add('toma_tarde', 'Entre la toma de las ' + ts[i - 1].hora + ' y la de las ' + ts[i].hora + ' pasaron ' + fNum(Math.round(h * 10) / 10) + ' h'); break; } }
+  // tandas nuevas
+  vivos('diluciones').filter(x => dias.includes(x.fecha)).forEach(x => { const m = DB.meds.find(y => y.id === x.medId); add('tanda', (x.fecha === f ? 'Hoy' : 'Ayer') + ' se preparó ' + (m ? m.nombre : 'una tanda nueva')); });
+  // peso
+  const pA = pesoDia(ayer) != null ? pesoDia(ayer) : pesoDia(f);
+  const pb = []; for (let i = 2; i <= 8; i++) { const p = pesoDia(addDays(f, -i)); if (p != null) pb.push(p); }
+  if (pA != null && pb.length >= 3) { const m = pb.reduce((a, b) => a + b, 0) / pb.length; if (pA < m * 0.98) add('peso_baja', 'El peso bajó a ' + Math.round(pA) + ' g (venía de ' + Math.round(m) + ' g)'); }
+  // otros síntomas antes
+  vivos('sintomas').filter(x => x.fecha >= addDays(f, -2) && x.fecha <= f && !(x.fecha === f && x.tipo === 'vomito')).forEach(x => add('sintoma_previo', fCorta(x.fecha) + ': ' + textoSintoma(x)));
+  // sospechas apuntadas
+  dias.forEach(d => { const s = sospechaDe(d); if (s) (s.items || []).forEach(k => add('sosp_' + k, (d === f ? 'Hoy' : 'Ayer') + ': ' + (SOSPECHA_N[k] || k).toLowerCase() + (k === 'otra' && s.nota ? ' (' + s.nota + ')' : ''))); });
+  return out;
+}
+// Compara días malos y no malos: qué factores aparecen más antes de los malos
+function patrones() {
+  const p = primerDia(); if (!p) return { lista: [], malos: 0, total: 0 };
+  const cuenta = {}; let malos = 0, total = 0;
+  for (let f = addDays(p, 1); f <= hoy(); f = addDays(f, 1)) {
+    if (!tieneDatos(f)) continue;
+    const m = esMalo(f); total++; if (m) malos++;
+    factores(f).forEach(x => { const c = cuenta[x.k] || (cuenta[x.k] = { con: 0, malosCon: 0 }); c.con++; if (m) c.malosCon++; });
+  }
+  const tasa = total ? malos / total : 0;
+  const lista = Object.keys(cuenta).map(k => Object.assign({ k }, cuenta[k], { tasa: cuenta[k].malosCon / cuenta[k].con }))
+    .filter(x => x.malosCon >= 3 && x.tasa >= tasa + 0.15).sort((a, b) => b.tasa - a.tasa);
+  return { lista, malos, total, tasa };
+}
+function pistasHTML(f, titulo) {
+  const fs = factores(f), s = sospechaDe(f);
+  return `<section class="card col" style="gap:8px;border:2px solid #F2C9C4"><div class="row" style="justify-content:space-between;align-items:baseline"><span class="b" style="font-size:17px">${titulo}</span><span class="tiny muted">48 h antes</span></div>
+    ${fs.length ? fs.map(x => `<div class="row" style="gap:10px;align-items:flex-start"><span style="width:8px;height:8px;border-radius:9px;background:#B3261E;margin-top:7px;flex:0 0 8px"></span><span class="small">${esc(x.texto)}</span></div>`).join('') : `<span class="small muted">No hay nada fuera de lo normal apuntado en las 48 horas anteriores.</span>`}
+    <span class="tiny muted">Son coincidencias, no causas. Compáralas con lo que diga la vet.</span>
+    <button class="btn btn-line" style="min-height:46px" data-a="sosp-abrir" data-f="${f}">${s ? 'Mis sospechas: ' + s.items.length : '¿Sospechas de algo? Apúntalo'}</button>
+  </section>`;
+}
+function patronesHTML() {
+  const P = patrones();
+  let h = `<section class="card col" style="gap:10px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Qué se repite antes de los días malos</h2><span class="tiny muted">Días malos = cacas malas o vómito. Se compara con el resto de días.</span></div>`;
+  if (P.malos < 3) h += `<div class="empty">Hacen falta al menos 3 días malos apuntados para buscar qué se repite. Ahora hay ${P.malos}.</div>`;
+  else if (!P.lista.length) h += `<span class="small muted">De ${P.total} días apuntados, ${P.malos} fueron malos. De momento nada se repite lo bastante antes de ellos como para destacarlo.</span>`;
+  else h += P.lista.map(x => `<div class="col" style="gap:4px;background:#FCE8E6;border-radius:14px;padding:12px"><span class="b" style="font-size:15px;color:#5C1410">${esc(FACTOR_N[x.k] || x.k)}</span><span class="small" style="color:#5C1410">Cuando pasa, el día fue malo <b>${x.malosCon} de ${x.con}</b> veces. Normalmente es malo ${Math.round(P.tasa * 100)} % de los días.</span></div>`).join('') + `<span class="tiny muted">Solo salen relaciones con al menos 3 casos. Son coincidencias: cuantos más días apuntes, más fiables.</span>`;
+  // últimos días malos con sus pistas
+  const recientes = []; for (let f = hoy(), i = 0; i < 60 && recientes.length < 4; i++, f = addDays(f, -1)) if (esMalo(f)) recientes.push(f);
+  if (recientes.length) h += `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px"><span class="b">Últimos días malos</span>${recientes.map(f => { const fs = factores(f); return `<div class="col" style="gap:2px"><span class="small b">${fFecha(f)}</span><span class="small muted">${fs.length ? fs.map(x => esc(x.texto)).join(' · ') : 'Sin nada fuera de lo normal'}</span></div>`; }).join('')}</div>`;
+  h += `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px"><span class="b">Preguntar a Claude</span><span class="small muted">Copia los últimos 30 días con una pregunta ya escrita. Pégalo en una conversación con Claude para que lo analice más a fondo.</span><button class="btn btn-teal" data-a="claude-copiar">Copiar para Claude</button><a href="https://claude.ai/new" style="text-align:center;font-weight:800;color:var(--teal-d)">Abrir Claude</a></div>`;
+  return h + `</section>`;
+}
+function textoClaude() {
+  const h = hoy(), desde = addDays(h, -29);
+  const L = ['Hola Claude. Te paso los datos de los últimos 30 días de Susi, mi hurona con enfermedad inflamatoria intestinal (IBD). Quiero que me ayudes a ver qué puede estar relacionado con sus días malos (cacas malas o vómitos): comida, cantidades, cambios de dieta o de medicación, horas de las tomas, preparaciones nuevas de suplementos o cualquier otra cosa. Dime qué patrones ves, qué te parece más probable y qué me recomendarías vigilar o comentar con la veterinaria. Ten en cuenta que no eres veterinario y que esto son solo coincidencias.', ''];
+  L.push('Medicación actual: ' + medsActivos().map(m => m.nombre + ' ' + m.dosis + ' (' + pauta(m) + ')').join('; '));
+  const da = dietaActual(); if (da) L.push('Dieta actual: ' + nombreCambio(da) + ' desde el ' + fCorta(da.fecha));
+  L.push('Meta de comida: ' + fNum(metaComida()) + ' g al día'); L.push('');
+  for (let f = desde; f <= h; f = addDays(f, 1)) {
+    const p = [];
+    const c = cacaDe(f); if (c) p.push('cacas ' + DIA_N[c.dia].toLowerCase() + ' (' + c.tipos.map(k => HECES_N[k]).join(', ') + ')');
+    ['manana', 'noche'].forEach(mom => { const t = tomaDe(f, mom); p.push(t ? 'toma ' + NOMBRE_MOM[mom] + ' ' + t.hora + (t.peso != null ? ' ' + fNum(t.peso) + ' g' : '') + faltan(t) : 'toma ' + NOMBRE_MOM[mom] + ' sin apuntar'); });
+    const com = comidasDe(f); if (com.length) p.push('comida: ' + com.map(x => (x.hora ? x.hora + ' ' : '') + x.que + (x.g != null ? ' ' + fNum(x.g) + ' g' : '')).join(', '));
+    const a = apetitoDe(f); if (a) p.push('apetito ' + a.valor);
+    sintomasDe(f).forEach(x => p.push('SÍNTOMA ' + (x.hora || '') + ' ' + textoSintoma(x) + (x.nota ? ' (' + x.nota + ')' : '')));
+    vivos('cambios').filter(x => x.fecha === f).forEach(x => p.push('CAMBIO: ' + nombreCambio(x)));
+    vivos('diluciones').filter(x => x.fecha === f).forEach(x => { const m = DB.meds.find(y => y.id === x.medId); p.push('preparado ' + (m ? m.nombre : '')); });
+    const s = sospechaDe(f); if (s) p.push('sospechas: ' + s.items.map(k => SOSPECHA_N[k]).join(', ') + (s.nota ? ' (' + s.nota + ')' : ''));
+    L.push(fFecha(f) + ': ' + p.join(' · '));
+  }
+  return L.join('\n');
+}
+function vistaSheetSospechas() {
+  const F = S.form;
+  return `<h2>Mis sospechas</h2><p class="small muted">${fFecha(F.fecha)} · lo que la app no puede saber. Entra en la comparación de días malos.</p>
+    <div class="chips">${SOSPECHAS.map(([k, l]) => `<button class="chip" data-a="sosp-item" data-v="${k}" aria-pressed="${F.items.includes(k)}">${l}</button>`).join('')}</div>
+    <label class="lbl">Nota (opcional)<textarea class="field" rows="2" data-bind="form.nota">${esc(F.nota || '')}</textarea></label>
+    <button class="btn btn-teal" data-a="sosp-guardar">Guardar</button>`;
+}
+
+/* =========================================================
    PANTALLA: MEDICACIÓN
    ========================================================= */
 function vistaMed() {
@@ -861,6 +985,7 @@ function eventos() {
   vivos('apetito').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Apetito: ' + (Object.fromEntries(APETITO)[c.valor] || '').toLowerCase(), d: '', a: 'borrar', col: 'apetito', id: c.id }));
   vivos('cambios').forEach(c => ev.push({ f: c.fecha, h: '', autor: c.autor, t: 'Cambio: ' + (TIPO_CAMBIO_N[c.tipo] || ''), d: nombreCambio(c), a: 'borrar', col: 'cambios', id: c.id }));
   vivos('sintomas').forEach(x => ev.push({ f: x.fecha, h: x.hora || '', autor: x.autor, t: '⚠️ ' + SINTOMA_N[x.tipo], d: [textoSintoma(x).split(' · ').slice(1).join(' · '), x.nota].filter(Boolean).join(' · '), a: 'sintoma-edit', id: x.id }));
+  vivos('sospechas').forEach(x => ev.push({ f: x.fecha, h: '', autor: x.autor, t: 'Sospechas', d: (x.items || []).map(k => SOSPECHA_N[k]).join(', ') + (x.nota ? ' · ' + x.nota : ''), a: 'sosp-abrir', id: x.id, fecha: x.fecha }));
   vivos('diluciones').forEach(c => { const m = DB.meds.find(x => x.id === c.medId) || {}; ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Preparado ' + (m.nombre || ''), d: '', a: 'borrar', col: 'diluciones', id: c.id }); });
   return ev.sort((a, b) => b.f.localeCompare(a.f) || hk(a.h).localeCompare(hk(b.h)));
 }
@@ -917,6 +1042,7 @@ function pintarSheet() {
   else if (t === 'nube') c = vistaSheetNube();
   else if (t === 'casa') c = vistaSheetCasa();
   else if (t === 'invitar') c = vistaSheetInvitar();
+  else if (t === 'sosp') c = vistaSheetSospechas();
   else if (t === 'meta') c = `<h2>Meta de comida</h2><p class="small muted">Los gramos que debería comer al día. Se puede cambiar cuando quieras y vale para los dos móviles.</p><div class="form"><label class="lbl">Gramos al día<input class="field" id="meta-in" inputmode="decimal" value="${fNum(metaComida())}" style="font-size:24px;text-align:center;font-weight:800"></label><button class="btn btn-teal" data-a="meta-guardar">Guardar</button></div>`;
   else if (t === 'borrar') c = `<h2>¿Borrar?</h2><p class="muted">${esc(S.sheet.extra.texto)}</p><button class="btn btn-danger" data-a="borrar-ok">Borrar</button><button class="btn btn-soft" data-a="cerrar">Cancelar</button>`;
   else if (t === 'informe') c = `<h2>Informe</h2><p class="small muted">Si no se ha copiado solo, mantén pulsado el texto para copiarlo.</p><textarea class="field" rows="14" readonly>${esc(S.sheet.extra)}</textarea><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
@@ -1049,6 +1175,10 @@ document.addEventListener('click', e => {
     case 'meta': abrirSheet('meta'); break;
     case 'meta-guardar': { const v = num(document.getElementById('meta-in').value); if (v == null || v <= 0) { toast('Pon los gramos de la meta'); break; } poner('ajustes', { id: 'meta-comida', g: v, autor: yo() }); cerrarSheet(); repintar(); toast('Meta: ' + fNum(v) + ' g al día'); break; }
     case 'apetito': { const fe = S.comida.fecha || f; const ex = apetitoDe(fe); if (ex && ex.valor === d.v) borrar('apetito', ex.id); else poner('apetito', { id: 'apetito-' + fe, fecha: fe, valor: d.v, hora: nowHM(), autor: yo() }); repintar(); break; }
+    case 'sosp-abrir': { const x = sospechaDe(d.f); S.form = { fecha: d.f, items: x ? x.items.slice() : [], nota: x ? x.nota || '' : '' }; abrirSheet('sosp'); break; }
+    case 'sosp-item': { const l = S.form.items; const i = l.indexOf(d.v); if (i >= 0) l.splice(i, 1); else l.push(d.v); pintarSheet(); break; }
+    case 'sosp-guardar': { const F = S.form; if (!F.items.length && !(F.nota || '').trim()) { const x = sospechaDe(F.fecha); if (x) borrar('sospechas', x.id); } else poner('sospechas', { id: 'sosp-' + F.fecha, fecha: F.fecha, items: F.items.slice(), nota: (F.nota || '').trim(), autor: yo() }); cerrarSheet(); repintar(); toast('Guardado'); break; }
+    case 'claude-copiar': { const t = textoClaude(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast('Copiado: pégalo en Claude'), () => abrirSheet('informe', t)); else abrirSheet('informe', t); break; }
     case 'sint-nuevo': S.sint = null; repintar(); break;
     case 'sint-tipo': S.sint.tipo = d.v; repintar(); break;
     case 'sint-asp': { const l = S.sint.aspecto; const i = l.indexOf(d.v); if (i >= 0) l.splice(i, 1); else l.push(d.v); repintar(); break; }
