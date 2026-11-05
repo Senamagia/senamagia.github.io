@@ -20,6 +20,8 @@ const HORA_DIARIA = 5; // se actualiza entre las 5 y las 6 de la mañana
 
 const HECES = { normal: 'Normal', con_forma: 'Con forma', sin_forma: 'Sin forma', pastosa: 'Pastosa', diarrea: 'Diarrea', mucosa: 'Mucosa', alpistada: 'Alpistada', alpistada_sf: 'Alpistada sin forma' };
 const DIA = { bueno: 'Bueno', regular: 'Regular', malo: 'Malo' };
+const SINTOMA = { vomito: 'Vómito', arcada: 'Arcadas sin vomitar', sangre: 'Sangre en las heces', decaida: 'Decaída, sin energía', no_come: 'No quiere comer', otro: 'Otro' };
+const ASPECTO = { sin_digerir: 'Comida sin digerir', bilis: 'Amarillo (bilis)', espuma: 'Espuma', liquido: 'Líquido', sangre: 'Con sangre', pelo: 'Bola de pelo' };
 const MOMENTO = { manana: 'Mañana', noche: 'Noche' };
 const APETITO = { bien: 'Bien', regular: 'Regular', poco: 'Poco', nada: 'Nada' };
 const TIPO_CAMBIO = { dieta: 'Cambio de dieta', dosis: 'Cambio de dosis', medicacion: 'Medicación nueva o retirada', suplemento: 'Suplementos', vet: 'Visita vet', nutri: 'Nutricionista', otro: 'Otro' };
@@ -81,7 +83,7 @@ function leerTodo_() {
   const u = get_(BASE + 'susitioUsuarios/' + s.uid, s.token);
   const casa = u.fields && u.fields.casa && u.fields.casa.stringValue;
   if (!casa) throw new Error('Esta cuenta todavía no está en la casa de Susi. Entra en la app y conéctate primero.');
-  const D = { meds: [], tomas: [], semanales: [], cacas: [], comidas: [], apetito: [], cambios: [], diluciones: [], ajustes: [] };
+  const D = { meds: [], tomas: [], semanales: [], cacas: [], comidas: [], apetito: [], cambios: [], diluciones: [], ajustes: [], sintomas: [] };
   let page = '', n = 0;
   do {
     const j = get_(BASE + 'susitio/' + casa + '/r?pageSize=300' + (page ? '&pageToken=' + encodeURIComponent(page) : ''), s.token);
@@ -143,24 +145,25 @@ function actualizar() {
 
   // --- Resumen diario ---
   const dias = {};
-  const dia = f => dias[f] || (dias[f] = { manana: '', noche: '', pesos: [], caca: '', tipos: '', g: 0, conG: false, sinPesar: 0, apetito: '' });
+  const dia = f => dias[f] || (dias[f] = { manana: '', noche: '', pesos: [], caca: '', tipos: '', g: 0, conG: false, sinPesar: 0, apetito: '', vomitos: 0 });
   D.tomas.forEach(t => { const x = dia(t.fecha); if (t.peso != null) { x[t.momento] = t.peso; x.pesos.push(t.peso); } });
   D.cacas.forEach(c => { const x = dia(c.fecha); x.caca = DIA[c.dia] || ''; x.tipos = (c.tipos || []).map(k => HECES[k] || k).join(', '); });
   D.comidas.forEach(c => { const x = dia(c.fecha); if (c.g != null) { x.g += c.g; x.conG = true; } else x.sinPesar++; });
   D.apetito.forEach(a => { dia(a.fecha).apetito = APETITO[a.valor] || ''; });
+  D.sintomas.forEach(x => { if (x.tipo === 'vomito') dia(x.fecha).vomitos++; });
   const fechas = Object.keys(dias).sort().reverse();
-  const filasDia = fechas.map(f => { const x = dias[f]; return [fecha_(f), DIAS_L[dow_(f)], x.manana, x.noche, media_(x.pesos), x.caca, x.tipos, x.conG ? Math.round(x.g * 10) / 10 : '', META, x.conG ? x.g / META : '', x.sinPesar || '', x.apetito, dietaEn(f)]; });
+  const filasDia = fechas.map(f => { const x = dias[f]; return [fecha_(f), DIAS_L[dow_(f)], x.manana, x.noche, media_(x.pesos), x.caca, x.tipos, x.conG ? Math.round(x.g * 10) / 10 : '', META, x.conG ? x.g / META : '', x.sinPesar || '', x.apetito, x.vomitos || '', dietaEn(f)]; });
 
   // --- Resumen por semana y por mes ---
   const agrupar = clave => {
     const g = {};
-    fechas.forEach(f => { const k = clave(f), x = dias[f]; const a = g[k] || (g[k] = { b: 0, r: 0, m: 0, pesos: [], gramos: [], desde: f, hasta: f }); if (x.caca === 'Bueno') a.b++; else if (x.caca === 'Regular') a.r++; else if (x.caca === 'Malo') a.m++; a.pesos = a.pesos.concat(x.pesos); if (x.conG) a.gramos.push(x.g); if (f < a.desde) a.desde = f; if (f > a.hasta) a.hasta = f; });
+    fechas.forEach(f => { const k = clave(f), x = dias[f]; const a = g[k] || (g[k] = { b: 0, r: 0, m: 0, pesos: [], gramos: [], desde: f, hasta: f, v: 0 }); a.v += x.vomitos; if (x.caca === 'Bueno') a.b++; else if (x.caca === 'Regular') a.r++; else if (x.caca === 'Malo') a.m++; a.pesos = a.pesos.concat(x.pesos); if (x.conG) a.gramos.push(x.g); if (f < a.desde) a.desde = f; if (f > a.hasta) a.hasta = f; });
     return g;
   };
   const sem = agrupar(lunes_);
-  const filasSem = Object.keys(sem).sort().reverse().map(k => { const a = sem[k], tot = a.b + a.r + a.m; const cs = cambios.filter(c => c.fecha >= k && c.fecha <= sumarDias_(k, 6)).map(c => c.fecha.slice(8) + '/' + c.fecha.slice(5, 7) + ' ' + nombreCambio_(c)).join(' · '); return [fecha_(k), a.b, a.r, a.m, tot ? a.b / tot : '', media_(a.pesos), media_(a.gramos), a.gramos.length ? media_(a.gramos) / META : '', dietaEn(sumarDias_(k, 6)), cs]; });
+  const filasSem = Object.keys(sem).sort().reverse().map(k => { const a = sem[k], tot = a.b + a.r + a.m; const cs = cambios.filter(c => c.fecha >= k && c.fecha <= sumarDias_(k, 6)).map(c => c.fecha.slice(8) + '/' + c.fecha.slice(5, 7) + ' ' + nombreCambio_(c)).join(' · '); return [fecha_(k), a.b, a.r, a.m, tot ? a.b / tot : '', media_(a.pesos), media_(a.gramos), a.gramos.length ? media_(a.gramos) / META : '', a.v || '', dietaEn(sumarDias_(k, 6)), cs]; });
   const mes = agrupar(f => f.slice(0, 7));
-  const filasMes = Object.keys(mes).sort().reverse().map(k => { const a = mes[k], tot = a.b + a.r + a.m; const cs = cambios.filter(c => c.fecha.slice(0, 7) === k).map(c => c.fecha.slice(8) + ' ' + nombreCambio_(c)).join(' · '); const pm = a.pesos; return [MESES[Number(k.slice(5)) - 1] + ' ' + k.slice(0, 4), a.b, a.r, a.m, tot ? a.b / tot : '', media_(pm), pm.length ? Math.min.apply(null, pm) : '', pm.length ? Math.max.apply(null, pm) : '', media_(a.gramos), dietaEn(a.hasta), cs]; });
+  const filasMes = Object.keys(mes).sort().reverse().map(k => { const a = mes[k], tot = a.b + a.r + a.m; const cs = cambios.filter(c => c.fecha.slice(0, 7) === k).map(c => c.fecha.slice(8) + ' ' + nombreCambio_(c)).join(' · '); const pm = a.pesos; return [MESES[Number(k.slice(5)) - 1] + ' ' + k.slice(0, 4), a.b, a.r, a.m, tot ? a.b / tot : '', media_(pm), pm.length ? Math.min.apply(null, pm) : '', pm.length ? Math.max.apply(null, pm) : '', media_(a.gramos), a.v || '', dietaEn(a.hasta), cs]; });
 
   // --- Inicio ---
   let ini = ss.getSheetByName('Inicio');
@@ -178,15 +181,16 @@ function actualizar() {
   ini.getRange(filaD, 1, 2, 1).setFontWeight('bold');
   ini.autoResizeColumns(1, 2);
 
-  escribir_(ss, 'Resumen diario', ['Fecha', 'Día', 'Peso mañana (g)', 'Peso noche (g)', 'Peso medio (g)', 'Cacas', 'Tipos de caca', 'Comida (g)', 'Meta (g)', '% de la meta', 'Comidas sin pesar', 'Apetito', 'Dieta'], filasDia, { 0: FECHA, 9: '0%' });
-  escribir_(ss, 'Por semana', ['Semana (lunes)', 'Días buenos', 'Regulares', 'Malos', '% buenos', 'Peso medio (g)', 'Comida media (g/día)', '% de la meta', 'Dieta', 'Cambios esa semana'], filasSem, { 0: FECHA, 4: '0%', 7: '0%' });
-  escribir_(ss, 'Por mes', ['Mes', 'Días buenos', 'Regulares', 'Malos', '% buenos', 'Peso medio (g)', 'Peso mínimo (g)', 'Peso máximo (g)', 'Comida media (g/día)', 'Dieta al final del mes', 'Cambios'], filasMes, { 4: '0%' });
+  escribir_(ss, 'Resumen diario', ['Fecha', 'Día', 'Peso mañana (g)', 'Peso noche (g)', 'Peso medio (g)', 'Cacas', 'Tipos de caca', 'Comida (g)', 'Meta (g)', '% de la meta', 'Comidas sin pesar', 'Apetito', 'Vómitos', 'Dieta'], filasDia, { 0: FECHA, 9: '0%' });
+  escribir_(ss, 'Por semana', ['Semana (lunes)', 'Días buenos', 'Regulares', 'Malos', '% buenos', 'Peso medio (g)', 'Comida media (g/día)', '% de la meta', 'Vómitos', 'Dieta', 'Cambios esa semana'], filasSem, { 0: FECHA, 4: '0%', 7: '0%' });
+  escribir_(ss, 'Por mes', ['Mes', 'Días buenos', 'Regulares', 'Malos', '% buenos', 'Peso medio (g)', 'Peso mínimo (g)', 'Peso máximo (g)', 'Comida media (g/día)', 'Vómitos', 'Dieta al final del mes', 'Cambios'], filasMes, { 4: '0%' });
   escribir_(ss, 'Tomas', ['Fecha', 'Toma', 'Hora', 'Peso (g)', 'Medicación dada', 'Quién'], D.tomas.slice().sort(porFechaDesc_).map(t => [fecha_(t.fecha), MOMENTO[t.momento] || t.momento, t.hora, t.peso, (t.meds || []).map(m => m.nombre + ' ' + (m.dosis || '')).join(', '), t.autor]), { 0: FECHA, 2: '@' });
   escribir_(ss, 'Cacas', ['Fecha', 'El día fue', 'Tipos', 'Quién'], D.cacas.slice().sort(porFechaDesc_).map(c => [fecha_(c.fecha), DIA[c.dia] || '', (c.tipos || []).map(k => HECES[k] || k).join(', '), c.autor]), { 0: FECHA });
   escribir_(ss, 'Comida', ['Fecha', 'Hora', 'Qué', 'Gramos', 'Quién'], D.comidas.slice().sort(porFechaDesc_).map(c => [fecha_(c.fecha), c.hora || '', c.que, c.g, c.autor]), { 0: FECHA, 1: '@' });
   const nomMed = id => { const m = D.meds.filter(x => x.id === id)[0]; return m ? m.nombre : ''; };
   escribir_(ss, 'Suplementos y B12', ['Fecha', 'Hora', 'Qué', 'Dosis', 'Quién'], D.semanales.slice().sort(porFechaDesc_).map(s => [fecha_(s.fecha), s.hora || '', nomMed(s.medId), s.dosis || '', s.autor]), { 0: FECHA, 1: '@' });
   escribir_(ss, 'Preparaciones', ['Fecha', 'Qué se preparó', 'Quién'], D.diluciones.slice().sort(porFechaDesc_).map(p => [fecha_(p.fecha), nomMed(p.medId), p.autor]), { 0: FECHA });
+  escribir_(ss, 'Síntomas', ['Fecha', 'Hora', 'Qué', 'Cómo era', 'Cantidad', 'Notas', 'Quién'], D.sintomas.slice().sort(porFechaDesc_).map(x => [fecha_(x.fecha), x.hora || '', SINTOMA[x.tipo] || x.tipo, (x.aspecto || []).map(k => ASPECTO[k] || k).join(', '), x.cantidad || '', x.nota || '', x.autor]), { 0: FECHA, 1: '@' });
   escribir_(ss, 'Cambios', ['Fecha', 'Tipo', 'Qué', 'Notas', 'Quién'], cambios.slice().reverse().map(c => [fecha_(c.fecha), TIPO_CAMBIO[c.tipo] || c.tipo, nombreCambio_(c), c.tipo === 'dieta' ? (c.texto || '') : '', c.autor]), { 0: FECHA });
   escribir_(ss, 'Medicación', ['Nombre', 'Dosis', 'Pauta', 'Se le da', 'Desde', 'Hasta'], D.meds.map(m => [m.nombre, m.dosis, pauta_(m), m.activo ? 'Sí' : 'No', m.desde ? fecha_(m.desde) : '', m.hasta ? fecha_(m.hasta) : '']), { 4: FECHA, 5: FECHA });
 
