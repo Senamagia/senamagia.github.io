@@ -428,6 +428,14 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .dn .lg i{display:inline-block;width:9px;height:9px;border-radius:5px;margin-right:7px}
 .dn .lg b{font-weight:700;margin-left:4px}
 .guide-fu ul{padding-left:18px;margin:8px 0}.guide-fu li{margin-bottom:6px}.guide-fu p{color:var(--sec)}
+.dy-r input[type=time].auto{color:var(--sec);background:transparent;box-shadow:inset 0 0 0 1px var(--sep)}
+.dye{display:flex;align-items:center;gap:8px;padding:8px 10px}
+.dye-ic{width:30px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+.dye .inl{flex:1;min-width:0;border:0;background:transparent;outline:none;font-weight:600}
+.dye-d{display:flex;align-items:center;gap:4px;font-size:12.5px;color:var(--sec);flex:none}
+.dye-d input{width:46px;height:30px;border:0;border-radius:8px;background:var(--field);text-align:center;outline:none}
+.dye-b{width:30px;height:30px;border-radius:15px;background:var(--field);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;color:var(--sec)}
+.dye-b[disabled]{opacity:.3}
 </style>
 </head>
 <body>
@@ -467,7 +475,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='2.0.3';
+const APP_VERSION='2.1';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'escena',n:'Escenario',l:'#6E44D4',d:'#C9A7FF'},{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -1094,7 +1102,7 @@ function boloForm(){
     const inp=(k,ph,type,extra)=>`<div class="fr"><input type="${type||'text'}" placeholder="${ph}" value="${esc(BF[k])}" data-in="BF" data-k="${k}" aria-label="${ph}" ${extra||''}></div>`;
     return `<div class="f">
     <div><div class="fl">Show</div><div class="wrapchips">${D.shows.map(s=>`<button class="tc${!BF.otro&&BF.showId===s.id?' on':''}" data-a="bfShow" data-id="${s.id}">${esc(s.name)}</button>`).join('')}<button class="tc oth${BF.otro?' on':''}" data-a="bfOtro">＋ Otro espectáculo</button></div>
-     ${BF.otro?`<div class="fg" style="margin-top:10px"><div class="fr"><span>Espectáculo</span><input type="text" class="tin" list="dlOtro" placeholder="Magia a dos…" value="${esc(BF.otroNom||'')}" data-in="BF" data-k="otroNom"></div><div class="fr"><span>Con quién</span><input type="text" class="tin" list="dlCon" placeholder="Opcional" value="${esc(BF.con||'')}" data-in="BF" data-k="con"></div></div>
+     ${BF.otro?`<div class="fg" style="margin-top:10px"><div class="fr"><span>Espectáculo</span><input type="text" class="tin" list="dlOtro" placeholder="Magia a dos…" value="${esc(BF.otroNom||'')}" data-in="BF" data-k="otroNom"></div><div class="fr"><span>Con quién</span><input type="text" class="tin" list="dlCon" placeholder="Opcional" value="${esc(BF.con||'')}" data-in="BF" data-k="con"></div><div class="fr"><span>Duración aprox.</span><input type="number" inputmode="numeric" class="tin" placeholder="min" value="${esc(BF.otroDur||'')}" data-in="BF" data-k="otroDur" style="text-align:right;max-width:90px"></div><div class="fr"><span>Con descanso</span>${tg(!!BF.otroDesc,'bfDesc')}</div></div>
       <datalist id="dlOtro">${[...new Set(D.bolos.map(b=>b.otro&&b.otroNom).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}</datalist><datalist id="dlCon">${[...new Set(D.bolos.map(b=>b.con).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
       <div class="note">Para los bolos que haces con otras personas o con un show que no está en tu app. Cuenta en la agenda y en las cuentas, pero no tiene números que valorar.</div>`:(D.shows.length?'':'<div class="note">Aún no tienes shows. Puedes guardar el bolo igualmente, apuntarlo como «Otro espectáculo» o asignarle un show más tarde.</div>')}</div>
     <div><div class="fl">Cuándo</div><div class="fg"><div class="fr"><span>Fecha</span><input type="date" value="${esc(BF.date)}" data-in="BF" data-k="date" style="text-align:right;flex:0 1 auto"></div><div class="fr"><span>Hora</span><input type="time" value="${esc(BF.hora)}" data-in="BF" data-k="hora" style="text-align:right;flex:0 1 auto"></div></div></div>
@@ -1931,42 +1939,80 @@ function renderIni(){
   const cv=$('#inCurve');if(cv&&nb){const s=boloShow(nb);cv.innerHTML=curveSVG(showNums(s),Math.max(200,cv.clientWidth),52,s.tpl,true)}
 }
 
-/* ---- día del bolo ---- */
-let DYID=null;const DY=()=>D.bolos.find(b=>b.id===DYID);
-function dayOpen(id){DYID=id;const b=DY();if(!b)return;if(!b.dia)b.dia={};
-  openSheet({title:'El día del bolo',left:'Cerrar',body:()=>{const b=DY();if(!b)return '';const d=b.dia||(b.dia={}),dn=d.done||{},s=boloShow(b),L=s?showNums(s):[],ms=matState(s),r=calc(b);
-    const dur=s&&s.tpl!=='coctel'?totalDur(L):0;
-    const rows=[
-      {k:'salida',ic:'🚗',c:'#FC5C65',t:'Salida',sub:b.direccion?esc(b.direccion)+' · toca para el mapa':(b.lugar?esc(b.lugar):'Apunta la dirección en los datos del bolo'),a:b.direccion?'dyMap':'dyEdit'},
-      {k:'montaje',ic:'🎒',c:'#FD9644',t:'Montaje y material',sub:ms&&ms.tot?('Material '+ms.done+' de '+ms.tot+(ms.miss.length?' · falta '+esc(ms.miss.slice(0,2).map(m=>m.name).join(', '))+(ms.miss.length>2?'…':''):' · todo listo')):'Sin lista de material',a:s?'dyMat':''},
-      {k:'prueba',ic:'🔊',c:'#F7B731',t:'Prueba de sonido',sub:'Música, micro y luces',a:''},
-      {k:'show',ic:'🎩',c:'#9B6CF0',t:boloShowName(b),sub:[dur?mins(dur)+' min':'',L.length?pl(L.length,'número','números'):'',b.personas?esc(b.personas)+' personas':''].filter(Boolean).join(' · ')||esc(evName(b.evento)),a:s?'dyShow':'',h:dur?Math.max(70,Math.min(150,dur/60*2.4)):70},
-      {k:'cierre',ic:'💶',c:'#20BF6B',t:'Cerrar el bolo',sub:r.set?'Cerrado · te queda '+eur(r.queda):'Caché, gastos y forma de cobro',a:CTA().on?'dyCierre':''}];
-    const done=k=>k==='cierre'?r.set:!!dn[k];
-    return `<div class="dy-sub"><b style="color:var(--text)">${capi(fdateLong(b.date))}</b> · ${esc(boloTitle(b))}</div><div class="dy">${rows.map(x=>`<div class="dy-r${done(x.k)?' done':''}${x.k==='show'?' sh':''}">
-      ${x.k==='cierre'?'<span class="nt">al acabar</span>':`<input type="time" value="${esc(x.k==='show'?(b.hora||''):(d[x.k]||''))}" data-in="diaT" data-k="${x.k}" aria-label="Hora de ${x.t}">`}
-      <span class="dy-p" style="background:${x.c};height:${x.h||34}px;box-shadow:0 0 16px ${x.c}55">${x.ic}</span>
-      <button class="dy-c" ${x.a?`data-a="${x.a}"`:''}><b>${esc(x.t)}</b><small>${x.sub}</small></button>
-      ${x.k==='cierre'?'<span></span>':`<button class="dy-ck${dn[x.k]?' on':''}" data-a="dyDone" data-k="${x.k}" aria-label="Hecho">${dn[x.k]?ICON.check:''}</button>`}</div>`).join('')}</div>
-      <div class="note" style="margin-top:6px">Pon la hora de cada paso y márcalo al terminarlo. Toca un paso para ir a lo que necesites.</div>
-      <div class="act" style="margin-top:12px"><button data-a="dyBolo">Ver ficha del bolo</button></div>`}});
-}
-IN.diaT=el=>{const b=DY();if(!b)return;const k=el.dataset.k;if(k==='show')b.hora=el.value;else{b.dia=b.dia||{};b.dia[k]=el.value}save(true)};
+/* ---- día del bolo (pasos editables) ---- */
+const DK={salida:['🚗','#FC5C65','Salida'],montaje:['🎒','#FD9644','Montaje y material'],prueba:['🔊','#F7B731','Prueba de sonido'],show:['🎩','#9B6CF0','Show'],parte:['🎩','#9B6CF0','Parte'],descanso:['☕','#8F89AE','Descanso'],coctel:['🥂','#9B6CF0','Cóctel'],cierre:['💶','#20BF6B','Cerrar el bolo'],x:['✦','#5B8DEF','Paso']};
+const DTPL=[['seguido','Show seguido'],['descanso','Con descanso'],['coctel','Cóctel']];
+const isPerf=k=>k==='show'||k==='parte'||k==='coctel';
+let DYID=null,DYED=false;const DY=()=>D.bolos.find(b=>b.id===DYID);
+function boloDurMin(b){if(b.otro)return +b.otroDur||0;const s=boloShow(b);return s&&s.tpl!=='coctel'?Math.round(totalDur(showNums(s))/60):0}
+function stp(k,t,dur){return {id:uid(),k,t:t||DK[k][2],dur:dur||'',time:'',done:false}}
+function dayTpl(b,kind){const m=boloDurMin(b),nm=boloShowName(b),R=[stp('salida'),stp('montaje'),stp('prueba')];
+  if(kind==='descanso'){const a=m?Math.round(m/2):'';R.push(stp('parte','Primera parte',a),stp('descanso','Descanso',15),stp('parte','Segunda parte',m?m-a:''))}
+  else if(kind==='coctel')R.push(stp('coctel','Cóctel · '+nm,m||60));
+  else R.push(stp('show',nm,m||''));
+  R.push(stp('cierre'));return R}
+function daySteps(b){b.dia=b.dia||{};const d=b.dia;
+  if(!d.steps){const old=d.done||{};const kind=b.otro&&b.otroDesc?'descanso':(boloShow(b)&&boloShow(b).tpl==='coctel'?'coctel':'seguido');
+    d.steps=dayTpl(b,kind);d.kind=kind;d.steps.forEach(s=>{if(d[s.k])s.time=d[s.k];if(old[s.k])s.done=true})}
+  return d.steps}
+const t2m=t=>{if(!t)return null;const p=t.split(':');return +p[0]*60+(+p[1])};
+const m2t=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+function dayTimes(b,S){const first=S.findIndex(s=>isPerf(s.k));let prev=null;
+  return S.map((s,i)=>{let t=s.time||(i===first&&b.hora)||'',auto=false;
+    if(!t&&prev!=null){t=m2t(prev);auto=true}
+    const m=t2m(t);prev=(m!=null&&+s.dur)?m+(+s.dur):null;return {t,auto}})}
+function stepSub(b,s){const ms=matState(boloShow(b)),r=calc(b);
+  if(s.k==='salida')return b.direccion?esc(b.direccion)+' · toca para el mapa':(b.lugar?esc(b.lugar):'');
+  if(s.k==='montaje')return ms&&ms.tot?'Material '+ms.done+' de '+ms.tot+(ms.miss.length?' · falta '+esc(ms.miss.slice(0,2).map(m=>m.name).join(', '))+(ms.miss.length>2?'…':''):' · todo listo'):'';
+  if(s.k==='prueba')return 'Música, micro y luces';
+  if(s.k==='cierre')return CTA().on?(r.set?'Cerrado · te queda '+eur(r.queda):'Caché, gastos y forma de cobro'):'';
+  const p=[];if(+s.dur)p.push(s.dur+' min');if(s.k==='show'||s.k==='coctel'){const s2=boloShow(b);if(s2){const n=showNums(s2).length;if(n)p.push(pl(n,'número','números'))}if(b.personas)p.push(esc(b.personas)+' personas');if(b.con)p.push('con '+esc(b.con))}
+  return p.join(' · ')}
+function stepAct(b,s){return s.k==='salida'?(b.direccion?'dyMap':''):s.k==='montaje'?(boloShow(b)?'dyMat':''):isPerf(s.k)?(boloShow(b)?'dyShow':''):s.k==='cierre'?(CTA().on?'dyCierre':''):''}
+function dayBody(){const b=DY();if(!b)return '';const S=daySteps(b),T=dayTimes(b,S),d=b.dia;
+  const chips=`<div class="wrapchips" style="margin-bottom:14px">${DTPL.map(([k,n])=>`<button class="tc${d.kind===k?' on':''}" data-a="dyTpl" data-k="${k}">${n}</button>`).join('')}</div>`;
+  const head=`<div class="dy-sub"><b style="color:var(--text)">${capi(fdateLong(b.date))}</b> · ${esc(boloTitle(b))}${b.otro?' · '+esc(boloShowName(b)):''}</div>`;
+  if(DYED){return head+chips+`<div class="group dy-ed">${S.map((s,i)=>{const k=DK[s.k]||DK.x;return `<div class="li dye"><span class="dye-ic" style="background:${k[1]}">${k[0]}</span>
+      <input type="text" class="inl" value="${esc(s.t)}" data-in="dyT" data-i="${i}" aria-label="Nombre del paso">
+      <label class="dye-d"><input type="number" inputmode="numeric" value="${esc(s.dur)}" placeholder="—" data-in="dyD" data-i="${i}" aria-label="Duración en minutos">min</label>
+      <button class="dye-b" data-a="dyUp" data-i="${i}" aria-label="Subir"${i?'':' disabled'}>↑</button><button class="dye-b" data-a="dyDel" data-i="${i}" aria-label="Quitar">×</button></div>`}).join('')}</div>
+      <div class="wrapchips" style="margin-top:10px">${['x','descanso','parte','prueba','salida'].map(k=>`<button class="tc" data-a="dyAdd" data-k="${k}">＋ ${k==='x'?'Paso libre':DK[k][2]}</button>`).join('')}</div>
+      <div class="note" style="margin-top:10px">Pon la duración de cada paso y la app encadena las horas sola.</div>`}
+  return head+chips+`<div class="dy">${S.map((s,i)=>{const k=DK[s.k]||DK.x,perf=isPerf(s.k),h=perf?Math.max(44,Math.min(150,(+s.dur||45)*1.6)):(+s.dur>=10?Math.max(34,Math.min(70,+s.dur*1.2)):34),a=stepAct(b,s),done=s.k==='cierre'?calc(b).set:s.done,sub=stepSub(b,s);
+    return `<div class="dy-r${done?' done':''}${perf?' sh':''}">
+      ${s.k==='cierre'?'<span class="nt">al acabar</span>':`<input type="time" class="${T[i].auto?'auto':''}" value="${esc(T[i].t)}" data-in="dyTime" data-i="${i}" aria-label="Hora de ${esc(s.t)}">`}
+      <span class="dy-p" style="background:${k[1]};height:${h}px;box-shadow:0 0 16px ${k[1]}55">${k[0]}</span>
+      <button class="dy-c" ${a?`data-a="${a}"`:''}><b>${esc(s.t)}</b>${sub?`<small>${sub}</small>`:''}</button>
+      ${s.k==='cierre'?'<span></span>':`<button class="dy-ck${s.done?' on':''}" data-a="dyDone" data-i="${i}" aria-label="Hecho">${s.done?ICON.check:''}</button>`}</div>`}).join('')}</div>
+    <div class="note" style="margin-top:6px">Pon la hora de empezar y la duración de cada paso: las demás horas se calculan solas. Toca un paso para ir al mapa, al material, al show o a las cuentas.</div>
+    <div class="act" style="margin-top:12px"><button data-a="dyBolo">Ver ficha del bolo</button></div>`}
+function dayOpen(id){DYID=id;DYED=false;const b=DY();if(!b)return;daySteps(b);
+  openSheet({title:'El día del bolo',left:'Cerrar',right:'Editar',rightA:'dyEditMode',body:dayBody})}
+IN.dyTime=el=>{const b=DY();if(!b)return;const S=daySteps(b),i=+el.dataset.i,first=S.findIndex(s=>isPerf(s.k));S[i].time=el.value;if(i===first)b.hora=el.value;save(true)};
+IN.dyT=el=>{const b=DY();if(!b)return;daySteps(b)[+el.dataset.i].t=el.value;save(true)};
+IN.dyD=el=>{const b=DY();if(!b)return;daySteps(b)[+el.dataset.i].dur=el.value.replace(/[^0-9]/g,'');save(true)};
 Object.assign(A,{
   dayOpen:el=>dayOpen(el.dataset.id),
-  dyDone:el=>{const b=DY();if(!b)return;b.dia=b.dia||{};b.dia.done=b.dia.done||{};const k=el.dataset.k;b.dia.done[k]=!b.dia.done[k];save();drawSheet()},
+  dyEditMode:()=>{DYED=!DYED;if(SH)SH.right=DYED?'Listo':'Editar';save();drawSheet()},
+  dyTpl:el=>{const b=DY();if(!b)return;const k=el.dataset.k;if(b.dia.kind===k&&!DYED)return;const old=JSON.stringify(b.dia);
+    b.dia.steps=dayTpl(b,k);b.dia.kind=k;save();drawSheet();toast('Día cambiado a «'+DTPL.find(x=>x[0]===k)[1]+'»',()=>{const bb=DY();if(bb){bb.dia=JSON.parse(old);save();drawSheet()}})},
+  dyDone:el=>{const b=DY();if(!b)return;const s=daySteps(b)[+el.dataset.i];s.done=!s.done;save();drawSheet()},
+  dyUp:el=>{const b=DY(),i=+el.dataset.i;if(!b||!i)return;const S=daySteps(b);S.splice(i-1,0,S.splice(i,1)[0]);b.dia.kind='';save();drawSheet()},
+  dyDel:el=>{const b=DY();if(!b)return;daySteps(b).splice(+el.dataset.i,1);b.dia.kind='';save();drawSheet()},
+  dyAdd:el=>{const b=DY();if(!b)return;const S=daySteps(b),k=el.dataset.k,ci=S.findIndex(s=>s.k==='cierre');S.splice(ci<0?S.length:ci,0,stp(k,k==='x'?'Nuevo paso':DK[k][2],k==='descanso'?15:''));b.dia.kind='';save();drawSheet()},
   dyMap:()=>{const b=DY();if(b&&b.direccion)window.open('https://maps.apple.com/?q='+encodeURIComponent(b.direccion),'_blank')},
-  dyEdit:()=>{const b=DY();if(!b)return;BF=clone(b);boloForm()},
   dyMat:()=>{const b=DY(),s=b&&boloShow(b);if(!s)return;D.cur=s.id;tab='mat';save();closeSheet()},
   dyShow:()=>{const b=DY(),s=b&&boloShow(b);if(!s)return;D.cur=s.id;tab='mon';save();closeSheet()},
   dyCierre:()=>{const b=DY();if(!b)return;OBID=b.id;cobroForm(b)},
   dyBolo:()=>{const b=DY();if(b)openBolo(b.id)},
+  bfDesc:()=>{BF.otroDesc=!BF.otroDesc;drawSheet()},
   goMat:el=>{if(el.dataset.id)D.cur=el.dataset.id;tab='mat';save();render();$('#v-mat').scrollTop=0},
   goInbox:()=>{tab='ide';IV.view='inbox';render();$('#v-ide').scrollTop=0},
   goCuentas:()=>{tab='sho';shoSeg='cuentas';render();$('#v-sho').scrollTop=0},
   iniNote:()=>{IV.view=null;quickNote()}
 });
 
+document.addEventListener('change',e=>{if(SH&&e.target.matches&&e.target.matches('[data-in=dyTime],[data-in=dyD]'))drawSheet()});
 /* ---- Cuentas: reparto anual ---- */
 function donutHTML(bm){const P=[['factura','Factura','#C9A7FF'],['coop','Cooperativa','#7EE0C3'],['sin','Sin factura','#FFD27A']],t=bm.factura+bm.coop+bm.sin;if(t<=0)return '';
   let off=25,arcs='';P.forEach(([k,,c])=>{const v=bm[k]/t*100;if(v<=0)return;arcs+=`<circle cx="21" cy="21" r="15.9" fill="none" stroke="${c}" stroke-width="6" stroke-dasharray="${v.toFixed(2)} ${(100-v).toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"/>`;off-=v});
