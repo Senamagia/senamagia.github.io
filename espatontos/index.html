@@ -368,10 +368,70 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .mny{letter-spacing:2px;color:var(--sec)}
 .sum .big.bad{color:var(--badText)}
 
+
+/* ===== 2.0 · Escenario ===== */
+[data-theme=dark]{
+  --bg:#0B0A18;--card:rgba(255,255,255,.065);--text:#F4F1FF;--sec:#B3ACD3;--sep:rgba(255,255,255,.1);--field:rgba(255,255,255,.08);--track:rgba(255,255,255,.12);
+  --shadow:inset 0 0 0 1px rgba(255,255,255,.07);--bar:rgba(11,10,24,.84);--sheet:#17142C;--tipBg:rgba(255,255,255,.08);--tipText:#D6D0F0;
+}
+[data-theme=dark] body{background:radial-gradient(130% 55% at 50% -5%,#3A2A6B 0%,#1A1538 45%,#0B0A18 100%) fixed #0B0A18}
+[data-theme=dark] .seg button.on{background:rgba(255,255,255,.16);box-shadow:none}
+[data-theme=dark] .row.drag .num{background:#2A2450}
+[data-theme=dark] #sheet{background:linear-gradient(180deg,#221C40,#17142C 240px)}
+[data-theme=dark] .big{text-shadow:0 0 28px rgba(201,167,255,.25)}
+[data-theme=dark] .bcol.cur i{box-shadow:0 0 14px var(--accent)}
+/* Inicio */
+.in-h{font-size:32px;font-weight:800;letter-spacing:-.8px;padding:0 4px;margin:0 0 14px}
+.in-hero{display:block;width:100%;text-align:left;padding:16px 16px 12px;border-radius:22px;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 24%,var(--card)),var(--card));box-shadow:var(--shadow),inset 0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent)}
+.in-k{font-size:11px;letter-spacing:.9px;font-weight:700;color:var(--accent);text-transform:uppercase}
+.in-hero b.t{display:block;font-size:24px;font-weight:800;letter-spacing:-.4px;margin-top:2px;overflow-wrap:anywhere}
+.in-hero .s{display:block;font-size:13.5px;color:var(--sec);margin-top:2px}
+.in-cv{margin:10px 0 6px;color:var(--accent);min-height:10px}
+.in-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--sec);margin-top:4px}
+.in-row b{color:var(--good);font-weight:600}
+.in-empty{padding:4px 0 2px}.in-empty .pill{margin-top:12px}
+.in-todo{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:8px 4px;border-bottom:1px solid var(--sep);font-size:15px;text-align:left}
+.in-todo:last-child{border-bottom:0}
+.in-todo i{width:19px;height:19px;border-radius:10px;border:1.7px solid var(--sec);flex:none;opacity:.7}
+.in-todo.warn i{border-color:#FC5C65;opacity:1}
+.in-todo span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.in-todo em{font-style:normal;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;flex:none}
+.in-todo .t1{background:rgba(253,150,68,.16);color:#E07A1F}.in-todo .t2{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.in-todo .t3{background:rgba(252,92,101,.16);color:#E5484D}.in-todo .t4{background:rgba(32,191,107,.15);color:var(--good)}.in-todo .t5{background:rgba(247,183,49,.17);color:#B8860B}
+[data-theme=dark] .in-todo .t1{color:#FFB877}[data-theme=dark] .in-todo .t3{color:#FF8A92}[data-theme=dark] .in-todo .t5{color:#FFD27A}
+.in-ok{font-size:14px;color:var(--good);font-weight:600;padding:12px 4px}
+.in-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+.in-tiles button{display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:16px;background:var(--card);box-shadow:var(--shadow);text-align:left;min-width:0}
+.in-tiles small{font-size:11.5px;color:var(--sec)}.in-tiles b{font-size:19px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.in-quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+/* Día del bolo */
+.dy-sub{font-size:14px;color:var(--sec);margin:-4px 2px 14px}
+.dy{display:flex;flex-direction:column}
+.dy-r{display:grid;grid-template-columns:84px 36px 1fr 30px;gap:10px;align-items:start;position:relative;padding-bottom:10px}
+.dy-r::before{content:"";position:absolute;left:111px;top:6px;bottom:-4px;width:2px;background:repeating-linear-gradient(var(--sep) 0 4px,transparent 4px 8px)}
+.dy-r:last-child::before{display:none}
+.dy-r input[type=time]{min-width:0;width:84px;height:32px;padding:0 4px;font-size:15px;text-align:center}.dy-r input[type=time]::-webkit-calendar-picker-indicator{display:none}
+.dy-r .nt{font-size:13px;color:var(--sec);text-align:center;padding-top:6px}
+.dy-p{width:36px;min-height:34px;border-radius:18px;display:flex;align-items:flex-start;justify-content:center;padding-top:7px;font-size:16px;position:relative;z-index:1}
+.dy-c{display:flex;flex-direction:column;gap:2px;padding-top:4px;text-align:left;min-width:0}
+.dy-c b{font-size:15.5px}.dy-c small{font-size:12.5px;color:var(--sec);overflow-wrap:anywhere}
+.dy-ck{width:26px;height:26px;border-radius:13px;border:1.7px solid var(--sec);margin-top:4px;display:flex;align-items:center;justify-content:center;opacity:.8}
+.dy-ck.on{background:var(--good);border-color:var(--good);opacity:1}
+.dy-r.done .dy-c,.dy-r.done .dy-p{opacity:.42}.dy-r.done .dy-c b{text-decoration:line-through}
+.dy-r.sh .dy-c b{font-size:17px;color:var(--accent)}
+/* Montar por bloques */
+.num .blk{width:10px;border-radius:5px;flex:none;align-self:stretch;margin:-2px 0}
+.num .ix.tm{font-size:12px!important;font-weight:600!important;width:34px!important;font-variant-numeric:tabular-nums}
+/* Cuentas: donut */
+.dn{display:flex;align-items:center;gap:18px;padding:14px 16px}
+.dn .lg{display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.dn .lg i{display:inline-block;width:9px;height:9px;border-radius:5px;margin-right:7px}
+.dn .lg b{font-weight:700;margin-left:4px}
 </style>
 </head>
 <body>
 <div id="views">
+  <section class="view" id="v-ini"></section>
   <section class="view" id="v-rep"></section>
   <section class="view" id="v-mon"></section>
   <section class="view" id="v-ide"></section>
@@ -379,10 +439,11 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
   <section class="view" id="v-sho"></section>
 </div>
 <nav id="tabs">
+  <button data-a="tab" data-t="ini"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>Inicio</button>
   <button data-a="tab" data-t="rep"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>Repertorio</button>
   <button data-a="tab" data-t="mon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-1 4-8 7-8s3 6 6 6 3-7 5-9"/><circle cx="10" cy="9" r="1.6" fill="currentColor"/><circle cx="16" cy="15" r="1.6" fill="currentColor"/></svg>Montar</button>
   <button data-a="tab" data-t="ide"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>Ideas</button>
-  <button data-a="tab" data-t="mat"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="7.5" width="17" height="12" rx="3"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 12.5h17"/></svg>Material</button>
+  
   <button data-a="tab" data-t="sho"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 8a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v8a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2z"/><path d="M12 9.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z" fill="currentColor" stroke="none"/></svg>Shows</button>
 </nav>
 <button id="fab" data-a="fab" aria-label="Nota rápida"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></button>
@@ -405,10 +466,10 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='1.9.1';
+const APP_VERSION='2.0';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
-const ACCENTS=[{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
+const ACCENTS=[{id:'escena',n:'Escenario',l:'#6E44D4',d:'#C9A7FF'},{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
 const TIPOS=[
  ['Con objetos',['Aparición','Desaparición','Transformación','Cambio de color','Transposición','Penetración','Restauración','Multiplicación','Unión y separación','Cambio de tamaño']],
  ['Leyes físicas',['Levitación','Suspensión','Animación','Invulnerabilidad','Anomalía física','Simpatía']],
@@ -594,13 +655,14 @@ function applyTheme(){
   document.documentElement.dataset.theme=dark?'dark':'light';document.documentElement.style.colorScheme=dark?'dark':'light';
   const ac=ACCENTS.find(x=>x.id===D.set.accent)||ACCENTS[0];
   document.documentElement.style.setProperty('--accent',dark?ac.d:ac.l);
-  document.documentElement.style.setProperty('--onAccent',dark&&(ac.id==='grafito'||ac.id==='oro')?'#111':'#fff');
-  const m=$('meta[name=theme-color]');if(m)m.setAttribute('content',dark?'#0E0E11':'#F4F4F7');
+  document.documentElement.style.setProperty('--onAccent',dark&&(ac.id==='grafito'||ac.id==='oro'||ac.id==='escena')?'#111':'#fff');
+  const m=$('meta[name=theme-color]');if(m)m.setAttribute('content',dark?'#2B2152':'#F4F4F7');
 }
 if(mq&&mq.addEventListener)mq.addEventListener('change',applyTheme);else if(mq&&mq.addListener)mq.addListener(applyTheme);
 
 /* ============ vistas ============ */
-let tab=(D.set&&['rep','mon','ide','mat','sho'].indexOf(D.set.tab)>=0)?D.set.tab:'mon',repQ='',repF='todos';
+if(!D.set.v2){D.set.v2=1;D.set.appearance='dark';D.set.accent='escena';D.set.tab='ini';try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
+let tab=(D.set&&['ini','rep','mon','ide','mat','sho'].indexOf(D.set.tab)>=0)?D.set.tab:'ini',repQ='',repF='todos';
 const ICON={
   gear:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
   plus:'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 2.5v11M2.5 8h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
@@ -615,9 +677,9 @@ const hdr=(left,right)=>`<div class="hdr"><div class="l">${left||''}</div><div s
 
 function render(){
   applyTheme();
-  $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===(tab==='mat'?'mon':tab)));
   $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+tab));
-  ({rep:renderRep,mon:renderMon,ide:renderIde,mat:renderMat,sho:renderSho})[tab]();
+  ({ini:renderIni,rep:renderRep,mon:renderMon,ide:renderIde,mat:renderMat,sho:renderSho})[tab]();
   const sd=$('#tabs [data-t=sho]');if(sd)sd.classList.toggle('dot',CTA().on&&unclosed().some(b=>!b.luego));
   const fb=$('#fab');if(fb)fb.style.display=(tab==='ide'&&!(IV.view==='ses'&&IV.unir))?'':'none';
   if(D.set.tab!==tab){D.set.tab=tab;save()}
@@ -651,11 +713,12 @@ function renderRep(){
 }
 
 /* ---- Montar ---- */
+let MSTART=null;
 function numRow(x,i,listKey,len,slot){
-  const e=emoOf(x.emo);
+  const e=emoOf(x.emo),st=listKey==='main'&&MSTART?MSTART[i]:null,bh=Math.round(Math.max(22,Math.min(110,(x.dur||0)/60*9)));
   const gap=i<len-1?`<button class="gap" data-a="trans" data-l="${listKey}" data-i="${i}"><i></i>${x.trans?`<span class="t">${esc(x.trans)}</span>`:'<span>+ transición</span>'}</button>`:'';
-  return `<div class="row" data-i="${i}"><div class="num">
-    <button class="ix" data-a="numAct" data-l="${listKey}" data-i="${i}" style="all:unset;width:24px;font-size:15px;font-weight:700;color:var(--sec);text-align:center;flex:none;cursor:pointer">${i+1}</button>
+  return `<div class="row" data-i="${i}"><div class="num">${st!=null?`<span class="blk" style="background:${e.c};min-height:${bh}px"></span>`:''}
+    <button class="ix${st!=null?' tm':''}" data-a="numAct" data-l="${listKey}" data-i="${i}" style="all:unset;width:24px;font-size:15px;font-weight:700;color:var(--sec);text-align:center;flex:none;cursor:pointer">${st!=null?fmt(st):i+1}</button>
     <button class="mid" data-a="numAct" data-l="${listKey}" data-i="${i}" style="text-align:left">
       <span class="nm">${x.pres&&i===0?'<span class="flash">✦ </span>':''}${esc(x.name)}</span>
       <span class="meta"><span class="emo" style="background:${e.c}">${esc(e.n)}</span><span>${fmt(x.dur)}</span><span class="dots">${dots(x.pot)}</span>${slot?'<span style="color:var(--accent);font-weight:600">'+slot+'</span>':''}${x.sube?'<span>· voluntario</span>':''}</span>
@@ -677,6 +740,7 @@ function renderMon(){
   if(!s){keepScroll(el,`<div class="wrap">${hdr('')}<h1>Montar</h1><div class="empty"><b>Aún no tienes shows</b>Crea tu primer show y empieza a colocar tus números.<br><br><button class="pill" data-a="newShow">${ICON.plus} Nuevo show</button></div></div>`);return}
   const W=rulesFor(s);const T=TPL[s.tpl];
   let body='';
+  MSTART=null;
   if(s.tpl==='coctel'){
     const all=resolve(s.sets.A);const d=totalDur(all);
     body=`<div class="card sum"><div style="display:flex;justify-content:space-between;align-items:flex-end"><div class="big">${fmt(d)}<small>por grupo</small></div><div style="text-align:right;font-size:13px;line-height:18px;color:var(--sec)"><div style="color:var(--text);font-weight:600">Set A · ${all.length} números</div><div>Ideal 5–10 min</div></div></div>
@@ -685,7 +749,7 @@ function renderMon(){
       body+=`<div class="sec-t">${n} <span>${L.length?fmt(totalDur(L)):desc}</span></div><div class="dl" data-l="${k}">${L.map((x,i)=>numRow(x,i,k,L.length,k!=='X'&&L.length<=3?SLOTS[L.length===2&&i===1?2:i]:'')).join('')}</div>
       <button class="addrow" data-a="addNums" data-l="${k}">${ICON.plus} Añadir al ${n.toLowerCase()}</button>`});
   }else{
-    const L=resolve(s.items),d=totalDur(L),g=s.target||0;
+    const L=resolve(s.items),d=totalDur(L),g=s.target||0;let acc=0;MSTART=L.map(x=>{const v=acc;acc+=x.dur||0;return v});
     body=`<div class="card sum"><div style="display:flex;justify-content:space-between;align-items:flex-end"><div class="big">${mins(d)}<small>min</small></div><div style="text-align:right;font-size:13px;line-height:18px;color:var(--sec)"><div style="color:var(--text);font-weight:600">${L.length} números</div><div>${g?'Objetivo '+g+' min':'Sin objetivo'}</div></div></div>
       ${g?`<div class="prog"><i class="${d/60>g*1.1?'over':''}" style="width:${Math.min(100,d/60/g*100)}%"></i></div>`:''}
       <div class="curvebox" id="curve"></div><div class="ends"><span>Apertura</span>${T.ideal?'<span>- - - curva ideal</span>':''}<span>Cierre</span></div>${warnsHTML(W)}</div>
@@ -732,7 +796,7 @@ function renderMat(){
     groups+=`<div class="sec-t">${WHERE[w]} <span>${g.filter(m=>ch[m.k]).length} de ${g.length}</span></div><div class="group">${g.map(m=>{const on=!!ch[m.k];
       const low=m.cons?(m.stock!==''&&m.stock!=null&&+m.stock<=3?`<span class="badge">Quedan ${m.stock}</span>`:'<span class="badge">Consumible</span>'):'';
       return `<button class="li" data-a="check" data-k="${esc(m.k)}"><span class="chk${on?' on':''}">${on?ICON.check:''}</span><span class="tx"><b style="${on?'color:var(--sec);text-decoration:line-through':''}">${esc(m.name)}</b><small>${esc(m.para.join(' · '))}</small></span>${low}</button>`}).join('')}</div>`});
-  keepScroll(el,`<div class="wrap">${hdr(esc(s.name)+' · '+(s.tpl==='coctel'?'cóctel':resolve(s.items).length+' números'),tot?'<button class="link" data-a="resetChecks" style="min-height:44px">Reiniciar</button>':'')}
+  keepScroll(el,`<div class="wrap">${hdr('<button class="link" data-a="tab" data-t="mon" style="min-height:44px;font-size:15px">‹ Montar</button> · '+esc(s.name),tot?'<button class="link" data-a="resetChecks" style="min-height:44px">Reiniciar</button>':'')}
    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;margin-bottom:4px"><h1 style="padding:0;margin:0">Material</h1>
    ${tot?`<div class="ring"><svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="${done} de ${tot} preparados"><circle cx="32" cy="32" r="27" fill="none" stroke="var(--track)" stroke-width="6"/><circle cx="32" cy="32" r="27" fill="none" stroke="${done===tot?'var(--good)':'var(--accent)'}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(circ*fr).toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 32 32)" style="transition:stroke-dasharray .35s"/></svg><b>${done}/${tot}</b></div>`:''}</div>
    ${tot?groups:'<div class="empty"><b>Nada que preparar</b>Los números de este show no tienen material apuntado en sus fichas.</div>'}</div>`);
@@ -985,9 +1049,10 @@ $('#file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
 /* ============ guía ============ */
 const GUIDE=[
  ['Qué es Bambalinas','<p>Bambalinas te ayuda a montar, preparar y revisar tus shows de magia. Guardas cada número en una ficha, los colocas en orden como si fueran post-its y la app te enseña la curva de energía del show, te avisa de lo que un director te diría en un ensayo y te prepara la lista de material.</p><p>Todo se guarda en tu dispositivo y funciona sin internet.</p>'],
+ ['Inicio y el día del bolo','<p><b>Inicio</b> te enseña de un vistazo tu próximo bolo, lo que tienes pendiente (bolos sin cerrar, material por preparar, cobros, proyectos e ideas sin ordenar) y tus cifras del mes. Toca cualquier pendiente para ir directo.</p><p>Toca el próximo bolo para abrir <b>el día del bolo</b>: salida, montaje, prueba de sonido, show y cierre. Pon la hora de cada paso, márcalo al terminarlo y tócalo para ir al mapa, al material, al show o a las cuentas.</p>'],
  ['Repertorio: tus fichas','<p>Cada número tiene su ficha. Lo más importante es que sea realista, porque el asistente trabaja con estos datos:</p><ul><li><b>Duración</b> en minutos y segundos.</li><li><b>Emoción</b> principal que transmite. Puedes crear las tuyas y elegir su color en Ajustes.</li><li><b>Potencia</b> del 1 (suave) al 5 (demoledora): cuánto impacta en el público.</li><li><b>Tipo de efecto</b>: puedes marcar varios, y crear los tuyos.</li><li><b>Público</b>: voluntarios, si suben al escenario y si es un número de presentación.</li><li><b>Condiciones</b>: si aguanta público rodeando, si necesita mesa o música, si termina limpio y si pide al público sujetar cosas.</li><li><b>Reset</b>: cuánto tardas en tenerlo listo otra vez.</li><li><b>Material</b>: dónde va (maleta, bolsillo o mesa) y si es consumible, con las unidades que te quedan.</li></ul><p>Usa el buscador y los filtros para encontrar números rápido. «Apto cóctel» muestra los que aguantan rodeado, duran 3 minutos o menos y tienen potencia 4 o 5.</p>'],
  ['Montar un show','<ul><li><b>Añadir:</b> pulsa «Añadir número» y elige de tu repertorio. En el iPad en horizontal tienes el repertorio a la derecha: tócalo para añadir.</li><li><b>Ordenar:</b> mantén el dedo en el icono ≡ de la derecha y arrastra.</li><li><b>Opciones de un número:</b> toca su nombre para editar la ficha, añadir una transición o quitarlo del show.</li><li><b>Transiciones:</b> entre número y número toca «+ transición» y apunta la frase puente, el chiste o el cambio de música.</li><li><b>La curva:</b> cada punto es un número, su altura es la potencia y su color la emoción. La línea gris discontinua es la curva ideal de la plantilla elegida.</li><li><b>El asistente:</b> bajo la curva aparecen los avisos más importantes. Tócalos para leer la explicación. Si algo lo haces a propósito, ocúltalo solo para ese show.</li></ul><p>Los colores de los avisos: rojo es importante, naranja es para revisar y gris es una sugerencia.</p>'],
- ['Material y shows','<p><b>Material</b> junta automáticamente el material de todos los números del show, sin repetidos y agrupado por maleta, bolsillo y mesa. Ve marcando lo que metes al hacer la maleta. «Reiniciar» deja la lista en blanco para el próximo bolo.</p><p><b>Shows</b> guarda todos tus shows. Toca uno para abrirlo en Montar. Con «···» puedes cambiar nombre, duración objetivo y plantilla, duplicarlo o eliminarlo. Si eliminas algo por error, pulsa «Deshacer» en el aviso que aparece abajo.</p>'],
+ ['Material y shows','<p><b>Material</b> se abre desde el botón «Material» de Montar o desde Inicio. Junta automáticamente el material de todos los números del show, sin repetidos y agrupado por maleta, bolsillo y mesa. Ve marcando lo que metes al hacer la maleta. «Reiniciar» deja la lista en blanco para el próximo bolo.</p><p><b>Shows</b> guarda todos tus shows. Toca uno para abrirlo en Montar. Con «···» puedes cambiar nombre, duración objetivo y plantilla, duplicarlo o eliminarlo. Si eliminas algo por error, pulsa «Deshacer» en el aviso que aparece abajo.</p>'],
  ['Bolos y cuentas','<p>En <b>Shows → Bolos</b> apuntas cada actuación: cliente, fecha, lugar, evento y show. Al terminar, valora cada número y la app irá calculando su potencia real.</p><p><b>Dinero de cada bolo:</b> abre el bolo y pulsa «Caché y forma de cobro».</p><ul><li><b>Factura:</b> pones la base, el IVA y la retención de IRPF. La app calcula el total, lo que te ingresan y lo que te queda de verdad (sin el IVA, que es de Hacienda).</li><li><b>Cooperativa:</b> lo que factura la cooperativa menos su comisión. Si ya sabes lo que te pagan, pon la comisión a 0.</li><li><b>Sin factura:</b> el importe y cómo te pagaron.</li></ul><p>Marca si está cobrado y cuándo. En «Gastos» apuntas a mano la gasolina, peajes, parking, dietas, material… El beneficio del bolo es lo que te queda menos los gastos.</p><p><b>Cuentas:</b> el resumen del mes o del año, lo pendiente de cobrar, los gastos por tipo y los <b>gastos generales</b> que no van con un bolo (material nuevo, web, formación…), que pueden repetirse cada mes. Puedes exportarlo a una hoja de cálculo.</p><p>En Ajustes → Cuentas eliges el IVA, el IRPF y la comisión por defecto, puedes <b>ocultar los importes</b> cuando enseñes la app, o apagar las cuentas si no las necesitas.</p>'],
  ['Ideas: notas, taller y proyectos','<p><b>Notas rápidas:</b> pulsa el botón del lápiz en la pestaña Ideas y apunta en dos segundos (también puedes dictar con el micrófono del teclado). Si no eliges carpeta, la nota va a «Sin ordenar»; desde ahí la mandas a su carpeta con un toque. Las carpetas las creas tú, con su nombre y su color.</p><p><b>Taller:</b> tu método creativo en seis pasos.</p><ul><li><b>Objetos:</b> los que quieras, o al azar.</li><li><b>Análisis morfológico:</b> físico, sensorial y función y contexto, más atributos libres.</li><li><b>Inversión:</b> la app te propone el contrario de cada atributo cuando lo conoce; cámbialo y marca con ✦ los que te sugieran algo.</li><li><b>Preposiciones:</b> combina los objetos por parejas en los dos sentidos. Marca con estrella las buenas y baraja para verlas de otra forma.</li><li><b>Árbol:</b> el mapa mental de cada objeto, en vista de ramas (cómoda en el iPhone) o de pizarra (arrastra y pellizca).</li><li><b>Hoja:</b> todo lo que ha salido en una sola página. Con «Limpiar» vas tachando lo que no tiene sentido (también se puede en cada paso); lo tachado se queda a la vista, salvo en el árbol. Con «Unir» eliges 2 o 3 conceptos, también tachados, y apuntas lo que sale. Al final, tus hipótesis fantásticas y tus conexiones.</li></ul><p><b>Proyectos:</b> las ideas que quieres convertir en número, en cuatro fases: idea, en desarrollo, ensayando y estrenado. Apunta qué falta y cuántas veces lo has ensayado. Al estrenarlo se crea su ficha en el Repertorio.</p>'],
  ['Ajustes y copias','<ul><li><b>Apariencia:</b> automático (sigue al dispositivo), claro u oscuro, y el color de acento.</li><li><b>Emociones y tipos propios:</b> créalos, renómbralos y elige colores.</li><li><b>Asistente:</b> activa o desactiva cada regla y ajusta la duración máxima de tu flash.</li><li><b>Copia de seguridad:</b> «Exportar copia» crea un archivo con todo. Guárdalo en Google Drive. «Importar copia» lo recupera en otro dispositivo, o añade el repertorio de un amigo al tuyo.</li></ul><p>Cada dispositivo guarda sus propios datos: para tener lo mismo en el iPhone y en el iPad, exporta en uno e importa en el otro.</p>'],
@@ -1054,7 +1119,7 @@ function openBolo(id){
     <div class="fg">${row('Contacto',esc(b.contacto||''))}${row('Teléfono',b.telefono?`<a class="link" href="tel:${esc(b.telefono.replace(/\s/g,''))}">${esc(b.telefono)}</a>`:'')}${row('Email',b.email?`<a class="link" href="mailto:${esc(b.email)}">${esc(b.email)}</a>`:'')}${row('Lugar',esc(b.lugar||''))}${row('Dirección',b.direccion?`<a class="link" href="https://maps.apple.com/?q=${encodeURIComponent(b.direccion)}" target="_blank" rel="noopener">${esc(b.direccion)}</a>`:'')}</div>
     ${b.notas?`<div><div class="fl">Notas</div><div class="wi"><p style="color:var(--text);white-space:pre-wrap">${esc(b.notas)}</p></div></div>`:''}
     ${b.eval?`<div><div class="fl">Valoración <span>${RATE[(b.eval.general||3)-1]} · sala ${RATE[(b.eval.energia||3)-1].toLowerCase()}</span></div><div class="fg">${nums.map(i=>`<div class="fr"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.name)}${i.fallo?' <span class="badge">Fallo</span>':''}</span><span style="color:var(--sec);font-size:14px;flex:none">${i.rate?RATE[i.rate-1]:'—'}</span></div>`).join('')}</div>${b.eval.cambiar?`<div class="wi" style="margin-top:10px"><p style="color:var(--text);white-space:pre-wrap">${esc(b.eval.cambiar)}</p></div>`:''}</div>`:''}
-    <div class="act"><button data-a="evalBolo" style="color:var(--accent);font-weight:600">${b.eval?'Editar valoración':'Valorar actuación'}</button><button data-a="editBolo">Datos del bolo</button><button class="d" data-a="delBolo">Eliminar bolo</button></div></div>`}});
+    <div class="act"><button data-a="dayOpen" data-id="${b.id}" style="color:var(--accent);font-weight:600">Ver el día del bolo</button><button data-a="evalBolo" style="color:var(--accent);font-weight:600">${b.eval?'Editar valoración':'Valorar actuación'}</button><button data-a="editBolo">Datos del bolo</button><button class="d" data-a="delBolo">Eliminar bolo</button></div></div>`}});
   S.editBolo=()=>{BF=clone(b);boloForm()};
   S.delBolo=()=>{closeSheet();withUndo('Bolo eliminado',()=>{D.bolos=D.bolos.filter(x=>x.id!==b.id)})};
   S.evalBolo=()=>evalForm(b);
@@ -1227,6 +1292,7 @@ function cuentasHTML(){
     h+=`<div class="card pend"><span class="pl wa">Pendiente de cobrar</span><b>${eur(tp)}</b>${P.slice(0,4).map(b=>`<button class="pendl" data-a="openBolo" data-id="${b.id}"><span>${esc(b.cliente||'Bolo')} · ${fdate(b.date)} · ${(MODOS.find(m=>m[0]===b.cobro.modo)||['',''])[1].toLowerCase()}</span><b>${eur(calc(b).ingresan)}</b></button>`).join('')}${P.length>4?`<small>y ${P.length-4} más</small>`:''}</div>`}
   if(!mes){const vals=S.map(s=>s.benef),mx=Math.max(1,...vals.map(Math.abs)),cur=new Date();
     h+=`<div class="sec-t">Beneficio mes a mes</div><div class="card chart"><div class="bars">${vals.map((v,i)=>`<button class="bcol${CM.y===cur.getFullYear()&&i===cur.getMonth()?' cur':''}" data-a="cmGo" data-m="${i}" aria-label="${MESES[i]}"><i class="${v<0?'neg':''}" style="height:${Math.round(Math.abs(v)/mx*100)}%"></i><span>${MESES[i][0].toUpperCase()}</span></button>`).join('')}</div><div class="note" style="padding-top:8px">Toca un mes para ver su detalle.</div></div>`;
+    h+=donutHTML(S.reduce((a,s)=>({factura:a.factura+s.byModo.factura,coop:a.coop+s.byModo.coop,sin:a.sin+s.byModo.sin}),{factura:0,coop:0,sin:0}));
     const ev={};S.forEach(s=>s.B.forEach(b=>{const r=calc(b);if(!r.set)return;const k=b.evento||'otro';ev[k]=ev[k]||{n:0,t:0};ev[k].n++;ev[k].t+=r.benef}));
     const ek=Object.keys(ev).sort((a,b)=>ev[b].t/ev[b].n-ev[a].t/ev[a].n);
     if(ek.length)h+=`<div class="sec-t">Lo que más te deja <span>media por bolo</span></div><div class="group">${ek.map(k=>`<div class="li"><span class="tx"><b>${esc(evName(k))}</b><small>${pl(ev[k].n,'bolo','bolos')}</small></span><b class="amt">${eur(ev[k].t/ev[k].n)}</b></div>`).join('')}</div>`;
@@ -1657,7 +1723,7 @@ const FB_CONFIG={apiKey:"AIzaSyDKjo5OtUZtATvoEsdf-hNLSUgdGbs0icE",authDomain:"es
 const FB_VER='10.12.2';
 const SYNC_KEY='espatontos-sync';
 const PARTS={repertorio:['nums','emos','tiposPropios'],shows:['shows','cur'],bolos:['bolos'],gastos:['gastos'],ideas:['ideas'],ajustes:['set']};
-const LOCAL_SET=['tab','seenGuide'];
+const LOCAL_SET=['tab','seenGuide','v2'];
 function mergeInto(o){if(!o)return;
   const byId=(k,mk)=>{if(!Array.isArray(o[k]))return;D[k]=D[k]||[];const ids={};D[k].forEach(x=>ids[x.id]=1);o[k].forEach(x=>{if(x&&!ids[x.id])D[k].push(mk?mk(x):x)})};
   byId('nums',x=>N(x));byId('shows',s=>Object.assign({items:[],sets:{A:[],B:[],X:[]},muted:[],checks:{}},s));byId('bolos');byId('gastos');byId('emos');
@@ -1813,8 +1879,100 @@ function cloudNudge(){if(!SYNC.enabled())return;const m=SYNC.loadMeta();if(m.uid
    <div class="note" style="padding:0 4px">Con una cuenta gratuita se guarda también en la nube y puedes abrirlo desde cualquier dispositivo.</div>
    <div class="act"><button data-a="authOpen" style="background:var(--accent);color:var(--onAccent);font-weight:600">Crear cuenta o entrar</button><button data-a="exportData">Prefiero exportar una copia</button></div></div>`})}
 
+
+/* ============ 2.0 · Inicio y día del bolo ============ */
+const DOW=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const fdateLong=s=>{const d=new Date(s+'T00:00');return DOW[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()]};
+const capi=s=>s?s[0].toUpperCase()+s.slice(1):s;
+const daysTo=d=>Math.round((new Date(d+'T00:00')-new Date(todayStr()+'T00:00'))/864e5);
+const boloTitle=b=>b.lugar||b.cliente||'Bolo';
+const boloShow=b=>b.otro?null:(D.shows.find(s=>s.id===b.showId)||null);
+const boloShowName=b=>b.otro?(b.otroNom||'Otro espectáculo'):(b.showName||((boloShow(b)||{}).name)||'Sin show');
+const showNums=s=>s.tpl==='coctel'?resolve(s.sets.A):resolve(s.items);
+function nextBolo(){const t=todayStr();return D.bolos.filter(b=>b.date&&b.date>=t).sort((a,b)=>(a.date+(a.hora||'')).localeCompare(b.date+(b.hora||'')))[0]||null}
+function matState(s){if(!s)return null;const L=matList(s),ch=s.checks||{};return {done:L.filter(m=>ch[m.k]).length,tot:L.length,miss:L.filter(m=>!ch[m.k])}}
+function whenTxt(b){const n=daysTo(b.date);return n===0?'Hoy':n===1?'Mañana':'En '+n+' días'}
+function saludo(){const h=new Date().getHours();return h<6?'Buenas noches':h<14?'Buenos días':h<21?'Buenas tardes':'Buenas noches'}
+
+function inicioTodos(){const R=[],on=CTA().on;
+  if(on)unclosed().filter(b=>!b.luego).slice(0,3).forEach(b=>R.push({t:'Cerrar el bolo de '+boloTitle(b),tag:'Cuentas',c:'t3',warn:1,a:'nudgeCobro',id:b.id}));
+  const nb=nextBolo();
+  if(nb&&daysTo(nb.date)<=7){const s=boloShow(nb),ms=matState(s);
+    if(ms&&ms.miss.length){const m=ms.miss;R.push({t:'Preparar '+m.slice(0,2).map(x=>x.name).join(', ')+(m.length>2?' y '+(m.length-2)+' más':''),tag:'Material',c:'t1',a:'goMat',id:s.id})}}
+  if(on)pendientes().slice(0,2).forEach(b=>R.push({t:'Cobrar '+boloTitle(b),tag:'Por cobrar',c:'t4',a:'openBolo',id:b.id}));
+  IDE().projs.filter(p=>p.phase==='des'||p.phase==='ens').sort((a,b)=>b.ts-a.ts).slice(0,2).forEach(p=>R.push({t:(p.phase==='ens'?'Ensayar «':'Desarrollar «')+p.t+'»',tag:'Proyecto',c:'t2',a:'projEdit',id:p.id}));
+  const nin=IDE().notes.filter(n=>!n.f||!folderOf(n.f)).length;
+  if(nin)R.push({t:pl(nin,'idea','ideas')+' sin ordenar',tag:'Ideas',c:'t5',a:'goInbox'});
+  return R}
+
+function renderIni(){
+  const el=$('#v-ini'),nb=nextBolo(),on=CTA().on;
+  let hero;
+  if(nb){const s=boloShow(nb),L=s?showNums(s):[],ms=matState(s);
+    const meta=[capi(fdateLong(nb.date)).slice(0,3)+' '+(+nb.date.split('-')[2]),nb.hora,boloShowName(nb),s&&s.tpl!=='coctel'&&L.length?mins(totalDur(L))+' min':''].filter(Boolean).join(' · ');
+    hero=`<button class="in-hero" data-a="dayOpen" data-id="${nb.id}"><span class="in-k">Próximo bolo · ${whenTxt(nb)}</span><b class="t">${esc(boloTitle(nb))}</b><span class="s">${esc(meta)}</span>
+      ${s&&s.tpl!=='coctel'&&L.length>1?'<div class="in-cv" id="inCurve"></div>':'<div style="height:8px"></div>'}
+      <div class="in-row"><span>${ms&&ms.tot?'Material '+ms.done+'/'+ms.tot:(nb.personas?esc(nb.personas)+' personas':esc(evName(nb.evento)))}</span><b>Ver el día ›</b></div></button>`;
+  }else hero=`<div class="in-hero in-empty"><span class="in-k">Próximo bolo</span><b class="t">Sin bolos a la vista</b><span class="s">Apunta tu próxima actuación y aquí verás el día preparado.</span><button class="pill" data-a="newBolo">${ICON.plus} Apuntar bolo</button></div>`;
+  const T=inicioTodos();
+  const todos=T.length?`<div class="card" style="padding:2px 12px">${T.map(x=>`<button class="in-todo${x.warn?' warn':''}" data-a="${x.a}" ${x.id?`data-id="${x.id}"`:''}><i></i><span>${esc(x.t)}</span><em class="${x.c}">${x.tag}</em></button>`).join('')}</div>`:'<div class="in-ok">✓ Todo al día</div>';
+  const nin=IDE().notes.filter(n=>!n.f||!folderOf(n.f)).length;
+  let tiles;
+  if(on){const P=pendientes(),pc=P.reduce((a,b)=>a+calc(b).ingresan,0),n=new Date(),ms=monthStats(ymOf(n.getFullYear(),n.getMonth()));
+    tiles=`<button data-a="goCuentas"><small>Por cobrar</small><b>${eur(pc)}</b></button><button data-a="goCuentas"><small>Este mes</small><b>${eur(ms.benef)}</b></button><button data-a="goInbox"><small>Ideas nuevas</small><b>${nin}</b></button>`;
+  }else tiles=`<button data-a="tab" data-t="sho"><small>Shows</small><b>${D.shows.length}</b></button><button data-a="tab" data-t="rep"><small>Números</small><b>${D.nums.length}</b></button><button data-a="goInbox"><small>Ideas nuevas</small><b>${nin}</b></button>`;
+  keepScroll(el,`<div class="wrap">${hdr(capi(fdateLong(todayStr())))}
+    <div class="in-h">${saludo()}</div>${hero}
+    <div class="sec-t">Pendiente</div>${todos}
+    <div class="in-tiles">${tiles}</div>
+    <div class="in-quick"><button class="pill ghost" data-a="newBolo">${ICON.plus} Bolo</button><button class="pill ghost" data-a="iniNote">✎ Nota rápida</button><button class="pill ghost" data-a="tab" data-t="mon">Montar show</button></div></div>`);
+  const cv=$('#inCurve');if(cv&&nb){const s=boloShow(nb);cv.innerHTML=curveSVG(showNums(s),Math.max(200,cv.clientWidth),52,s.tpl,true)}
+}
+
+/* ---- día del bolo ---- */
+let DYID=null;const DY=()=>D.bolos.find(b=>b.id===DYID);
+function dayOpen(id){DYID=id;const b=DY();if(!b)return;if(!b.dia)b.dia={};
+  openSheet({title:'El día del bolo',left:'Cerrar',body:()=>{const b=DY();if(!b)return '';const d=b.dia||(b.dia={}),dn=d.done||{},s=boloShow(b),L=s?showNums(s):[],ms=matState(s),r=calc(b);
+    const dur=s&&s.tpl!=='coctel'?totalDur(L):0;
+    const rows=[
+      {k:'salida',ic:'🚗',c:'#FC5C65',t:'Salida',sub:b.direccion?esc(b.direccion)+' · toca para el mapa':(b.lugar?esc(b.lugar):'Apunta la dirección en los datos del bolo'),a:b.direccion?'dyMap':'dyEdit'},
+      {k:'montaje',ic:'🎒',c:'#FD9644',t:'Montaje y material',sub:ms&&ms.tot?('Material '+ms.done+' de '+ms.tot+(ms.miss.length?' · falta '+esc(ms.miss.slice(0,2).map(m=>m.name).join(', '))+(ms.miss.length>2?'…':''):' · todo listo')):'Sin lista de material',a:s?'dyMat':''},
+      {k:'prueba',ic:'🔊',c:'#F7B731',t:'Prueba de sonido',sub:'Música, micro y luces',a:''},
+      {k:'show',ic:'🎩',c:'#9B6CF0',t:boloShowName(b),sub:[dur?mins(dur)+' min':'',L.length?pl(L.length,'número','números'):'',b.personas?esc(b.personas)+' personas':''].filter(Boolean).join(' · ')||esc(evName(b.evento)),a:s?'dyShow':'',h:dur?Math.max(70,Math.min(150,dur/60*2.4)):70},
+      {k:'cierre',ic:'💶',c:'#20BF6B',t:'Cerrar el bolo',sub:r.set?'Cerrado · te queda '+eur(r.queda):'Caché, gastos y forma de cobro',a:CTA().on?'dyCierre':''}];
+    const done=k=>k==='cierre'?r.set:!!dn[k];
+    return `<div class="dy-sub"><b style="color:var(--text)">${capi(fdateLong(b.date))}</b> · ${esc(boloTitle(b))}</div><div class="dy">${rows.map(x=>`<div class="dy-r${done(x.k)?' done':''}${x.k==='show'?' sh':''}">
+      ${x.k==='cierre'?'<span class="nt">al acabar</span>':`<input type="time" value="${esc(x.k==='show'?(b.hora||''):(d[x.k]||''))}" data-in="diaT" data-k="${x.k}" aria-label="Hora de ${x.t}">`}
+      <span class="dy-p" style="background:${x.c};height:${x.h||34}px;box-shadow:0 0 16px ${x.c}55">${x.ic}</span>
+      <button class="dy-c" ${x.a?`data-a="${x.a}"`:''}><b>${esc(x.t)}</b><small>${x.sub}</small></button>
+      ${x.k==='cierre'?'<span></span>':`<button class="dy-ck${dn[x.k]?' on':''}" data-a="dyDone" data-k="${x.k}" aria-label="Hecho">${dn[x.k]?ICON.check:''}</button>`}</div>`).join('')}</div>
+      <div class="note" style="margin-top:6px">Pon la hora de cada paso y márcalo al terminarlo. Toca un paso para ir a lo que necesites.</div>
+      <div class="act" style="margin-top:12px"><button data-a="dyBolo">Ver ficha del bolo</button></div>`}});
+}
+IN.diaT=el=>{const b=DY();if(!b)return;const k=el.dataset.k;if(k==='show')b.hora=el.value;else{b.dia=b.dia||{};b.dia[k]=el.value}save(true)};
+Object.assign(A,{
+  dayOpen:el=>dayOpen(el.dataset.id),
+  dyDone:el=>{const b=DY();if(!b)return;b.dia=b.dia||{};b.dia.done=b.dia.done||{};const k=el.dataset.k;b.dia.done[k]=!b.dia.done[k];save();drawSheet()},
+  dyMap:()=>{const b=DY();if(b&&b.direccion)window.open('https://maps.apple.com/?q='+encodeURIComponent(b.direccion),'_blank')},
+  dyEdit:()=>{const b=DY();if(!b)return;BF=clone(b);boloForm()},
+  dyMat:()=>{const b=DY(),s=b&&boloShow(b);if(!s)return;D.cur=s.id;tab='mat';save();closeSheet()},
+  dyShow:()=>{const b=DY(),s=b&&boloShow(b);if(!s)return;D.cur=s.id;tab='mon';save();closeSheet()},
+  dyCierre:()=>{const b=DY();if(!b)return;OBID=b.id;cobroForm(b)},
+  dyBolo:()=>{const b=DY();if(b)openBolo(b.id)},
+  goMat:el=>{if(el.dataset.id)D.cur=el.dataset.id;tab='mat';save();render();$('#v-mat').scrollTop=0},
+  goInbox:()=>{tab='ide';IV.view='inbox';render();$('#v-ide').scrollTop=0},
+  goCuentas:()=>{tab='sho';shoSeg='cuentas';render();$('#v-sho').scrollTop=0},
+  iniNote:()=>{IV.view=null;quickNote()}
+});
+
+/* ---- Cuentas: reparto anual ---- */
+function donutHTML(bm){const P=[['factura','Factura','#C9A7FF'],['coop','Cooperativa','#7EE0C3'],['sin','Sin factura','#FFD27A']],t=bm.factura+bm.coop+bm.sin;if(t<=0)return '';
+  let off=25,arcs='';P.forEach(([k,,c])=>{const v=bm[k]/t*100;if(v<=0)return;arcs+=`<circle cx="21" cy="21" r="15.9" fill="none" stroke="${c}" stroke-width="6" stroke-dasharray="${v.toFixed(2)} ${(100-v).toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"/>`;off-=v});
+  return `<div class="sec-t">Cómo cobras</div><div class="card dn"><svg viewBox="0 0 42 42" width="104" height="104"><circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--track)" stroke-width="6"/>${arcs}</svg>
+   <div class="lg">${P.filter(([k])=>bm[k]>0).map(([k,n,c])=>`<span><i style="background:${c}"></i>${n}<b>${Math.round(bm[k]/t*100)} %</b></span>`).join('')}</div></div>`}
+
 /* ============ arranque ============ */
-addEventListener('resize',()=>{if(tab==='mon')render()});
+addEventListener('resize',()=>{if(tab==='mon'||tab==='ini')render()});
 render();
 $('#splashVer').textContent='Versión '+APP_VERSION;
 S.hideSplash=()=>{const sp=$('#splash');if(sp&&!sp.classList.contains('off')){sp.classList.add('off');setTimeout(()=>sp.remove(),500)}};
