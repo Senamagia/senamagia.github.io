@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.2';
+const VERSION = '2.3';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -220,14 +220,14 @@ function sembrarMeds() {
     m({ nombre: 'Vitamina B12', dosis: '0,25 ml subcutánea', tipo: 'semanal', dias: [1, 4], aviso: true }),
     m(SUPL.melena), m(SUPL.maxi), m(SUPL.glut)
   ];
-  DB.migr = 2;
+  DB.migr = 3;
   guardar();
 }
 // Suplementos: se preparan para varios días y se le da un poco cada día
 const SUPL = {
-  melena: { nombre: 'Melena de león', dosis: '1 g a la semana, un poco cada día', tipo: 'diario', momentos: [], dil: { cada: 7, texto: '1 g para toda la semana (de martes a martes)' } },
-  maxi: { nombre: 'Maxi Digest', dosis: '1 g a la semana, un poco cada día', tipo: 'diario', momentos: [], dil: { cada: 7, texto: '1 g para toda la semana (de martes a martes)' } },
-  glut: { nombre: 'Glutamina', dosis: '1 g cada 4 días (0,25 g al día)', tipo: 'diario', momentos: [], dil: { cada: 4, texto: '1 g para 4 días' } }
+  melena: { nombre: 'Melena de león', dosis: '1 g por semana', tipo: 'diario', momentos: ['manana', 'noche'], dil: { cada: 7, texto: '1 g para toda la semana (de martes a martes)' } },
+  maxi: { nombre: 'Maxi Digest', dosis: '1 g por semana', tipo: 'diario', momentos: ['manana', 'noche'], dil: { cada: 7, texto: '1 g para toda la semana (de martes a martes)' } },
+  glut: { nombre: 'Glutamina', dosis: '1 g cada 4 días', tipo: 'diario', momentos: ['manana', 'noche'], dil: { cada: 4, texto: '1 g para 4 días' } }
 };
 function migrar() {
   if ((DB.migr || 1) >= 2) return;
@@ -237,6 +237,17 @@ function migrar() {
     if (n && m.tipo === 'semanal' && !(m.dias || []).length) { delete m.dias; delete m.aviso; Object.assign(m, JSON.parse(JSON.stringify(n))); m.upd = Date.now(); }
   });
   DB.migr = 2;
+  guardar();
+}
+// Versión 3: los suplementos se dan con la medicación, en las dos tomas
+function migrar3() {
+  if ((DB.migr || 1) >= 3) return;
+  const map = { 'melena de león': SUPL.melena, 'maxi digest': SUPL.maxi, 'glutamina': SUPL.glut };
+  DB.meds.forEach(m => {
+    const n = map[(m.nombre || '').toLowerCase()];
+    if (n && m.tipo === 'diario' && !(m.momentos || []).length) { m.momentos = ['manana', 'noche']; m.dosis = n.dosis; m.upd = Date.now(); SYNC.marcar('meds', m.id); }
+  });
+  DB.migr = 3;
   guardar();
 }
 const vivos = c => DB[c].filter(r => !r.borrado);
@@ -1457,6 +1468,7 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
 // Al volver a la app (otro día u otra hora) se actualiza lo que toca
 let ultimoDia = hoy();
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !S.sheet) { if (hoy() !== ultimoDia) { ultimoDia = hoy(); S.hero = {}; S.cacas = null; S.comida = { que: '', g: '' }; } repintar(); } });
+migrar3();
 pintar();
 if (!yo()) abrirSheet('quien');
 SYNC.arrancar();
