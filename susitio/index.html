@@ -151,6 +151,10 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
 .banner button{background:#fff;color:var(--ink);border-radius:12px;min-height:40px;padding:0 12px;font-weight:800}
 .empty{border:1.5px dashed #D9CBBB;border-radius:22px;padding:16px;color:var(--muted);font-size:15px;text-align:center}
 .who{display:flex;flex-direction:column;gap:12px;align-items:stretch;text-align:center;padding:24px 8px}
+#imprimir{display:none}
+body.imprimiendo #app,body.imprimiendo .tabbar,body.imprimiendo #sheet,body.imprimiendo #toast{display:none}
+body.imprimiendo #imprimir{display:block;background:#fff}
+@media print{.no-print,#app,.tabbar,#sheet,#toast{display:none!important}#imprimir{display:block!important}body{background:#fff}}
 </style>
 </head>
 <body>
@@ -167,7 +171,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.5';
+const VERSION = '2.6';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -195,7 +199,7 @@ const num = v => { if (v == null || v === '') return null; const n = Number(Stri
 const fNum = n => String(Math.round(n * 100) / 100).replace('.', ',');
 
 /* ---------- Datos ---------- */
-const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones', 'ajustes', 'sintomas', 'sospechas', 'energia'];
+const COLS = ['meds', 'tomas', 'semanales', 'cacas', 'comidas', 'apetito', 'cambios', 'diluciones', 'ajustes', 'sintomas', 'sospechas', 'energia', 'citas', 'analiticas', 'fotos'];
 const metaComida = () => { const r = (DB.ajustes || []).find(x => x.id === 'meta-comida' && !x.borrado); return r && r.g > 0 ? r.g : 100; };
 let DB;
 function vacio() { const o = { v: 1 }; COLS.forEach(c => o[c] = []); return o; }
@@ -362,6 +366,7 @@ function heroForm(f, mom) {
   return S.hero[k];
 }
 function vistaHoy() {
+  aplicarPlanes();
   const f = hoy();
   const nombre = yo();
   const mom = heroMomento(f);
@@ -425,7 +430,7 @@ function vistaHoy() {
   if (da && da.alimento) {
     const n = diffDays(f, da.fecha) + 1;
     const mp = datosDia(); const r = resumen(da.fecha, f, mp);
-    h += `<button class="mini" data-a="tab" data-tab="prog"><span class="ico" style="background:var(--teal-s);font-size:18px;font-weight:800;color:var(--teal-d)">${n}</span><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Dieta actual · día ${n}</span><span class="b" style="font-size:17px">Solo ${esc(da.alimento)}</span><span class="small muted">${r.tot ? r.g + ' días buenos de ' + r.tot : 'Aún sin días apuntados'}${r.peso != null ? ' · peso medio ' + Math.round(r.peso) + ' g' : ''}</span></span>${I.chev}</button>`;
+    h += `<button class="mini" data-a="tab" data-tab="prog"><span class="ico" style="background:var(--teal-s);font-size:18px;font-weight:800;color:var(--teal-d)">${n}</span><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Dieta actual · día ${n}${da.diasPrueba ? ' de ' + da.diasPrueba : ''}</span><span class="b" style="font-size:17px">Solo ${esc(da.alimento)}</span><span class="small muted">${r.tot ? r.g + ' días buenos de ' + r.tot : 'Aún sin días apuntados'}${r.peso != null ? ' · peso medio ' + Math.round(r.peso) + ' g' : ''}</span></span>${I.chev}</button>`;
   }
   // Cómo va hoy
   const up = ultimoPeso();
@@ -472,7 +477,7 @@ function avisos(f) {
       }
     }
   });
-  return out;
+  return out.concat(avisosVet(f));
 }
 
 
@@ -574,6 +579,7 @@ function formCacas() {
     <button class="btn btn-teal" data-a="caca-guardar">${r ? 'Actualizar' : 'Guardar'}</button>
     ${r ? `<span class="tiny muted" style="text-align:center">Apuntado por ${esc(r.autor)}. Al guardar se cambia por lo que marques ahora.</span>` : ''}
   </section>
+  <section class="card col" style="gap:8px"><span class="b" style="font-size:17px">Fotos de las cacas</span><span class="tiny muted">Para enseñárselas a la vet.</span>${fotosHTML('caca-' + F.fecha)}</section>
   <section class="card col" style="gap:8px"><span class="b" style="font-size:17px">Energía ${F.fecha === hoy() ? 'hoy' : 'ese día'}</span><span class="tiny muted">Cómo la ves de activa y despierta. Se guarda al tocar.</span>
     <div class="seg" style="grid-template-columns:repeat(5,minmax(0,1fr))">${ENERGIA.map(([k, l]) => `<button data-a="energia" data-v="${k}" aria-pressed="${en && en.valor === k}" aria-label="${l}">${k}</button>`).join('')}</div>
     <div class="row tiny muted" style="justify-content:space-between"><span>Muy baja</span><span>Muy activa</span></div>
@@ -634,6 +640,7 @@ function metaBarra(tot, sinPesar) {
 }
 function formSintoma() {
   if (!S.sint) S.sint = { fecha: hoy(), hora: nowHM(), tipo: 'vomito', aspecto: [], cantidad: '', nota: '' };
+  if (!S.sint.id && !S.sint.nid) S.sint.nid = uid();
   const F = S.sint;
   const lista = vivos('sintomas').sort((a, b) => b.fecha.localeCompare(a.fecha) || hk(b.hora).localeCompare(hk(a.hora)));
   const ultV = lista.find(x => x.tipo === 'vomito');
@@ -644,6 +651,7 @@ function formSintoma() {
     <div class="lbl">Cantidad<div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${CANTIDAD.map(([k, l]) => `<button data-a="sint-cant" data-v="${k}" aria-pressed="${F.cantidad === k}">${l}</button>`).join('')}</div></div>` : ''}
     <div class="grid2"><label class="lbl">Día<input class="field" type="date" max="${hoy()}" data-bind="sint.fecha" value="${esc(F.fecha)}"></label><label class="lbl">Hora<input class="field" type="time" data-bind="sint.hora" value="${esc(F.hora)}"></label></div>
     <label class="lbl">Notas (opcional)<textarea class="field" rows="2" data-bind="sint.nota" placeholder="Ej.: justo después de la toma de la noche">${esc(F.nota)}</textarea></label>
+    ${fotosHTML(F.id || F.nid)}
     <button class="btn btn-teal" data-a="sint-guardar">${F.id ? 'Guardar cambios' : 'Guardar'}</button>
     ${F.id ? `<button class="btn btn-danger" data-a="sint-borrar">Borrar</button><button class="btn btn-soft" data-a="sint-nuevo">Apuntar uno nuevo</button>` : ''}
   </section>
@@ -659,7 +667,7 @@ function formCambio() {
   return `<section class="card form">
     <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cambio u observación</h2><span class="small muted">Los cambios de dieta y de medicación salen marcados en la gráfica de peso y empiezan una etapa nueva en Progreso. Las visitas y notas quedan en el Diario.</span></div>
     <div class="chips">${TIPOS_CAMBIO.map(([k, l]) => `<button class="chip" data-a="cambio-tipo" data-v="${k}" aria-pressed="${F.tipo === k}">${l}</button>`).join('')}</div>
-    ${F.tipo === 'dieta' ? `<label class="lbl">Qué come ahora<input class="field" data-bind="cambio.alimento" value="${esc(F.alimento || '')}" placeholder="Ej.: papilla de pollo"><span class="tiny muted" style="font-weight:600">Solo eso hasta ver cómo le sienta. Saldrá como etapa en Progreso y como botón rápido en Comida.</span></label>` : ''}
+    ${F.tipo === 'dieta' ? `<div class="grid2"><label class="lbl">Marca<input class="field" data-bind="cambio.marca" value="${esc(F.marca || '')}" placeholder="Opcional"></label><label class="lbl">Proteína<input class="field" data-bind="cambio.proteina" value="${esc(F.proteina || '')}" placeholder="Ej.: pollo"></label></div><label class="lbl">Días de prueba que recomienda la nutricionista<input class="field" inputmode="numeric" data-bind="cambio.diasPrueba" value="${esc(F.diasPrueba || '')}" placeholder="Opcional"></label><label class="lbl">Qué come ahora<input class="field" data-bind="cambio.alimento" value="${esc(F.alimento || '')}" placeholder="Ej.: papilla de pollo"><span class="tiny muted" style="font-weight:600">Solo eso hasta ver cómo le sienta. Saldrá como etapa en Progreso y como botón rápido en Comida.</span></label>` : ''}
     <label class="lbl">${F.tipo === 'dieta' ? 'Notas (opcional)' : 'Qué ha cambiado'}<textarea class="field" rows="3" data-bind="cambio.texto" placeholder="${F.tipo === 'dieta' ? 'Ej.: indicado por la nutricionista' : 'Ej.: Prednisona baja a 0,05 ml'}">${esc(F.texto)}</textarea></label>
     <label class="lbl">Desde qué día<input class="field" type="date" value="${F.fecha}" data-bind="cambio.fecha"></label>
     <button class="btn btn-teal" data-a="cambio-guardar">Guardar cambio</button>
@@ -727,6 +735,7 @@ function vistaProg() {
     <div style="background:var(--reg);color:var(--reg-t)"><span class="n">${R.r}</span><span class="t">regulares</span></div>
     <div style="background:var(--bad);color:#fff"><span class="n">${R.m}</span><span class="t">malos</span></div></section>`;
   h += patronesHTML();
+  h += alimentosHTML();
   h += graficaPeso(desde, hasta, map);
   // Etapas
   const E = etapas(desde, hasta);
@@ -740,7 +749,7 @@ function vistaProg() {
     ${conclusion(ER)}
   </section>`;
   h += semanas(desde, hasta, map);
-  h += `<section class="card col" style="gap:10px"><h2 style="font-size:18px;font-weight:800">Informe para la vet</h2><p class="small muted">Este resumen en texto, para mandarlo por WhatsApp a la vet o a la nutricionista.</p><button class="btn btn-line" data-a="informe">Copiar informe</button></section>`;
+  h += `<section class="card col" style="gap:10px"><h2 style="font-size:18px;font-weight:800">Informe para la vet</h2><p class="small muted">Este resumen en texto, para mandarlo por WhatsApp a la vet o a la nutricionista.</p><div class="grid2"><button class="btn btn-line" data-a="informe">Copiar texto</button><button class="btn btn-teal" data-a="pdf">Imprimir o PDF</button></div><span class="tiny muted">«Imprimir o PDF» abre el informe con la gráfica: en el iPhone, en la pantalla de imprimir, elige Compartir › Guardar en Archivos para tenerlo en PDF.</span></section>`;
   return h;
 }
 function conclusion(ER) {
@@ -995,18 +1004,203 @@ function vistaSheetSospechas() {
     <button class="btn btn-teal" data-a="sosp-guardar">Guardar</button>`;
 }
 
+
+/* =========================================================
+   VETERINARIA: citas y analíticas
+   ========================================================= */
+const CON = [['vet', 'Veterinaria'], ['nutri', 'Nutricionista'], ['otro', 'Otro']];
+const CON_N = Object.fromEntries(CON);
+const VALORES = [['hto', 'Hematocrito', '%'], ['leu', 'Leucocitos', '×10³/µL'], ['pla', 'Plaquetas', '×10³/µL'], ['glu', 'Glucosa', 'mg/dL'], ['pt', 'Proteínas totales', 'g/dL'], ['alb', 'Albúmina', 'g/dL'], ['alt', 'ALT (hígado)', 'U/L'], ['bun', 'Urea (BUN)', 'mg/dL']];
+const proximaAnalitica = () => { const l = vivos('analiticas').filter(a => a.proxima).sort((a, b) => b.fecha.localeCompare(a.fecha)); return l[0] ? l[0].proxima : null; };
+function vetHTML() {
+  const h = hoy();
+  const citas = vivos('citas').sort((a, b) => (a.fecha + (a.hora || '')).localeCompare(b.fecha + (b.hora || '')));
+  const prox = citas.filter(c => c.fecha >= h), pas = citas.filter(c => c.fecha < h).reverse().slice(0, 5);
+  const ans = vivos('analiticas').sort((a, b) => b.fecha.localeCompare(a.fecha));
+  const pa = proximaAnalitica();
+  const fila = c => `<button class="list-row" data-a="cita-edit" data-id="${c.id}"><span class="col grow"><span class="b">${fFecha(c.fecha)}${c.hora ? ' · ' + esc(c.hora) : ''} · ${esc(CON_N[c.con] || '')}</span><span class="tiny muted">${esc(c.motivo || '')}${c.notas ? ' · ' + esc(c.notas) : ''}</span></span>${I.chev}</button>`;
+  return `<section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between"><h2 style="font-size:17px;font-weight:800">Citas</h2><button class="chip add" data-a="cita-nueva">+ Cita</button></div>
+      ${prox.length ? `<div class="col">${prox.map(fila).join('')}</div>` : '<span class="small muted">No hay citas próximas apuntadas.</span>'}
+      ${pas.length ? `<span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em;margin-top:4px">Anteriores</span><div class="col">${pas.map(fila).join('')}</div>` : ''}
+    </section>
+    <section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between"><h2 style="font-size:17px;font-weight:800">Analíticas</h2><button class="chip add" data-a="ana-nueva">+ Analítica</button></div>
+      <span class="small muted">Con Imurel conviene hacer análisis de sangre de vez en cuando. Apunta los valores que te den y cuándo toca la siguiente.</span>
+      ${pa ? `<span class="small b" style="color:${pa <= h ? 'var(--bad)' : 'var(--teal-d)'}">Próxima: ${fFecha(pa)}${pa < h ? ' (pasada)' : ''}</span>` : ''}
+      ${ans.length ? `<div class="col">${ans.slice(0, 6).map(a => `<button class="list-row" data-a="ana-edit" data-id="${a.id}"><span class="col grow"><span class="b">${fFecha(a.fecha)}</span><span class="tiny muted">${VALORES.filter(v => a.v && a.v[v[0]] != null && a.v[v[0]] !== '').map(v => v[1] + ' ' + a.v[v[0]]).join(' · ') || esc(a.notas || '')}</span></span>${I.chev}</button>`).join('')}</div>` : ''}
+    </section>`;
+}
+function vistaSheetCita() {
+  const F = S.form;
+  return `<h2>${F.existe ? 'Cita' : 'Nueva cita'}</h2><div class="form">
+    <div class="chips">${CON.map(([k, l]) => `<button class="chip" data-a="cita-con" data-v="${k}" aria-pressed="${F.con === k}">${l}</button>`).join('')}</div>
+    <div class="grid2"><label class="lbl">Día<input class="field" type="date" data-bind="form.fecha" value="${esc(F.fecha)}"></label><label class="lbl">Hora<input class="field" type="time" data-bind="form.hora" value="${esc(F.hora || '')}"></label></div>
+    <label class="lbl">Motivo<input class="field" data-bind="form.motivo" value="${esc(F.motivo || '')}" placeholder="Ej.: revisión, analítica"></label>
+    <label class="lbl">Qué dijeron / qué mandaron<textarea class="field" rows="4" data-bind="form.notas" placeholder="Se rellena después de la visita">${esc(F.notas || '')}</textarea></label>
+    <button class="btn btn-teal" data-a="cita-guardar">Guardar</button>
+    ${F.existe ? '<button class="btn btn-danger" data-a="cita-borrar">Borrar</button>' : ''}
+    <span class="tiny muted" style="text-align:center">Te avisa en Hoy el día antes y el mismo día.</span></div>`;
+}
+function vistaSheetAnalitica() {
+  const F = S.form;
+  return `<h2>${F.existe ? 'Analítica' : 'Nueva analítica'}</h2><div class="form">
+    <label class="lbl">Fecha<input class="field" type="date" max="${hoy()}" data-bind="form.fecha" value="${esc(F.fecha)}"></label>
+    <span class="tiny muted">Rellena solo los que te den. Puedes usar coma o punto.</span>
+    <div class="grid2">${VALORES.map(([k, l, u]) => `<label class="lbl">${l} <span style="font-weight:600">(${u})</span><input class="field" inputmode="decimal" data-bind="form.v.${k}" value="${esc(F.v[k] || '')}"></label>`).join('')}</div>
+    <label class="lbl">Notas<textarea class="field" rows="3" data-bind="form.notas" placeholder="Lo que comentó la vet">${esc(F.notas || '')}</textarea></label>
+    <label class="lbl">Próxima analítica (opcional)<input class="field" type="date" data-bind="form.proxima" value="${esc(F.proxima || '')}"></label>
+    <button class="btn btn-teal" data-a="ana-guardar">Guardar</button>
+    ${F.existe ? '<button class="btn btn-danger" data-a="ana-borrar">Borrar</button>' : ''}</div>`;
+}
+
+/* =========================================================
+   PLAN DE DOSIS (bajada de prednisona u otros)
+   Cada paso se aplica solo el día que toca.
+   ========================================================= */
+function aplicarPlanes() {
+  const h = hoy();
+  DB.meds.filter(m => !m.borrado && m.activo && (m.plan || []).length).forEach(m => {
+    const pend = m.plan.filter(p => !p.hecho && p.fecha <= h).sort((a, b) => a.fecha.localeCompare(b.fecha));
+    if (!pend.length) return;
+    const r = JSON.parse(JSON.stringify(m));
+    let antes = r.dosis;
+    pend.forEach(p => {
+      const q = r.plan.find(x => x.fecha === p.fecha && x.dosis === p.dosis); q.hecho = true;
+      poner('cambios', { id: 'plan-' + m.id + '-' + p.fecha, fecha: p.fecha, tipo: 'dosis', texto: m.nombre + ': ' + (antes || '—') + ' → ' + p.dosis + ' (plan)', autor: 'Plan' });
+      antes = p.dosis; r.dosis = p.dosis;
+    });
+    poner('meds', r);
+  });
+}
+function planHTML(F) {
+  const plan = (F.plan || []).slice().sort((a, b) => a.fecha.localeCompare(b.fecha));
+  return `<div class="card col" style="gap:10px;background:var(--soft)">
+    <span class="b">Plan de cambio de dosis</span><span class="tiny muted" style="font-weight:600">Para una bajada (o subida) que te marque la vet. El día que toca, la dosis cambia sola y queda apuntado.</span>
+    ${plan.map((p, i) => `<div class="row" style="gap:8px"><span class="small b grow" style="${p.hecho ? 'color:var(--muted);text-decoration:line-through' : ''}">Desde el ${fFecha(p.fecha)}: ${esc(p.dosis)}</span><button class="x-btn" aria-label="Quitar este paso" data-a="plan-quitar" data-i="${(F.plan || []).indexOf(p)}">${I.x}</button></div>`).join('')}
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px"><input class="field" type="date" data-bind="form.planF" value="${esc(F.planF || '')}" aria-label="Desde qué día"><input class="field" data-bind="form.planD" value="${esc(F.planD || '')}" placeholder="Nueva dosis" aria-label="Nueva dosis"></div>
+    <button class="chip add" style="align-self:flex-start" data-a="plan-add">+ Añadir paso</button>
+  </div>`;
+}
+
+/* =========================================================
+   EXISTENCIAS
+   ========================================================= */
+function existencias(m) {
+  const st = m.stock; if (!st || st.cantidad == null || !(st.cada > 0)) return null;
+  const dias = Math.max(0, diffDays(hoy(), st.fecha));
+  const quedan = st.cantidad - dias / st.cada;
+  return { quedan: Math.max(0, quedan), dias: Math.max(0, Math.floor(quedan * st.cada)), unidad: st.unidad || 'unidades' };
+}
+function stockHTML(F) {
+  const st = F.stock || {};
+  return `<div class="card col" style="gap:10px;background:var(--soft)">
+    <span class="b">Existencias</span><span class="tiny muted" style="font-weight:600">Te avisa en Hoy cuando quede para menos de 7 días.</span>
+    <div class="grid2"><label class="lbl">Quedan ahora<input class="field" inputmode="decimal" data-bind="form.stockC" value="${esc(F.stockC != null ? F.stockC : (st.cantidad != null ? fNum(Math.round(existencias(F) ? existencias(F).quedan * 10 : st.cantidad * 10) / 10) : ''))}"></label><label class="lbl">Unidad<input class="field" data-bind="form.stockU" value="${esc(F.stockU != null ? F.stockU : (st.unidad || 'pastillas'))}"></label></div>
+    <label class="lbl">Se gasta 1 cada cuántos días<input class="field" inputmode="decimal" data-bind="form.stockCada" value="${esc(F.stockCada != null ? F.stockCada : (st.cada ? fNum(st.cada) : ''))}" placeholder="Ej.: Imurel 4 · Pepcid 2,5"></label>
+  </div>`;
+}
+
+/* =========================================================
+   FOTOS (pequeñas, guardadas con los datos)
+   ========================================================= */
+const fotosDe = ref => vivos('fotos').filter(x => x.ref === ref);
+function fotosHTML(ref) {
+  const l = fotosDe(ref);
+  return `<div class="col" style="gap:8px"><div class="row" style="gap:8px;flex-wrap:wrap">${l.map(x => `<button data-a="foto-ver" data-id="${x.id}" style="width:72px;height:72px;border-radius:12px;overflow:hidden;flex:0 0 72px"><img alt="Foto" src="${x.data}" style="width:100%;height:100%;object-fit:cover"></button>`).join('')}
+    <label class="chip add" style="display:flex;align-items:center;cursor:pointer">📷 ${l.length ? 'Otra foto' : 'Añadir foto'}<input type="file" accept="image/*" data-foto="${esc(ref)}" style="display:none"></label></div></div>`;
+}
+function reducirFoto(file) {
+  return new Promise((ok, ko) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { const max = 900, k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg', 0.62)); };
+    img.onerror = ko; img.src = url;
+  });
+}
+document.addEventListener('change', async e => {
+  const t = e.target; if (!t.dataset || !t.dataset.foto || !t.files[0]) return;
+  try { const data = await reducirFoto(t.files[0]); const ref = t.dataset.foto; poner('fotos', { id: uid(), ref, fecha: ref.startsWith('caca-') ? ref.slice(5) : hoy(), data, autor: yo() }); toast('Foto guardada'); repintar(); }
+  catch (err) { toast('No se ha podido guardar la foto'); }
+  t.value = '';
+});
+
+/* =========================================================
+   DIETA: alimentos probados y cómo le sentaron
+   ========================================================= */
+function alimentosHTML() {
+  const ds = vivos('cambios').filter(c => c.tipo === 'dieta').sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (!ds.length) return '';
+  const map = datosDia();
+  return `<section class="card col" style="gap:10px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Alimentos probados</h2><span class="tiny muted">Cada dieta, cuánto duró y cómo fue. Marca cómo le sentó.</span></div>
+    ${ds.slice().reverse().map((c, ii) => { const i = ds.indexOf(c); const hasta = i + 1 < ds.length ? addDays(ds[i + 1].fecha, -1) : hoy(); const r = resumen(c.fecha, hasta, map); const n = diffDays(hasta, c.fecha) + 1;
+      return `<div class="col" style="gap:6px;background:var(--soft);border-radius:14px;padding:12px">
+        <div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><span class="b">${esc(nombreCambio(c))}${c.marca ? ' · ' + esc(c.marca) : ''}</span><span class="tiny muted" style="white-space:nowrap">${n} día${n > 1 ? 's' : ''}${c.diasPrueba ? ' de ' + c.diasPrueba : ''}</span></div>
+        <span class="tiny muted">${fCorta(c.fecha)} – ${hasta === hoy() ? 'hoy' : fCorta(hasta)}${c.proteina ? ' · proteína: ' + esc(c.proteina) : ''}</span>
+        <span class="small">${r.tot ? r.g + ' buenos, ' + r.r + ' regulares, ' + r.m + ' malos' : 'Sin cacas apuntadas'}${r.peso != null ? ' · ' + Math.round(r.peso) + ' g de media' : ''}${r.vomitos ? ' · ' + r.vomitos + ' vómito' + (r.vomitos > 1 ? 's' : '') : ''}</span>
+        <div class="row" style="gap:6px">${[['bien', 'Le sentó bien'], ['regular', 'Regular'], ['mal', 'Mal']].map(([k, l]) => `<button class="chip" style="min-height:38px;font-size:14px" data-a="dieta-res" data-id="${c.id}" data-v="${k}" aria-pressed="${c.resultado === k}">${l}</button>`).join('')}</div>
+      </div>`; }).join('')}
+  </section>`;
+}
+
+/* =========================================================
+   AVISOS de citas, analíticas, plan de dosis y existencias
+   ========================================================= */
+function avisosVet(f) {
+  const out = [], man = addDays(f, 1);
+  vivos('citas').filter(c => c.fecha === f || c.fecha === man).forEach(c => out.push(`<button class="aviso pu" data-a="cita-edit" data-id="${c.id}"><span class="k">${c.fecha === f ? 'Hoy' : 'Mañana'}${c.hora ? ' · ' + esc(c.hora) : ''}</span><span class="t">Cita: ${esc(CON_N[c.con] || '')}</span><span class="s">${esc(c.motivo || 'Toca para apuntar lo que digan')}</span></button>`));
+  const pa = proximaAnalitica();
+  if (pa && pa <= addDays(f, 3) && !vivos('analiticas').some(a => a.fecha >= pa)) out.push(`<button class="aviso pu" data-a="tab" data-tab="med"><span class="k">${pa < f ? 'Pasada' : pa === f ? 'Hoy' : fFecha(pa)}</span><span class="t">Analítica de sangre</span><span class="s">Pide cita si no la tienes</span></button>`);
+  medsActivos().forEach(m => {
+    (m.plan || []).filter(p => !p.hecho && (p.fecha === man || p.fecha === f)).forEach(p => out.push(`<div class="aviso or"><span class="k">${p.fecha === f ? 'Hoy' : 'Mañana'}</span><span class="t">${esc(m.nombre)} pasa a ${esc(p.dosis)}</span><span class="s">Según el plan de dosis</span></div>`));
+    const e = existencias(m);
+    if (e && e.dias <= 7) out.push(`<button class="aviso or" data-a="med-edit" data-id="${m.id}"><span class="k">Comprar</span><span class="t">${esc(m.nombre)}</span><span class="s">Quedan ~${fNum(Math.round(e.quedan * 10) / 10)} ${esc(e.unidad)} (${e.dias} día${e.dias === 1 ? '' : 's'})</span></button>`);
+  });
+  return out;
+}
+
+/* =========================================================
+   INFORME PARA IMPRIMIR O GUARDAR EN PDF
+   ========================================================= */
+function informePDF() {
+  const { desde, hasta } = rangoProg();
+  const map = datosDia();
+  const R = resumen(desde, hasta, map);
+  const E = etapas(desde, hasta);
+  const sint = vivos('sintomas').filter(x => x.fecha >= desde && x.fecha <= hasta).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const cs = vivos('cambios').filter(c => c.fecha >= desde && c.fecha <= hasta).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const an = vivos('analiticas').sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
+  let h = `<div style="font-family:Nunito,system-ui,sans-serif;color:#2A2320;padding:8px">
+    <div style="display:flex;align-items:center;gap:12px">${LOGO(48)}<div><div style="font-size:24px;font-weight:800">Susi · informe</div><div style="font-size:13px">Del ${fFecha(desde)} al ${fFecha(hasta)} · hecho el ${fFecha(hoy())}</div></div></div>
+    <h3>Resumen</h3><p>Días: <b>${R.g}</b> buenos, <b>${R.r}</b> regulares, <b>${R.m}</b> malos${R.tot ? ' (' + Math.round(R.g * 100 / R.tot) + ' % buenos)' : ''}. ${R.pesos.length ? 'Peso medio <b>' + Math.round(R.peso) + ' g</b> (mín. ' + fNum(Math.min(...R.pesos)) + ', máx. ' + fNum(Math.max(...R.pesos)) + ').' : ''} ${R.vomitos ? 'Vómitos: <b>' + R.vomitos + '</b>.' : ''}</p>
+    <h3>Medicación actual</h3><ul>${medsActivos().map(m => `<li>${esc(m.nombre)} ${esc(m.dosis)} · ${esc(pauta(m))}</li>`).join('')}</ul>
+    ${dietaActual() ? `<p>Dieta actual: <b>${esc(nombreCambio(dietaActual()))}</b> desde el ${fCorta(dietaActual().fecha)}.</p>` : ''}
+    <div style="page-break-inside:avoid">${graficaPeso(desde, hasta, map)}</div>
+    ${E.length > 1 ? `<h3>Por etapas</h3><table style="width:100%;border-collapse:collapse;font-size:13px"><tr><th align="left">Etapa</th><th>Días buenos/reg./malos</th><th>Peso medio</th></tr>${E.map(e => { const r = resumen(e.desde < desde ? desde : e.desde, e.hasta, map); return `<tr><td>${esc(e.nombre)}<br><small>${fCorta(e.desde)} – ${fCorta(e.hasta)}</small></td><td align="center">${r.g}/${r.r}/${r.m}</td><td align="center">${r.peso != null ? Math.round(r.peso) + ' g' : '—'}</td></tr>`; }).join('')}</table>` : ''}
+    ${sint.length ? `<h3>Síntomas</h3><ul>${sint.map(x => `<li>${fCorta(x.fecha)} ${esc(x.hora || '')}: ${esc(textoSintoma(x))}${x.nota ? ' (' + esc(x.nota) + ')' : ''}</li>`).join('')}</ul>` : ''}
+    ${cs.length ? `<h3>Cambios</h3><ul>${cs.map(c => `<li>${fCorta(c.fecha)}: ${esc(nombreCambio(c))}</li>`).join('')}</ul>` : ''}
+    ${an ? `<h3>Última analítica (${fCorta(an.fecha)})</h3><p>${VALORES.filter(v => an.v && an.v[v[0]]).map(v => v[1] + ': ' + esc(an.v[v[0]]) + ' ' + v[2]).join(' · ')}${an.notas ? '<br>' + esc(an.notas) : ''}</p>` : ''}
+  </div>`;
+  let el = document.getElementById('imprimir');
+  if (!el) { el = document.createElement('div'); el.id = 'imprimir'; document.body.appendChild(el); }
+  el.innerHTML = h;
+  document.body.classList.add('imprimiendo');
+  el.insertAdjacentHTML('afterbegin', '<div class="no-print" style="display:flex;gap:8px;padding:12px;position:sticky;top:0;background:#fff;z-index:5"><button class="btn btn-teal" style="flex:1" onclick="window.print()">Imprimir o guardar PDF</button><button class="btn btn-soft" style="flex:1" onclick="document.body.classList.remove(\'imprimiendo\')">Volver</button></div>');
+  window.scrollTo(0, 0);
+  setTimeout(() => { try { window.print(); } catch (e) {} }, 400);
+}
+
 /* =========================================================
    PANTALLA: MEDICACIÓN
    ========================================================= */
 function vistaMed() {
   const act = medsActivos();
-  const grupo = (tit, l) => l.length ? `<h2 class="sec-title" style="font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">${tit}</h2>${l.map(m => `<button class="mini" data-a="med-edit" data-id="${m.id}" style="min-height:72px"><span class="col grow"><span class="b" style="font-size:17px">${esc(m.nombre)}</span><span class="small muted">${esc(m.dosis)} · ${pauta(m)}</span>${m.dil ? `<span class="tiny b" style="color:var(--warn)">Aviso para preparar cada ${m.dil.cada} días</span>` : ''}${m.aviso && (m.dias || []).length ? `<span class="tiny b" style="color:var(--pu-k)">Con aviso</span>` : ''}</span>${I.chev}</button>`).join('')}` : '';
+  const grupo = (tit, l) => l.length ? `<h2 class="sec-title" style="font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">${tit}</h2>${l.map(m => `<button class="mini" data-a="med-edit" data-id="${m.id}" style="min-height:72px"><span class="col grow"><span class="b" style="font-size:17px">${esc(m.nombre)}</span><span class="small muted">${esc(m.dosis)} · ${pauta(m)}</span>${m.dil ? `<span class="tiny b" style="color:var(--warn)">Aviso para preparar cada ${m.dil.cada} días</span>` : ''}${m.aviso && (m.dias || []).length ? `<span class="tiny b" style="color:var(--pu-k)">Con aviso</span>` : ''}${existencias(m) ? `<span class="tiny b" style="color:${existencias(m).dias <= 7 ? 'var(--bad)' : 'var(--teal-d)'}">Quedan ~${fNum(Math.round(existencias(m).quedan * 10) / 10)} ${esc(existencias(m).unidad)} · ${existencias(m).dias} días</span>` : ''}${(m.plan || []).some(p => !p.hecho) ? `<span class="tiny b" style="color:var(--warn)">Plan: ${esc(m.plan.filter(p => !p.hecho).sort((a, b) => a.fecha.localeCompare(b.fecha))[0].dosis)} desde el ${fCorta(m.plan.filter(p => !p.hecho).sort((a, b) => a.fecha.localeCompare(b.fecha))[0].fecha)}</span>` : ''}</span>${I.chev}</button>`).join('')}` : '';
   const viejos = vivos('meds').filter(m => !m.activo);
   return `<header class="row" style="justify-content:space-between"><h1 style="font-size:30px;font-weight:800">Medicación</h1><button class="btn btn-teal" style="width:auto;min-height:46px;border-radius:999px" data-a="med-nuevo">+ Añadir</button></header>
     <p class="small muted" style="margin:0 4px">Lo que pongas aquí es lo que sale en las tomas de Hoy. Toca uno para cambiar la dosis o dejar de dárselo.</p>
     ${grupo('Cada día', act.filter(m => m.tipo === 'diario'))}
     ${grupo('Cada semana', act.filter(m => m.tipo === 'semanal'))}
     ${viejos.length ? `<h2 class="sec-title" style="font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Ya no se le da</h2><div class="card" style="padding:4px 16px">${viejos.map(m => `<div class="list-row"><span class="col grow"><span class="b">${esc(m.nombre)}</span><span class="tiny muted">${esc(m.dosis)}${m.hasta ? ' · hasta el ' + fCorta(m.hasta) : ''}</span></span><button class="chip" data-a="med-volver" data-id="${m.id}">Volver a dar</button></div>`).join('')}</div>` : ''}
+    <h2 class="sec-title" style="font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Veterinaria</h2>
+    ${vetHTML()}
     ${nubeHTML()}
     <section class="card col" style="gap:10px"><h2 style="font-size:17px;font-weight:800">Ajustes y copia de seguridad</h2>
       <p class="small muted">${SYNC.meta.casa ? 'Los datos están en la nube y en este móvil. La copia es por si acaso.' : 'Ahora los datos se guardan solo en este móvil. Haz una copia de vez en cuando.'}</p>
@@ -1042,6 +1236,8 @@ function vistaSheetMed() {
         </div>` : `
         <div class="lbl">Qué días (opcional)<div class="chips">${DIAS_1.map((d, i) => `<button class="chip" style="min-width:44px;padding:0" data-a="f-dia" data-v="${i}" aria-pressed="${(F.dias || []).includes(i)}">${d}</button>`).join('')}</div><span class="tiny muted" style="font-weight:600">Sin días, sale en Hoy para marcarlo una vez en la semana.</span></div>
         ${(F.dias || []).length ? `<button class="card row" data-a="f-aviso" style="justify-content:space-between;background:var(--soft);min-height:56px;text-align:left"><span class="b">Avisar los días que toca</span>${sw(!!F.aviso)}</button>` : ''}`}
+      ${planHTML(F)}
+      ${stockHTML(F)}
       <button class="btn btn-teal" data-a="med-guardar">Guardar</button>
       ${F.nuevo ? '' : `<button class="btn btn-danger" data-a="med-dejar">Dejar de dárselo</button>`}
       ${F.nuevo ? '' : `<span class="tiny muted" style="text-align:center">Si cambias la dosis queda apuntado como cambio en Progreso.</span>`}
@@ -1119,6 +1315,9 @@ function pintarSheet() {
   else if (t === 'casa') c = vistaSheetCasa();
   else if (t === 'invitar') c = vistaSheetInvitar();
   else if (t === 'sosp') c = vistaSheetSospechas();
+  else if (t === 'cita') c = vistaSheetCita();
+  else if (t === 'ana') c = vistaSheetAnalitica();
+  else if (t === 'foto') c = `<h2>Foto</h2><img alt="Foto" src="${S.sheet.extra.data}" style="width:100%;border-radius:16px"><span class="tiny muted">${fFecha(S.sheet.extra.fecha)} · ${esc(S.sheet.extra.autor || '')}</span><button class="btn btn-danger" data-a="foto-borrar">Borrar foto</button><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
   else if (t === 'meta') c = `<h2>Meta de comida</h2><p class="small muted">Los gramos que debería comer al día. Se puede cambiar cuando quieras y vale para los dos móviles.</p><div class="form"><label class="lbl">Gramos al día<input class="field" id="meta-in" inputmode="decimal" value="${fNum(metaComida())}" style="font-size:24px;text-align:center;font-weight:800"></label><button class="btn btn-teal" data-a="meta-guardar">Guardar</button></div>`;
   else if (t === 'borrar') c = `<h2>¿Borrar?</h2><p class="muted">${esc(S.sheet.extra.texto)}</p><button class="btn btn-danger" data-a="borrar-ok">Borrar</button><button class="btn btn-soft" data-a="cerrar">Cancelar</button>`;
   else if (t === 'informe') c = `<h2>Informe</h2><p class="small muted">Si no se ha copiado solo, mantén pulsado el texto para copiarlo.</p><textarea class="field" rows="14" readonly>${esc(S.sheet.extra)}</textarea><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
@@ -1259,13 +1458,28 @@ document.addEventListener('click', e => {
     case 'sosp-item': { const l = S.form.items; const i = l.indexOf(d.v); if (i >= 0) l.splice(i, 1); else l.push(d.v); pintarSheet(); break; }
     case 'sosp-guardar': { const F = S.form; if (!F.items.length && !(F.nota || '').trim()) { const x = sospechaDe(F.fecha); if (x) borrar('sospechas', x.id); } else poner('sospechas', { id: 'sosp-' + F.fecha, fecha: F.fecha, items: F.items.slice(), nota: (F.nota || '').trim(), autor: yo() }); cerrarSheet(); repintar(); toast('Guardado'); break; }
     case 'claude-copiar': { const t = textoClaude(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast('Copiado: pégalo en Claude'), () => abrirSheet('informe', t)); else abrirSheet('informe', t); break; }
+    case 'cita-nueva': S.form = { id: uid(), con: 'vet', fecha: hoy(), hora: '', motivo: '', notas: '' }; abrirSheet('cita'); break;
+    case 'cita-edit': { const c = DB.citas.find(x => x.id === d.id); if (c) { S.form = Object.assign({ existe: true }, JSON.parse(JSON.stringify(c))); abrirSheet('cita'); } break; }
+    case 'cita-con': S.form.con = d.v; pintarSheet(); break;
+    case 'cita-guardar': { const F = S.form; if (!F.fecha) { toast('Pon el día'); break; } poner('citas', { id: F.id, con: F.con, fecha: F.fecha, hora: F.hora || '', motivo: (F.motivo || '').trim(), notas: (F.notas || '').trim(), autor: F.autor || yo() }); cerrarSheet(); repintar(); toast('Cita guardada'); break; }
+    case 'cita-borrar': borrar('citas', S.form.id); cerrarSheet(); repintar(); break;
+    case 'ana-nueva': S.form = { id: uid(), fecha: hoy(), v: {}, notas: '', proxima: '' }; abrirSheet('ana'); break;
+    case 'ana-edit': { const a = DB.analiticas.find(x => x.id === d.id); if (a) { S.form = Object.assign({ existe: true }, JSON.parse(JSON.stringify(a))); if (!S.form.v) S.form.v = {}; abrirSheet('ana'); } break; }
+    case 'ana-guardar': { const F = S.form; const v = {}; Object.keys(F.v || {}).forEach(k => { if (String(F.v[k]).trim() !== '') v[k] = String(F.v[k]).trim(); }); poner('analiticas', { id: F.id, fecha: F.fecha || hoy(), v, notas: (F.notas || '').trim(), proxima: F.proxima || '', autor: F.autor || yo() }); cerrarSheet(); repintar(); toast('Analítica guardada'); break; }
+    case 'ana-borrar': borrar('analiticas', S.form.id); cerrarSheet(); repintar(); break;
+    case 'plan-add': { const F = S.form; if (!F.planF || !(F.planD || '').trim()) { toast('Pon el día y la nueva dosis'); break; } F.plan = (F.plan || []).concat([{ fecha: F.planF, dosis: F.planD.trim(), hecho: false }]); F.planF = ''; F.planD = ''; pintarSheet(); break; }
+    case 'plan-quitar': S.form.plan.splice(Number(d.i), 1); pintarSheet(); break;
+    case 'foto-ver': { const x = DB.fotos.find(y => y.id === d.id); if (x) abrirSheet('foto', x); break; }
+    case 'foto-borrar': borrar('fotos', S.sheet.extra.id); cerrarSheet(); repintar(); break;
+    case 'dieta-res': { const c = DB.cambios.find(x => x.id === d.id); if (c) { const r = Object.assign({}, c, { resultado: c.resultado === d.v ? '' : d.v }); poner('cambios', r); repintar(); } break; }
+    case 'pdf': informePDF(); break;
     case 'sint-nuevo': S.sint = null; repintar(); break;
     case 'sint-tipo': S.sint.tipo = d.v; repintar(); break;
     case 'sint-asp': { const l = S.sint.aspecto; const i = l.indexOf(d.v); if (i >= 0) l.splice(i, 1); else l.push(d.v); repintar(); break; }
     case 'sint-cant': S.sint.cantidad = S.sint.cantidad === d.v ? '' : d.v; repintar(); break;
     case 'sint-guardar': {
       const F = S.sint;
-      const rec = { id: F.id || uid(), fecha: F.fecha || f, hora: F.hora || '', tipo: F.tipo, aspecto: F.tipo === 'vomito' ? F.aspecto.slice() : [], cantidad: F.tipo === 'vomito' ? F.cantidad : '', nota: (F.nota || '').trim(), autor: F.autor || yo() };
+      const rec = { id: F.id || F.nid || uid(), fecha: F.fecha || f, hora: F.hora || '', tipo: F.tipo, aspecto: F.tipo === 'vomito' ? F.aspecto.slice() : [], cantidad: F.tipo === 'vomito' ? F.cantidad : '', nota: (F.nota || '').trim(), autor: F.autor || yo() };
       poner('sintomas', rec); S.sint = null; repintar(); toast(SINTOMA_N[rec.tipo] + ' apuntado'); break;
     }
     case 'sintoma-edit': { const x = DB.sintomas.find(y => y.id === d.id); if (x) { S.sint = { id: x.id, fecha: x.fecha, hora: x.hora || '', tipo: x.tipo, aspecto: (x.aspecto || []).slice(), cantidad: x.cantidad || '', nota: x.nota || '', autor: x.autor }; S.tab = 'reg'; S.reg = 'sintoma'; window.scrollTo(0, 0); pintar(); toast('Cambia lo que quieras y pulsa Guardar'); } break; }
@@ -1275,7 +1489,7 @@ document.addEventListener('click', e => {
       const F = S.cambio;
       if (F.tipo === 'dieta' && !(F.alimento || '').trim()) { toast('Escribe qué come ahora'); break; }
       if (!F.texto.trim() && F.tipo !== 'dieta') { toast('Escribe qué ha cambiado'); break; }
-      poner('cambios', { id: uid(), fecha: F.fecha || f, tipo: F.tipo, alimento: F.tipo === 'dieta' ? F.alimento.trim() : undefined, texto: F.texto.trim(), autor: yo() });
+      poner('cambios', Object.assign({ id: uid(), fecha: F.fecha || f, tipo: F.tipo, alimento: F.tipo === 'dieta' ? F.alimento.trim() : undefined, texto: F.texto.trim(), autor: yo() }, F.tipo === 'dieta' ? { marca: (F.marca || '').trim(), proteina: (F.proteina || '').trim(), diasPrueba: parseInt(F.diasPrueba, 10) || null } : {}));
       S.cambio = null; repintar(); toast('Cambio guardado'); break;
     }
     case 'cambio-borrar': abrirSheet('borrar', { col: 'cambios', id: d.id, texto: 'Este cambio dejará de separar etapas en Progreso.' }); break;
@@ -1303,6 +1517,11 @@ document.addEventListener('click', e => {
       if (!F.nombre.trim()) { toast('Pon el nombre'); break; }
       const viejo = DB.meds.find(m => m.id === F.id);
       const rec = Object.assign({}, F); delete rec.nuevo; delete rec.ultPrep; delete rec.ultPrep0;
+      ['planF', 'planD', 'stockC', 'stockU', 'stockCada'].forEach(k => delete rec[k]);
+      if (F.stockC != null || F.stockCada != null || F.stockU != null) {
+        const c = num(F.stockC != null ? F.stockC : (existencias(F) ? existencias(F).quedan : null)), cada = num(F.stockCada != null ? F.stockCada : (F.stock && F.stock.cada));
+        rec.stock = c != null && cada > 0 ? { cantidad: c, cada, unidad: (F.stockU != null ? F.stockU : (F.stock && F.stock.unidad) || 'pastillas').trim() || 'unidades', fecha: hoy() } : (c == null && !cada ? null : rec.stock);
+      }
       if (rec.dil && F.ultPrep !== F.ultPrep0) { vivos('diluciones').filter(x => x.medId === F.id).forEach(x => borrar('diluciones', x.id)); if (F.ultPrep) poner('diluciones', { id: uid(), medId: F.id, fecha: F.ultPrep, hora: '', autor: yo() }); }
       rec.nombre = rec.nombre.trim(); rec.dosis = (rec.dosis || '').trim();
       if (rec.dil) { rec.dil.cada = Math.max(1, parseInt(rec.dil.cada, 10) || 4); }
@@ -1677,8 +1896,9 @@ cargar();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 // Al volver a la app (otro día u otra hora) se actualiza lo que toca
 let ultimoDia = hoy();
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !S.sheet) { if (hoy() !== ultimoDia) { ultimoDia = hoy(); S.hero = {}; S.cacas = null; S.comida = { que: '', g: '' }; } repintar(); } });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !S.sheet) { if (hoy() !== ultimoDia) { ultimoDia = hoy(); aplicarPlanes(); S.hero = {}; S.cacas = null; S.comida = { que: '', g: '' }; } repintar(); } });
 migrar3();
+aplicarPlanes();
 pintar();
 if (!yo()) abrirSheet('quien');
 SYNC.arrancar();
