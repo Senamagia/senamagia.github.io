@@ -389,7 +389,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .in-cv{margin:10px 0 6px;color:var(--accent);min-height:10px}
 .in-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--sec);margin-top:4px}
 .in-row b{color:var(--good);font-weight:600}
-.in-empty{padding:4px 0 2px}.in-empty .pill{margin-top:12px}
+.in-hero.in-empty{padding:16px 18px 18px}.in-empty .pill{margin-top:14px}
 .in-todo{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:8px 4px;border-bottom:1px solid var(--sep);font-size:15px;text-align:left}
 .in-todo:last-child{border-bottom:0}
 .in-todo i{width:19px;height:19px;border-radius:10px;border:1.7px solid var(--sec);flex:none;opacity:.7}
@@ -466,7 +466,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='2.0';
+const APP_VERSION='2.0.1';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'escena',n:'Escenario',l:'#6E44D4',d:'#C9A7FF'},{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
