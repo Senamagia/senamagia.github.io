@@ -231,7 +231,6 @@ function graficaPeso_(ss, filas) {
  * aviso a los móviles que lo hayan activado en la app, si la siguiente toma
  * todavía no está apuntada. Solo avisa una vez por toma.
  */
-const AVISO_MIN = 11 * 60 + 30;
 function tomaMs_(t) { const d = fecha_(t.fecha); const h = (t.hora || '00:00').split(':').map(Number); d.setHours(h[0], h[1], 0, 0); if ((t.hora || '') < '04') d.setDate(d.getDate() + 1); return d.getTime(); }
 function casa_(s) { const u = get_(BASE + 'susitioUsuarios/' + s.uid, s.token); const c = u.fields && u.fields.casa && u.fields.casa.stringValue; if (!c) throw new Error('Esta cuenta no está en la casa de Susi.'); return c; }
 function recientes_(s, casa, desdeMs) {
@@ -258,22 +257,52 @@ function todosMeds_(s, casa) {
   try { JSON.parse(r.getContentText()).forEach(x => { const f = x.document && x.document.fields; if (f && f.d) { const m = JSON.parse(f.d.stringValue); if (!m.borrado) l.push(m); } }); } catch (e) {}
   return l;
 }
+// Dos avisos por toma: a las 11 h 30 min ("quedan 30 min") y a las 11 h 55 min ("hora de preparar").
+// Cada 5 minutos se mira la última toma y se programan los dos avisos a su hora exacta.
+const ETAPAS = { a30: 11 * 60 + 30, a55: 11 * 60 + 55 };
+function siguiente_(s, casa) {
+  const R = recientes_(s, casa, Date.now() - 3 * 24 * 3600000);
+  const u = R.tomas.filter(t => t.hora).sort((a, b) => tomaMs_(b) - tomaMs_(a))[0];
+  return u ? { u: u, clave: u.id + '@' + u.hora } : null;
+}
 function avisos() {
-  const s = entrar_(), casa = casa_(s), ahora = Date.now();
-  const R = recientes_(s, casa, ahora - 3 * 24 * 3600000);
-  const tomas = R.tomas.filter(t => t.hora).sort((a, b) => tomaMs_(b) - tomaMs_(a));
-  const u = tomas[0];
-  if (!u) return;
-  const cuando = tomaMs_(u) + AVISO_MIN * 60000;
-  if (ahora < cuando || ahora > cuando + 3 * 3600000) return; // aún no toca, o ya pasó hace mucho
-  const props = PropertiesService.getScriptProperties();
-  const clave = u.id + '@' + u.hora;
-  if (props.getProperty('ULTIMO_AVISO') === clave) return; // ya avisado
-  const sig = u.momento === 'manana' ? 'noche' : 'manana';
-  const hora = Utilities.formatDate(new Date(tomaMs_(u) + 12 * 3600000), Session.getScriptTimeZone(), 'HH:mm');
-  const meds = todosMeds_(s, casa).filter(m => m.activo && m.tipo === 'diario' && (m.momentos || []).indexOf(sig) >= 0).map(m => m.nombre + ' ' + (m.dosis || ''));
-  const n = enviar_(s, casa, 'Prepara la toma de la ' + (sig === 'noche' ? 'noche' : 'mañana') + ' · ' + hora, 'Susi: ' + (meds.length ? meds.join(', ') : 'toma') + '. No olvides pesarla.');
-  if (n) props.setProperty('ULTIMO_AVISO', clave);
+  const s = entrar_(), casa = casa_(s), x = siguiente_(s, casa);
+  if (!x) return;
+  const props = PropertiesService.getScriptProperties(), base = tomaMs_(x.u), ahora = Date.now();
+  if (props.getProperty('AVISO_TOMA') !== x.clave) {
+    // toma nueva: se programan los dos avisos a su hora
+    ScriptApp.getProjectTriggers().forEach(t => { if (['aviso30', 'aviso55'].includes(t.getHandlerFunction())) ScriptApp.deleteTrigger(t); });
+    if (base + ETAPAS.a30 * 60000 > ahora + 60000) ScriptApp.newTrigger('aviso30').timeBased().at(new Date(base + ETAPAS.a30 * 60000)).create();
+    if (base + ETAPAS.a55 * 60000 > ahora + 60000) ScriptApp.newTrigger('aviso55').timeBased().at(new Date(base + ETAPAS.a55 * 60000)).create();
+    props.setProperties({ AVISO_TOMA: x.clave, ENVIADO_a30: '', ENVIADO_a55: '' });
+  }
+  // por si un aviso programado no saltó: se manda aquí, con unos minutos de retraso
+  const t55 = base + ETAPAS.a55 * 60000;
+  if (ahora >= t55 && ahora < t55 + 3 * 3600000) mandarEtapa_('a55', s, casa, x);
+  else if (ahora >= base + ETAPAS.a30 * 60000 && ahora < t55) mandarEtapa_('a30', s, casa, x);
+}
+function aviso30() { mandarEtapa_('a30'); }
+function aviso55() { mandarEtapa_('a55'); }
+function mandarEtapa_(etapa, s, casa, x) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) return;
+  try {
+    s = s || entrar_(); casa = casa || casa_(s); x = x || siguiente_(s, casa);
+    if (!x) return;
+    const props = PropertiesService.getScriptProperties();
+    if (props.getProperty('ENVIADO_' + etapa) === x.clave) return; // ya enviado
+    const t = tomaMs_(x.u) + ETAPAS[etapa] * 60000, ahora = Date.now();
+    if (ahora < t - 2 * 60000 || ahora > t + 3 * 3600000) return; // no toca ahora (o ya se dio la siguiente toma)
+    const sig = x.u.momento === 'manana' ? 'noche' : 'manana';
+    const hora = Utilities.formatDate(new Date(tomaMs_(x.u) + 12 * 3600000), Session.getScriptTimeZone(), 'HH:mm');
+    const meds = todosMeds_(s, casa).filter(m => m.activo && m.tipo === 'diario' && (m.momentos || []).indexOf(sig) >= 0).map(m => m.nombre + ' ' + (m.dosis || ''));
+    const lista = meds.length ? meds.join(', ') : 'la toma';
+    const nom = sig === 'noche' ? 'noche' : 'mañana';
+    const n = etapa === 'a30'
+      ? enviar_(s, casa, 'Quedan 30 min · toma de la ' + nom + ' (' + hora + ')', 'Susi: ' + lista + '.')
+      : enviar_(s, casa, 'Hora de preparar la medicina', 'Toma de la ' + nom + ' de Susi a las ' + hora + ': ' + lista + '. No olvides pesarla.');
+    if (n) props.setProperty('ENVIADO_' + etapa, x.clave);
+  } finally { lock.releaseLock(); }
 }
 function activarAvisos() {
   ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === 'avisos') ScriptApp.deleteTrigger(t); });
