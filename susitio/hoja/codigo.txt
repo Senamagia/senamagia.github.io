@@ -30,6 +30,7 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', '
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Susitio')
     .addItem('Actualizar ahora', 'actualizar')
+    .addItem('Activar los avisos de las tomas', 'activarAvisos')
     .addItem('Mandar un aviso de prueba', 'avisoPrueba')
     .addItem('Cambiar cuenta o contraseña', 'configurar')
     .addToUi();
@@ -263,6 +264,11 @@ function avisos() {
   const meds = todosMeds_(s, casa).filter(m => m.activo && m.tipo === 'diario' && (m.momentos || []).indexOf(sig) >= 0).map(m => m.nombre + ' ' + (m.dosis || ''));
   const n = enviar_(s, casa, 'Prepara la toma de la ' + (sig === 'noche' ? 'noche' : 'mañana') + ' · ' + hora, 'Susi: ' + (meds.length ? meds.join(', ') : 'toma') + '. No olvides pesarla.');
   if (n) props.setProperty('ULTIMO_AVISO', clave);
+}
+function activarAvisos() {
+  ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === 'avisos') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('avisos').timeBased().everyMinutes(5).create();
+  avisoPrueba();
 }
 function avisoPrueba() {
   const s = entrar_(), casa = casa_(s);
