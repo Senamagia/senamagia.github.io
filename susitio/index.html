@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.4.1';
+const VERSION = '2.4.2';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -828,7 +828,8 @@ function factores(f) {
     if (gA > m * 1.3) add('comida_mucha', 'Ayer comió ' + fNum(Math.round(gA)) + ' g (lo habitual son ' + Math.round(m) + ' g)');
     else if (gA < m * 0.7) add('comida_poca', 'Ayer comió ' + fNum(Math.round(gA)) + ' g (lo habitual son ' + Math.round(m) + ' g)');
   }
-  const antes = new Set(vivos('comidas').filter(c => c.fecha < ayer && c.fecha >= addDays(f, -16)).map(c => (c.que || '').trim().toLowerCase()));
+  const prev = vivos('comidas').filter(c => c.fecha < ayer && c.fecha >= addDays(f, -16));
+  const antes = new Set(new Set(prev.map(c => c.fecha)).size >= 7 ? prev.map(c => (c.que || '').trim().toLowerCase()) : []);
   vivos('comidas').filter(c => dias.includes(c.fecha)).forEach(c => { const q = (c.que || '').trim().toLowerCase(); if (q && antes.size && !antes.has(q)) add('comida_nueva', 'Comió ' + c.que + ' (no lo comía en las 2 semanas anteriores)'); });
   const madr = vivos('comidas').filter(c => dias.includes(c.fecha) && c.hora && c.hora < '04').length;
   if (madr >= 2) add('madrugada', 'Comió ' + madr + ' veces de madrugada');
@@ -840,7 +841,7 @@ function factores(f) {
     if (d === f && mom === 'noche') return;
     const t = tomaDe(d, mom);
     if (!t) { const pt = vivos('tomas').reduce((m, x) => !m || x.fecha < m ? x.fecha : m, null); if (d === ayer && pt && ayer > pt) add('toma_falta', 'No está apuntada la toma de la ' + NOMBRE_MOM[mom] + ' de ayer'); return; }
-    const falta = medsToma(mom).filter(m => !(t.meds || []).some(x => x.id === m.id));
+    const falta = medsToma(mom).filter(m => (m.upd || 0) < (t.upd || 0) && !(t.meds || []).some(x => x.id === m.id));
     if (falta.length) add('toma_incompleta', 'En la toma de la ' + NOMBRE_MOM[mom] + (d === f ? ' de hoy' : ' de ayer') + ' faltó ' + falta.map(m => m.nombre).join(', '));
   }));
   const ts = vivos('tomas').filter(t => t.hora && t.fecha >= addDays(f, -2) && t.fecha <= f).sort((a, b) => tomaMs(a) - tomaMs(b));
