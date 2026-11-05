@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.4.2';
+const VERSION = '2.4.3';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -872,8 +872,13 @@ function patrones() {
     .filter(x => x.malosCon >= 3 && x.tasa >= tasa + 0.15).sort((a, b) => b.tasa - a.tasa);
   return { lista, malos, total, tasa };
 }
+// Hacen falta al menos 14 días con cacas y tomas apuntadas para poder comparar
+const DIAS_MIN = 14;
+function diasConDatos() { const c = new Set(vivos('cacas').map(x => x.fecha)), t = new Set(vivos('tomas').map(x => x.fecha)); return Math.min(c.size, t.size); }
 function pistasHTML(f, titulo) {
-  const fs = factores(f), s = sospechaDe(f);
+  const s = sospechaDe(f), n = diasConDatos();
+  if (n < DIAS_MIN) return `<section class="card col" style="gap:8px;border:2px solid #F2C9C4"><span class="b" style="font-size:17px">Pistas</span><span class="small muted">Para buscar qué pudo influir hacen falta al menos ${DIAS_MIN} días con tomas y cacas apuntadas, y así poder comparar con lo normal. Lleváis ${n}.</span><div style="height:8px;border-radius:9px;background:#F1E2CF;overflow:hidden"><div style="height:100%;width:${Math.round(n * 100 / DIAS_MIN)}%;background:var(--teal)"></div></div><button class="btn btn-line" style="min-height:46px" data-a="sosp-abrir" data-f="${f}">${s ? 'Mis sospechas: ' + s.items.length : '¿Sospechas de algo? Apúntalo'}</button></section>`;
+  const fs = factores(f);
   return `<section class="card col" style="gap:8px;border:2px solid #F2C9C4"><div class="row" style="justify-content:space-between;align-items:baseline"><span class="b" style="font-size:17px">${titulo}</span><span class="tiny muted">48 h antes</span></div>
     ${fs.length ? fs.map(x => `<div class="row" style="gap:10px;align-items:flex-start"><span style="width:8px;height:8px;border-radius:9px;background:#B3261E;margin-top:7px;flex:0 0 8px"></span><span class="small">${esc(x.texto)}</span></div>`).join('') : `<span class="small muted">No hay nada fuera de lo normal apuntado en las 48 horas anteriores.</span>`}
     <span class="tiny muted">Son coincidencias, no causas. Compáralas con lo que diga la vet.</span>
@@ -883,12 +888,14 @@ function pistasHTML(f, titulo) {
 function patronesHTML() {
   const P = patrones();
   let h = `<section class="card col" style="gap:10px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Qué se repite antes de los días malos</h2><span class="tiny muted">Días malos = cacas malas o vómito. Se compara con el resto de días.</span></div>`;
-  if (P.malos < 3) h += `<div class="empty">Hacen falta al menos 3 días malos apuntados para buscar qué se repite. Ahora hay ${P.malos}.</div>`;
+  const nd = diasConDatos();
+  if (nd < DIAS_MIN) h += `<div class="empty">Hacen falta al menos ${DIAS_MIN} días con tomas y cacas apuntadas para empezar a comparar. Lleváis ${nd}.</div>`;
+  else if (P.malos < 3) h += `<div class="empty">Hacen falta al menos 3 días malos apuntados para buscar qué se repite. Ahora hay ${P.malos}.</div>`;
   else if (!P.lista.length) h += `<span class="small muted">De ${P.total} días apuntados, ${P.malos} fueron malos. De momento nada se repite lo bastante antes de ellos como para destacarlo.</span>`;
   else h += P.lista.map(x => `<div class="col" style="gap:4px;background:#FCE8E6;border-radius:14px;padding:12px"><span class="b" style="font-size:15px;color:#5C1410">${esc(FACTOR_N[x.k] || x.k)}</span><span class="small" style="color:#5C1410">Cuando pasa, el día fue malo <b>${x.malosCon} de ${x.con}</b> veces. Normalmente es malo ${Math.round(P.tasa * 100)} % de los días.</span></div>`).join('') + `<span class="tiny muted">Solo salen relaciones con al menos 3 casos. Son coincidencias: cuantos más días apuntes, más fiables.</span>`;
   // últimos días malos con sus pistas
   const recientes = []; for (let f = hoy(), i = 0; i < 60 && recientes.length < 4; i++, f = addDays(f, -1)) if (esMalo(f)) recientes.push(f);
-  if (recientes.length) h += `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px"><span class="b">Últimos días malos</span>${recientes.map(f => { const fs = factores(f); return `<div class="col" style="gap:2px"><span class="small b">${fFecha(f)}</span><span class="small muted">${fs.length ? fs.map(x => esc(x.texto)).join(' · ') : 'Sin nada fuera de lo normal'}</span></div>`; }).join('')}</div>`;
+  if (recientes.length && nd >= DIAS_MIN) h += `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px"><span class="b">Últimos días malos</span>${recientes.map(f => { const fs = factores(f); return `<div class="col" style="gap:2px"><span class="small b">${fFecha(f)}</span><span class="small muted">${fs.length ? fs.map(x => esc(x.texto)).join(' · ') : 'Sin nada fuera de lo normal'}</span></div>`; }).join('')}</div>`;
   h += `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px"><span class="b">Preguntar a Claude</span><span class="small muted">Copia los últimos 30 días con una pregunta ya escrita. Pégalo en una conversación con Claude para que lo analice más a fondo.</span><button class="btn btn-teal" data-a="claude-copiar">Copiar para Claude</button><a href="https://claude.ai/new" style="text-align:center;font-weight:800;color:var(--teal-d)">Abrir Claude</a></div>`;
   return h + `</section>`;
 }
