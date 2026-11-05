@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.0';
+const VERSION = '2.1';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -318,6 +318,11 @@ const ini = n => `<span class="ini ${n === 'Sara' ? 'sara' : ''}">${n === 'Sara'
 /* =========================================================
    PANTALLA: HOY
    ========================================================= */
+// Momento real de una toma (las de madrugada cuentan como del día anterior)
+function tomaMs(t) { const d = parseD(t.fecha); const [h, m] = (t.hora || '00:00').split(':').map(Number); d.setHours(h, m, 0, 0); if ((t.hora || '') < '04') d.setDate(d.getDate() + 1); return d.getTime(); }
+function ultimaToma() { return vivos('tomas').filter(t => t.hora).sort((a, b) => tomaMs(b) - tomaMs(a))[0]; }
+// La siguiente toma va 12 horas después de la última
+function prevista(mom) { const u = ultimaToma(); if (!u || u.momento === mom && tomaMs(u) > Date.now() - 6 * 3600000) return ''; const d = new Date(tomaMs(u) + 12 * 3600000); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 function heroMomento(f) {
   const m = tomaDe(f, 'manana'), n = tomaDe(f, 'noche');
   if (!m && (horaSusi() < 11 || n)) return 'manana'; // antes de las 15:00
@@ -355,7 +360,7 @@ function vistaHoy() {
     const F = heroForm(f, mom);
     const meds = medsToma(mom);
     h += `<section class="hero" aria-label="Toma pendiente">
-      <div class="row" style="justify-content:space-between"><span class="kicker">Ahora toca</span>
+      <div class="row" style="justify-content:space-between"><span class="kicker">Ahora toca${prevista(mom) ? ' · prevista ' + prevista(mom) : ''}</span>
         ${F.editHora ? `<input class="hero-time" type="time" value="${esc(F.hora || nowHM())}" data-hero="hora" aria-label="Hora de la toma">` : `<button class="pill-btn" data-a="hero-hora">Hora: ${F.hora ? esc(F.hora) : 'ahora'}</button>`}
       </div>
       <h2>Toma de la ${NOMBRE_MOM[mom]}</h2>
@@ -1092,6 +1097,7 @@ const SYNC = {
     const casaRef = c => F.doc(db, 'susitio', c);
     const rcol = c => F.collection(db, 'susitio', c, 'r');
     const leer = snap => { const out = []; snap.forEach(d => { const x = d.data(); out.push({ col: x.col, d: x.d, st: x.st ? x.st.toMillis() : 0, local: d.metadata.hasPendingWrites }); }); return out; };
+    this.F = F; this.app = app; this.db = db;
     this.fb = {
       onAuth: cb => Au.onAuthStateChanged(auth, u => cb(u ? { uid: u.uid, email: u.email } : null)),
       entrar: (e, p) => Au.signInWithEmailAndPassword(auth, e, p).then(c => ({ uid: c.user.uid, email: c.user.email })),
@@ -1103,6 +1109,8 @@ const SYNC = {
       soyMiembro: async (casa, uid) => { try { const d = await F.getDoc(F.doc(db, 'susitio', casa, 'miembros', uid)); return d.exists(); } catch (e) { return false; } },
       crearCasa: async (casa, uid, datos) => { await F.setDoc(casaRef(casa), { owner: uid, t: F.serverTimestamp() }); await F.setDoc(F.doc(db, 'susitio', casa, 'miembros', uid), Object.assign({ t: F.serverTimestamp() }, datos)); },
       unirse: async (casa, cod, uid, datos) => { await F.setDoc(F.doc(db, 'susitio', casa, 'miembros', uid), Object.assign({ codigo: cod, t: F.serverTimestamp() }, datos)); try { await F.deleteDoc(F.doc(db, 'susitio', casa, 'invitaciones', cod)); } catch (e) {} },
+      guardarAviso: (casa, id, datos) => F.setDoc(F.doc(db, 'susitio', casa, 'avisos', id), Object.assign({ t: F.serverTimestamp() }, datos)),
+      borrarAviso: (casa, id) => F.deleteDoc(F.doc(db, 'susitio', casa, 'avisos', id)),
       invitar: (casa, cod, uid) => F.setDoc(F.doc(db, 'susitio', casa, 'invitaciones', cod), { por: uid, t: F.serverTimestamp() }),
       miembros: async casa => { const s = await F.getDocs(F.collection(db, 'susitio', casa, 'miembros')); const r = []; s.forEach(d => r.push(Object.assign({ uid: d.id }, d.data()))); return r; },
       bajar: async (casa, desde) => leer(await F.getDocs(desde ? F.query(rcol(casa), F.where('st', '>', F.Timestamp.fromMillis(desde))) : rcol(casa))),
@@ -1255,6 +1263,31 @@ const SYNC = {
     this.user = null; this.meta = {}; this.guardarMeta(); this.setStatus('off');
   }
 };
+/* ---------- Avisos al móvil (notificaciones) ---------- */
+const VAPID = 'BKjynu7f1iQV0UvhXbQ8p44Xl0WVbyJ8lFg4OUxp7s4_XaCPCHZSvl8QRdE5xM_CwOrZxx4arVdWlhgbAbgJpbI';
+const fnvHash = t => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); };
+function avisosHTML() {
+  const ok = SYNC.meta.aviso && typeof Notification !== 'undefined' && Notification.permission === 'granted';
+  return ok ? `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b grow" style="color:var(--teal-d)">🔔 Avisos activados en este móvil: 30 min antes de cada toma</span><button class="chip" data-a="avisos-off">Quitar</button></div>`
+    : `<button class="btn btn-line" data-a="avisos-on">🔔 Activar avisos en este móvil</button><span class="tiny muted">Te avisa 30 minutos antes de cada toma (11 h 30 min después de la anterior).</span>`;
+}
+async function activarAvisos() {
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) { toast(standalone ? 'Este móvil no admite avisos (hace falta iOS 16.4 o más nuevo)' : 'Abre Susitio desde el icono de la pantalla de inicio para activar los avisos'); return; }
+  const per = await Notification.requestPermission();
+  if (per !== 'granted') { toast('Sin permiso: actívalo en Ajustes › Notificaciones › Susitio'); return; }
+  try {
+    await SYNC.cargar();
+    const M = await import('https://www.gstatic.com/firebasejs/' + FB_VER + '/firebase-messaging.js');
+    const reg = await navigator.serviceWorker.ready;
+    const token = await M.getToken(M.getMessaging(SYNC.app), { vapidKey: VAPID, serviceWorkerRegistration: reg });
+    if (!token) throw new Error('sin token');
+    const id = fnvHash(token);
+    await SYNC.fb.guardarAviso(SYNC.meta.casa, id, { token, uid: SYNC.user.uid, nombre: yo() });
+    SYNC.meta.aviso = { id }; SYNC.guardarMeta();
+    toast('Avisos activados');
+  } catch (e) { toast('No se han podido activar los avisos' + (e && e.code ? ' (' + e.code + ')' : '')); }
+}
 function errNube(e) {
   const c = (e && e.code) || '';
   return ({
@@ -1277,6 +1310,7 @@ function nubeHTML() {
     <span class="small" style="overflow-wrap:anywhere">${esc(m.email || '')}</span>
     <span class="small ${SYNC.status === 'ok' ? '' : 'b'}" style="color:${SYNC.status === 'ok' ? 'var(--muted)' : 'var(--warn)'}">${est}${pend ? ' · ' + pend + ' por subir' : ''}</span>
     ${!SYNC.user && SYNC.status === 'off' ? `<button class="btn btn-teal" data-a="nube-abrir">Volver a entrar</button>` : m.casa ? `<div class="grid2"><button class="btn btn-line" data-a="invitar">Invitar a alguien</button><button class="btn btn-soft" data-a="sync-ahora">Sincronizar</button></div>` : `<button class="btn btn-teal" data-a="casa-abrir">Entrar en la casa de Susi</button>`}
+    ${m.casa && SYNC.user ? avisosHTML() : ''}
     <button class="btn btn-soft" data-a="nube-salir">Cerrar sesión</button></section>`;
 }
 function vistaSheetNube() {
@@ -1330,6 +1364,11 @@ async function accionNube(a) {
       try { await navigator.clipboard.writeText(S.sheet.extra); toast('Código copiado'); } catch (e) { toast('Mantén pulsado el código para copiarlo'); }
     } else if (a === 'sync-ahora') {
       if (!SYNC.unsub) await SYNC.conectar(); else await SYNC.subir(); toast(SYNC.status === 'ok' ? 'Sincronizado' : 'Sin conexión: se subirá más tarde');
+    } else if (a === 'avisos-on') {
+      await activarAvisos(); repintar();
+    } else if (a === 'avisos-off') {
+      try { await SYNC.fb.borrarAviso(SYNC.meta.casa, SYNC.meta.aviso.id); } catch (e) {}
+      delete SYNC.meta.aviso; SYNC.guardarMeta(); repintar(); toast('Avisos desactivados en este móvil');
     } else if (a === 'nube-salir') {
       await SYNC.salir(); repintar(); toast('Sesión cerrada. Los datos siguen en este móvil.');
     }
@@ -1340,7 +1379,7 @@ document.addEventListener('click', e => {
   const a = b.dataset.a;
   if (a === 'nube-abrir') { S.au = { email: SYNC.meta.email || '', pass: '' }; abrirSheet(SYNC.meta.uid && SYNC.user ? 'casa' : 'nube'); }
   else if (a === 'casa-abrir') { S.au = S.au || {}; abrirSheet('casa'); }
-  else if (['au-entrar', 'au-crear', 'au-olvido', 'casa-crear', 'casa-unirse', 'invitar', 'invitar-copiar', 'sync-ahora', 'nube-salir'].includes(a)) accionNube(a);
+  else if (['au-entrar', 'au-crear', 'au-olvido', 'casa-crear', 'casa-unirse', 'invitar', 'invitar-copiar', 'sync-ahora', 'nube-salir', 'avisos-on', 'avisos-off'].includes(a)) accionNube(a);
 });
 addEventListener('online', () => { if (SYNC.user) { if (!SYNC.unsub) SYNC.conectar(); else SYNC.subir(); } });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && SYNC.user) { if (!SYNC.unsub && SYNC.meta.casa) SYNC.conectar(); else SYNC.subir(); } });

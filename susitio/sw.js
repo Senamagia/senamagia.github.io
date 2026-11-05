@@ -1,6 +1,6 @@
 // Guarda Susitio en el móvil para que funcione sin internet.
 // Cada versión nueva cambia VERSION; la app avisa y se actualiza cuando se pulsa «Actualizar».
-const VERSION = 'susitio-v7';
+const VERSION = 'susitio-v8';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -30,4 +30,16 @@ self.addEventListener('fetch', e => {
     try { return await fetch(e.request); }
     catch (err) { return (e.request.mode === 'navigate' && await cache.match('./index.html')) || Response.error(); }
   }));
+});
+
+// Avisos: el programa de la hoja de Google manda el mensaje y aquí se enseña
+self.addEventListener('push', e => {
+  let p = {};
+  try { p = e.data ? e.data.json() : {}; } catch (err) { p = { data: { title: 'Susitio', body: e.data ? e.data.text() : '' } }; }
+  const d = p.data || p.notification || p;
+  e.waitUntil(self.registration.showNotification(d.title || 'Susitio', { body: d.body || '', icon: 'icon-180.png', badge: 'icon-180.png', tag: d.tag || 'susitio', renotify: true }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(l => { const c = l.find(x => x.url.includes('/susitio/')); return c ? c.focus() : self.clients.openWindow('./'); }));
 });
