@@ -167,7 +167,7 @@ textarea.field{height:auto;padding:12px;resize:none;line-height:1.4}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.4';
+const VERSION = '2.4.1';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -839,7 +839,7 @@ function factores(f) {
   dias.forEach(d => ['manana', 'noche'].forEach(mom => {
     if (d === f && mom === 'noche') return;
     const t = tomaDe(d, mom);
-    if (!t) { if (d === ayer) add('toma_falta', 'No está apuntada la toma de la ' + NOMBRE_MOM[mom] + ' de ayer'); return; }
+    if (!t) { const pt = vivos('tomas').reduce((m, x) => !m || x.fecha < m ? x.fecha : m, null); if (d === ayer && pt && ayer > pt) add('toma_falta', 'No está apuntada la toma de la ' + NOMBRE_MOM[mom] + ' de ayer'); return; }
     const falta = medsToma(mom).filter(m => !(t.meds || []).some(x => x.id === m.id));
     if (falta.length) add('toma_incompleta', 'En la toma de la ' + NOMBRE_MOM[mom] + (d === f ? ' de hoy' : ' de ayer') + ' faltó ' + falta.map(m => m.nombre).join(', '));
   }));
