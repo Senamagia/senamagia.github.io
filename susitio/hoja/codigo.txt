@@ -348,10 +348,11 @@ function diagnostico() {
   const oauth = ScriptApp.getOAuthToken();
   docs.forEach(d => {
     const f = d.fields || {}, tok = f.token && f.token.stringValue;
+    if (!f.nombre || f.nombre.stringValue !== 'Sena') return;
     const r = UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/' + PROYECTO + '/messages:send', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { Authorization: 'Bearer ' + oauth, 'x-goog-user-project': PROYECTO },
-      payload: JSON.stringify({ validate_only: true, message: { token: tok, data: { title: 'x', body: 'x' } } })
+      payload: JSON.stringify({ message: { token: tok, data: { title: 'Prueba de Susitio (solo Sena)', body: 'Comprobando los avisos 🐾', tag: 'prueba' }, webpush: { headers: { Urgency: 'high', TTL: '3600' } } } })
     });
     console.log((f.nombre ? f.nombre.stringValue : '?') + ' · actualizado ' + (d.updateTime || '') + ' → ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 200));
   });
