@@ -171,7 +171,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.6';
+const VERSION = '2.6.1';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -1708,7 +1708,7 @@ const SYNC = {
       }
       await this.subir();
       this.unsub = fb.escuchar(casa, this.meta.desde || 0, lista => { this.aplicar(lista); this.ultimo = Date.now(); if (this.status !== 'ok') this.setStatus('ok'); }, () => { this.unsub = null; this.setStatus('sin-red'); });
-      this.ultimo = Date.now(); this.setStatus('ok');
+      this.ultimo = Date.now(); this.setStatus('ok'); revisarAviso();
       repintar();
     } catch (e) { this.unsub = null; this.setStatus('sin-red'); }
   },
@@ -1757,8 +1757,8 @@ const VAPID = 'BKjynu7f1iQV0UvhXbQ8p44Xl0WVbyJ8lFg4OUxp7s4_XaCPCHZSvl8QRdE5xM_Cw
 const fnvHash = t => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); };
 function avisosHTML() {
   const ok = SYNC.meta.aviso && typeof Notification !== 'undefined' && Notification.permission === 'granted';
-  return ok ? `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b grow" style="color:var(--teal-d)">🔔 Avisos activados en este móvil: 30 min antes de cada toma</span><button class="chip" data-a="avisos-off">Quitar</button></div>`
-    : `<button class="btn btn-line" data-a="avisos-on">🔔 Activar avisos en este móvil</button><span class="tiny muted">Te avisa 30 minutos antes de cada toma (11 h 30 min después de la anterior).</span>`;
+  return ok ? `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b grow" style="color:var(--teal-d)">🔔 Avisos activados en este móvil: a las 11 h 30 min y 11 h 55 min de cada toma</span><button class="chip" data-a="avisos-off">Quitar</button></div>`
+    : `<button class="btn btn-line" data-a="avisos-on">🔔 Activar avisos en este móvil</button><span class="tiny muted">Te avisa a las 11 h 30 min («quedan 30 min») y a las 11 h 55 min («hora de preparar la medicina») de la toma anterior.</span>`;
 }
 async function activarAvisos() {
   const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
@@ -1777,6 +1777,23 @@ async function activarAvisos() {
     toast('Avisos activados');
   } catch (e) { toast('No se han podido activar los avisos' + (e && e.code ? ' (' + e.code + ')' : '')); }
 }
+// Cada vez que se abre la app se comprueba que el aviso de este móvil sigue vivo; si el móvil ha cambiado su dirección de avisos, se guarda la nueva.
+let avisoRevisado = 0;
+async function revisarAviso() {
+  if (!SYNC.meta.aviso || !SYNC.user || !SYNC.meta.casa || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  if (Date.now() - avisoRevisado < 10 * 60000) return;
+  avisoRevisado = Date.now();
+  try {
+    const M = await import('https://www.gstatic.com/firebasejs/' + FB_VER + '/firebase-messaging.js');
+    const reg = await navigator.serviceWorker.ready;
+    const token = await M.getToken(M.getMessaging(SYNC.app), { vapidKey: VAPID, serviceWorkerRegistration: reg });
+    if (!token) return;
+    const id = fnvHash(token);
+    await SYNC.fb.guardarAviso(SYNC.meta.casa, id, { token, uid: SYNC.user.uid, nombre: yo() });
+    if (SYNC.meta.aviso.id !== id) { try { await SYNC.fb.borrarAviso(SYNC.meta.casa, SYNC.meta.aviso.id); } catch (e) {} SYNC.meta.aviso = { id }; SYNC.guardarMeta(); }
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') revisarAviso(); });
 function errNube(e) {
   const c = (e && e.code) || '';
   return ({
