@@ -171,7 +171,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.6.2';
+const VERSION = '2.7';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -769,35 +769,44 @@ function dietaActual() { const d = vivos('cambios').filter(c => c.tipo === 'diet
 const ES_MED = c => ['dosis', 'medicacion', 'suplemento'].includes(c.tipo);
 function graficaPeso(desde, hasta, map) {
   const N = diffDays(hasta, desde) + 1;
-  const pts = [];
-  for (let i = 0; i < N; i++) { const f = addDays(desde, i); const d = map[f]; if (d && d.pesos.length) pts.push([i, d.pesos.reduce((a, b) => a + b, 0) / d.pesos.length]); }
-  const ult = pts.length ? pts[pts.length - 1][1] : null;
-  const dif = pts.length > 1 ? ult - pts[0][1] : null;
-  let h = `<section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between;align-items:flex-end"><div class="col"><h2 style="font-size:19px;font-weight:800">Peso, dieta y medicación</h2><span class="tiny muted">Media de mañana y noche de cada día</span></div>
-    ${ult != null ? `<div class="col" style="align-items:flex-end"><span style="font-size:28px;font-weight:800;line-height:1">${Math.round(ult)} g</span>${dif != null ? `<span class="tiny b" style="color:${dif < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${dif > 0 ? '+' : dif < 0 ? '−' : '±'}${Math.round(Math.abs(dif))} g en el periodo</span>` : ''}</div>` : ''}</div>`;
-  if (pts.length < 2) return h + `<div class="empty">Hacen falta al menos dos días con peso para dibujar la gráfica.</div></section>`;
+  // Todas las pesadas, en orden: la de las 14:00 y la de las 2:30 de cada día
+  const pts = vivos('tomas').filter(t => t.peso != null && t.fecha >= desde && t.fecha <= hasta)
+    .sort((a, b) => tomaMs(a) - tomaMs(b))
+    .map(t => ({ i: diffDays(t.fecha, desde), off: t.momento === 'noche' ? 0.72 : 0.28, v: t.peso, t }));
+  const ult = pts.length ? pts[pts.length - 1].v : null;
+  const dif = pts.length > 1 ? ult - pts[0].v : null;
+  let h = `<section class="card col" style="gap:10px"><div class="row" style="justify-content:space-between;align-items:flex-end"><div class="col"><h2 style="font-size:19px;font-weight:800">Peso, dieta y medicación</h2><span class="tiny muted">Cada pesada en orden · toca un punto</span></div>
+    ${ult != null ? `<div class="col" style="align-items:flex-end"><span style="font-size:28px;font-weight:800;line-height:1;white-space:nowrap">${fNum(ult)} g</span>${dif != null ? `<span class="tiny b" style="white-space:nowrap;color:${dif < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${dif > 0 ? '+' : dif < 0 ? '−' : '±'}${fNum(Math.abs(dif))} g en el periodo</span>` : ''}</div>` : ''}</div>`;
+  if (pts.length < 2) return h + `<div class="empty">Hacen falta al menos dos pesadas para dibujar la gráfica.</div></section>`;
   const cs = vivos('cambios').sort((a, b) => a.fecha.localeCompare(b.fecha));
   const dietas = cs.filter(ES_DIETA);
   const meds = cs.filter(c => ES_MED(c) && c.fecha >= desde && c.fecha <= hasta);
-  const W = 326, x0 = 34, x1 = W - 6, yD = 4, yM = 34, yT = 66, yB = 214, H = 236;
-  let lo = Math.min(...pts.map(p => p[1])), hi = Math.max(...pts.map(p => p[1]));
-  const pd = Math.max(4, (hi - lo) * 0.15); lo -= pd; hi += pd;
-  const X = i => x0 + i * (x1 - x0) / Math.max(1, N - 1);
-  const XF = f => X(Math.min(N - 1, Math.max(0, diffDays(f, desde))));
+  const W = 326, x0 = 34, x1 = W - 4, yD = 2, yM = 30, yT = 60, yB = 196, yS = 212, H = N <= 10 ? 250 : 234;
+  // Escala fija: mínimo 80 g de alto, en pasos de 20 g, para que 5 g no parezcan un drama
+  let lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v));
+  const mid = (lo + hi) / 2, span = Math.max(80, hi - lo + 30);
+  lo = Math.floor((mid - span / 2) / 20) * 20; hi = Math.ceil((mid + span / 2) / 20) * 20;
+  const cw = (x1 - x0) / N;
+  const XD = i => x0 + cw * i;
+  const XP = p => XD(p.i) + cw * p.off;
+  const XF = f => XD(Math.min(N, Math.max(0, diffDays(f, desde))));
   const Y = v => yB - (v - lo) * (yB - yT) / (hi - lo);
   const corta = (n, k) => n.length > k ? n.slice(0, Math.max(1, k - 1)) + '…' : n;
-  let s = `<svg role="img" aria-label="Peso de Susi del ${fCorta(desde)} al ${fCorta(hasta)}, con los cambios de dieta y de medicación marcados" width="100%" viewBox="0 0 ${W} ${H}" style="display:block">`;
+  // Qué comía antes del primer cambio de dieta: lo que más se ha apuntado en Comida en esos días
+  const comidaDe = (a, b) => { const c = {}; vivos('comidas').forEach(x => { const k = (x.que || '').trim(); if (k && x.fecha >= a && x.fecha <= b) c[k] = (c[k] || 0) + 1; }); const l = Object.entries(c).sort((x, y) => y[1] - x[1]); return l.length ? l[0][0] : null; };
+  let s = `<svg role="img" aria-label="Peso de Susi del ${fCorta(desde)} al ${fCorta(hasta)}, pesada a pesada, con la dieta, la medicación y cómo fue cada día" width="100%" viewBox="0 0 ${W} ${H}" style="display:block">`;
   // Carril de dieta
-  s += `<text x="0" y="${yD + 15}" font-size="10" font-weight="800" fill="#6E625A">DIETA</text>`;
+  s += `<text x="0" y="${yD + 14}" font-size="10" font-weight="800" fill="#6E625A">DIETA</text>`;
   const tramos = [];
   const antes = dietas.filter(c => c.fecha <= desde).pop();
-  tramos.push({ desde, nombre: antes ? nombreCambio(antes) : 'Dieta de antes' });
-  dietas.filter(c => c.fecha > desde && c.fecha <= hasta).forEach(c => tramos.push({ desde: c.fecha, nombre: nombreCambio(c), cambio: true }));
+  const dentro = dietas.filter(c => c.fecha > desde && c.fecha <= hasta);
+  tramos.push({ desde, nombre: antes ? nombreCambio(antes) : (comidaDe(desde, dentro.length ? addDays(dentro[0].fecha, -1) : hasta) || 'Dieta de antes') });
+  dentro.forEach(c => tramos.push({ desde: c.fecha, nombre: nombreCambio(c), cambio: true }));
   const COLD = ['#F6E7D4', '#CFE7E3', '#F2D4B5', '#B9DCD6'];
   tramos.forEach((t, i) => {
     const a = XF(t.desde), b = i + 1 < tramos.length ? XF(tramos[i + 1].desde) : x1;
-    s += `<rect x="${a.toFixed(1)}" y="${yD}" width="${Math.max(2, b - a - 1).toFixed(1)}" height="22" rx="6" fill="${COLD[i % COLD.length]}"/>`;
-    if (b - a > 28) s += `<text x="${(a + 6).toFixed(1)}" y="${yD + 15}" font-size="11" font-weight="800" fill="#2A2320">${esc(corta(t.nombre, Math.floor((b - a - 10) / 6.2)))}</text>`;
+    s += `<rect x="${a.toFixed(1)}" y="${yD}" width="${Math.max(2, b - a - 1).toFixed(1)}" height="20" rx="6" fill="${COLD[i % COLD.length]}"/>`;
+    if (b - a > 28) s += `<text x="${(a + 6).toFixed(1)}" y="${yD + 14}" font-size="11" font-weight="800" fill="#2A2320">${esc(corta(t.nombre, Math.floor((b - a - 10) / 6.2)))}</text>`;
     if (t.cambio) s += `<line x1="${a.toFixed(1)}" x2="${a.toFixed(1)}" y1="${yD}" y2="${yB}" stroke="#1D6B66" stroke-width="2.5"/>`;
   });
   // Carril de medicación
@@ -806,17 +815,33 @@ function graficaPeso(desde, hasta, map) {
     const x = XF(c.fecha);
     s += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${yM + 18}" y2="${yB}" stroke="#C2620E" stroke-width="1.6" stroke-dasharray="4 4"/><circle cx="${x.toFixed(1)}" cy="${yM + 9}" r="9" fill="#F2B880" stroke="#fff" stroke-width="2"/><text x="${x.toFixed(1)}" y="${yM + 13}" text-anchor="middle" font-size="11" font-weight="800" fill="#4A2402">${i + 1}</text>`;
   });
-  // Peso
-  for (let k = 0; k < 3; k++) {
-    const v = lo + (hi - lo) * (0.2 + 0.3 * k);
-    s += `<line x1="${x0}" x2="${x1}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#E2D8CB" stroke-dasharray="2 4"/><text x="${x0 - 6}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#6E625A">${Math.round(v)}</text>`;
+  // Rejilla de peso
+  for (let v = lo + 20; v < hi; v += 20) s += `<line x1="${x0}" x2="${x1}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#E2D8CB" stroke-dasharray="2 4"/><text x="${x0 - 5}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#6E625A">${v}</text>`;
+  if (N <= 31) for (let k = 1; k < N; k++) s += `<line x1="${XD(k).toFixed(1)}" x2="${XD(k).toFixed(1)}" y1="${yT}" y2="${yB}" stroke="#E2D8CB" stroke-opacity=".6"/>`;
+  // Línea con todas las pesadas
+  s += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + XP(p).toFixed(1) + ' ' + Y(p.v).toFixed(1)).join(' ')}" fill="none" stroke="#2A2320" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const conNum = pts.length <= 14;
+  pts.forEach((p, k) => {
+    const last = k === pts.length - 1, x = XP(p), y = Y(p.v);
+    const info = `${fCorta(p.t.fecha)} · toma de ${p.t.momento === 'noche' ? 'noche' : 'mañana'}${p.t.hora ? ' (' + p.t.hora + ')' : ''}: ${fNum(p.v)} g`;
+    s += `<g data-a="peso-pt" data-t="${esc(info)}" style="cursor:pointer"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="12" fill="transparent"/>`;
+    if (pts.length < 60 || last) s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${last ? 5.5 : 3.5}" fill="#2A2320" stroke="#fff" stroke-width="1.5"/>`;
+    if (conNum || last) { const abajo = k > 0 ? p.v < pts[k - 1].v : p.v < pts[1].v; s += `<text x="${x.toFixed(1)}" y="${(y + (abajo ? 17 : -9)).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="${last ? 800 : 600}" fill="#2A2320">${fNum(p.v)}</text>`; }
+    s += `</g>`;
+  });
+  // Cómo fue cada día y vómitos
+  const COLDIA = { bueno: '#2E9E5B', regular: '#F2B33D', malo: '#C8382F' }, NOMD = { bueno: 'Bueno', regular: 'Regular', malo: 'Malo' };
+  for (let k = 0; k < N; k++) {
+    const d = map[addDays(desde, k)], x = XD(k);
+    const c = d && d.dia ? COLDIA[d.dia] : '#EFE7DD';
+    s += `<rect x="${(x + 1).toFixed(1)}" y="${yS}" width="${Math.max(1, cw - 2).toFixed(1)}" height="18" rx="${cw > 12 ? 4 : 1}" fill="${c}"/>`;
+    if (cw > 44 && d && d.dia) s += `<text x="${(x + cw / 2).toFixed(1)}" y="${yS + 13}" text-anchor="middle" font-size="11" font-weight="700" fill="${d.dia === 'regular' ? '#4A2E02' : '#fff'}">${NOMD[d.dia]}</text>`;
+    if (d && d.vomitos) s += `<path d="M${(x + cw / 2 - 6).toFixed(1)} ${yS - 3} L${(x + cw / 2 + 6).toFixed(1)} ${yS - 3} L${(x + cw / 2).toFixed(1)} ${yS - 14} Z" fill="#B3261E"/>`;
+    if (N <= 10) s += `<text x="${(x + cw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle" font-size="11" fill="#6E625A">${fCorta(addDays(desde, k))}</text>`;
   }
-  s += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ')}" fill="none" stroke="#2A2320" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
-  for (let i = 0; i < N; i++) { const d = map[addDays(desde, i)]; if (d && d.vomitos) { const x = X(i); s += `<path d="M${(x - 6).toFixed(1)} ${yB - 2} L${(x + 6).toFixed(1)} ${yB - 2} L${x.toFixed(1)} ${yB - 13} Z" fill="#B3261E"/>`; } }
-  if (pts.length < 40) pts.forEach(p => { s += `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" fill="#2A2320"/>`; });
-  const lp = pts[pts.length - 1];
-  s += `<circle cx="${X(lp[0]).toFixed(1)}" cy="${Y(lp[1]).toFixed(1)}" r="5.5" fill="#2A2320"/>`;
-  s += `<text x="${x0}" y="${H - 4}" font-size="11" fill="#6E625A">${fCorta(desde)}</text><text x="${x1}" y="${H - 4}" text-anchor="end" font-size="11" fill="#6E625A">hoy</text></svg>`;
+  if (N > 10) s += `<text x="${x0}" y="${H - 4}" font-size="11" fill="#6E625A">${fCorta(desde)}</text><text x="${x1}" y="${H - 4}" text-anchor="end" font-size="11" fill="#6E625A">hoy</text>`;
+  s += `</svg>`;
+  s += `<div class="row tiny muted" style="gap:12px;flex-wrap:wrap"><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#2E9E5B"></span>Bueno</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#F2B33D"></span>Regular</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#C8382F"></span>Malo</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#EFE7DD"></span>Sin apuntar</span></div>`;
   // Leyenda: qué pasó en cada marca, con el peso antes y después
   const media = (a, b) => { const v = []; for (let f = a; f <= b; f = addDays(f, 1)) { const d = map[f]; if (d) v.push(...d.pesos); } return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
   const efecto = f => { const a = media(addDays(f, -7), addDays(f, -1)), b = media(f, addDays(f, 6)); if (a == null || b == null) return ''; const d = b - a; return ` · <b style="color:${d < -2 ? 'var(--warn)' : 'var(--teal-d)'}">${Math.abs(d) < 2 ? 'peso igual' : (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'}</b> la semana siguiente`; };
@@ -1497,6 +1522,7 @@ document.addEventListener('click', e => {
 
     /* Progreso */
     case 'rango': S.rango = d.v; repintar(); break;
+    case 'peso-pt': toast(d.t); break;
     case 'informe': {
       const t = textoInforme();
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast('Informe copiado'), () => abrirSheet('informe', t));

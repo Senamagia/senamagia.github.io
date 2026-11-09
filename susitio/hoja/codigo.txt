@@ -121,6 +121,7 @@ function escribir_(ss, nombre, cabecera, filas, formatos) {
   let sh = ss.getSheetByName(nombre);
   if (!sh) sh = ss.insertSheet(nombre);
   sh.clearContents();
+  sh.clearFormats(); // por si quedó un formato viejo (p. ej. un % en una columna que ya no lo es)
   const datos = [cabecera].concat(filas);
   sh.getRange(1, 1, datos.length, cabecera.length).setValues(datos.map(r => cabecera.map((_, i) => r[i] === undefined || r[i] === null ? '' : r[i])));
   const cab = sh.getRange(1, 1, 1, cabecera.length);
