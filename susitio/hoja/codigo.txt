@@ -336,3 +336,24 @@ function enviar_(s, casa, titulo, texto) {
   });
   return n;
 }
+
+/* Revisión: cuántos móviles tienen los avisos activos y si Google los acepta (no manda nada) */
+function diagnostico() {
+  const s = entrar_(), casa = casa_(s);
+  const j = get_(BASE + 'susitio/' + casa + '/avisos?pageSize=50', s.token);
+  const docs = j.documents || [];
+  console.log('Móviles con avisos: ' + docs.length);
+  const oauth = ScriptApp.getOAuthToken();
+  docs.forEach(d => {
+    const f = d.fields || {}, tok = f.token && f.token.stringValue;
+    const r = UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/' + PROYECTO + '/messages:send', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { Authorization: 'Bearer ' + oauth, 'x-goog-user-project': PROYECTO },
+      payload: JSON.stringify({ validate_only: true, message: { token: tok, data: { title: 'x', body: 'x' } } })
+    });
+    console.log((f.nombre ? f.nombre.stringValue : '?') + ' · actualizado ' + (d.updateTime || '') + ' → ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 200));
+  });
+  const x = siguiente_(s, casa);
+  const p = PropertiesService.getScriptProperties().getProperties();
+  console.log('Última toma: ' + (x ? x.clave : 'ninguna') + ' · ' + JSON.stringify({ AVISO_TOMA: p.AVISO_TOMA, ENVIADO_a30: p.ENVIADO_a30, ENVIADO_a55: p.ENVIADO_a55 }));
+}
