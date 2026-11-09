@@ -328,6 +328,8 @@ function enviar_(s, casa, titulo, texto) {
       payload: JSON.stringify({ message: { token: tok, data: { title: titulo, body: texto, tag: 'toma' }, webpush: { headers: { Urgency: 'high', TTL: '10800' } } } })
     });
     const c = r.getResponseCode();
+    const quien = d.fields.nombre ? d.fields.nombre.stringValue : '?';
+    console.log('Aviso «' + titulo + '» → ' + quien + ': ' + c + (c === 200 ? '' : ' ' + r.getContentText().slice(0, 300)));
     if (c === 200) n++;
     else if (c === 404 || /UNREGISTERED/.test(r.getContentText())) {
       // ese móvil ya no admite avisos: se quita
