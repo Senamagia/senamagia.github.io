@@ -171,7 +171,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.6.1';
+const VERSION = '2.6.2';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -1769,13 +1769,21 @@ async function activarAvisos() {
     await SYNC.cargar();
     const M = await import('https://www.gstatic.com/firebasejs/' + FB_VER + '/firebase-messaging.js');
     const reg = await navigator.serviceWorker.ready;
-    const token = await M.getToken(M.getMessaging(SYNC.app), { vapidKey: VAPID, serviceWorkerRegistration: reg });
-    if (!token) throw new Error('sin token');
+    const msg = M.getMessaging(SYNC.app);
+    // Se empieza de cero: se borra la suscripción vieja del móvil (puede estar muerta) y se pide una nueva.
+    try { await M.deleteToken(msg); } catch (e) {}
+    try { const sub = await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+    let token = null, ultimo = null;
+    for (let i = 0; i < 3 && !token; i++) {
+      try { token = await M.getToken(msg, { vapidKey: VAPID, serviceWorkerRegistration: reg }); }
+      catch (e) { ultimo = e; await new Promise(r => setTimeout(r, 1500)); }
+    }
+    if (!token) throw ultimo || new Error('sin token');
     const id = fnvHash(token);
     await SYNC.fb.guardarAviso(SYNC.meta.casa, id, { token, uid: SYNC.user.uid, nombre: yo() });
-    SYNC.meta.aviso = { id }; SYNC.guardarMeta();
-    toast('Avisos activados');
-  } catch (e) { toast('No se han podido activar los avisos' + (e && e.code ? ' (' + e.code + ')' : '')); }
+    SYNC.meta.aviso = { id }; SYNC.guardarMeta(); avisoRevisado = Date.now();
+    repintar(); toast('Avisos activados');
+  } catch (e) { toast('No se han podido activar los avisos: ' + ((e && (e.code || e.message)) || e)); }
 }
 // Cada vez que se abre la app se comprueba que el aviso de este móvil sigue vivo; si el móvil ha cambiado su dirección de avisos, se guarda la nueva.
 let avisoRevisado = 0;
