@@ -1,0 +1,165 @@
+/** @OnlyCurrentDoc */
+/**
+ * Laura · hoja de Google que manda los avisos al iPhone y guarda una copia de los datos.
+ *
+ * Cómo se usa (solo la primera vez):
+ *   1. Recarga la hoja: arriba aparece el menú «Laura».
+ *   2. Menú Laura › Conectar con mi cuenta de Laura. Dale permiso a tu cuenta de Google.
+ *   3. Escribe el correo y la contraseña con los que entras en la app.
+ * A partir de ahí, cada minuto mira si toca algún aviso (pastillas, la pregunta de los
+ * 15 minutos tras el pinchazo, la cita del día siguiente) y cada madrugada copia tus datos.
+ */
+
+const API_KEY = 'AIzaSyDXdrRm69cympP9-zd1MOl5lGfVWJVcCqo';
+const PROYECTO = 'laura-8a65c';
+const BASE = 'https://firestore.googleapis.com/v1/projects/' + PROYECTO + '/databases/(default)/documents/';
+const HORA_DIARIA = 5;
+const MARGEN_MIN = 20; // si un aviso se retrasa más de esto, ya no se manda
+
+/* ---------------- Menú ---------------- */
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('Laura')
+    .addItem('Conectar con mi cuenta de Laura', 'configurar')
+    .addItem('Mandar un aviso de prueba', 'avisoPrueba')
+    .addItem('Copiar mis datos ahora', 'actualizar')
+    .addToUi();
+}
+
+function configurar() {
+  const ui = SpreadsheetApp.getUi();
+  const r1 = ui.prompt('Laura', 'Correo con el que entras en Laura:', ui.ButtonSet.OK_CANCEL);
+  if (r1.getSelectedButton() !== ui.Button.OK) return;
+  const r2 = ui.prompt('Laura', 'Contraseña de Laura (solo la ves tú, se guarda en tu cuenta de Google):', ui.ButtonSet.OK_CANCEL);
+  if (r2.getSelectedButton() !== ui.Button.OK) return;
+  const props = PropertiesService.getUserProperties();
+  props.setProperty('EMAIL', r1.getResponseText().trim());
+  props.setProperty('PASS', r2.getResponseText());
+  ScriptApp.getProjectTriggers().forEach(t => { if (['actualizar', 'avisos'].includes(t.getHandlerFunction())) ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('avisos').timeBased().everyMinutes(1).create();
+  ScriptApp.newTrigger('actualizar').timeBased().everyDays(1).atHour(HORA_DIARIA).create();
+  try {
+    entrar_();
+    let n = 0; try { n = actualizar(); } catch (e) {}
+    ui.alert('Listo', 'Conectado con Laura (' + n + ' registros copiados). Cada minuto mirará si toca un aviso. Prueba ahora «Laura › Mandar un aviso de prueba».', ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('No se ha podido', String(e.message || e), ui.ButtonSet.OK);
+  }
+}
+
+/* ---------------- Entrar y leer la nube ---------------- */
+function entrar_() {
+  const cache = CacheService.getUserCache();
+  const c = cache.get('SESION');
+  if (c) return JSON.parse(c);
+  const props = PropertiesService.getUserProperties();
+  const email = props.getProperty('EMAIL'), pass = props.getProperty('PASS');
+  if (!email || !pass) throw new Error('Falta conectar la cuenta: menú Laura › Conectar con mi cuenta de Laura.');
+  const r = UrlFetchApp.fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + API_KEY, {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    payload: JSON.stringify({ email: email, password: pass, returnSecureToken: true })
+  });
+  const j = JSON.parse(r.getContentText());
+  if (!j.idToken) throw new Error('No se ha podido entrar en Laura: revisa el correo y la contraseña (' + ((j.error && j.error.message) || r.getResponseCode()) + ').');
+  const s = { token: j.idToken, uid: j.localId };
+  cache.put('SESION', JSON.stringify(s), 3000); // el permiso dura 1 hora: se renueva cada 50 min
+  return s;
+}
+function get_(url, token) {
+  const r = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true });
+  if (r.getResponseCode() === 404) return null;
+  if (r.getResponseCode() === 401) { CacheService.getUserCache().remove('SESION'); throw new Error('Sesión caducada, se renueva en el siguiente intento.'); }
+  if (r.getResponseCode() !== 200) throw new Error('La nube ha respondido ' + r.getResponseCode() + ': ' + r.getContentText().slice(0, 200));
+  return JSON.parse(r.getContentText());
+}
+
+/* ---------------- Avisos (cada minuto) ---------------- */
+function avisos() {
+  const s = entrar_();
+  const doc = get_(BASE + 'laura/' + s.uid + '/estado/plan', s.token);
+  if (!doc || !doc.fields || !doc.fields.d) return;
+  let plan; try { plan = JSON.parse(doc.fields.d.stringValue); } catch (e) { return; }
+  const ahora = Date.now(), props = PropertiesService.getScriptProperties(), hechos = props.getProperties();
+  let tokens = null;
+  (plan.avisos || []).forEach(a => {
+    const rep = Math.max(1, a.rep || 1), cada = (a.cada || 0) * 60000;
+    for (let k = 0; k < rep; k++) {
+      const t = a.t + k * cada, clave = 'E|' + a.id + '|' + k;
+      if (ahora < t || ahora > t + MARGEN_MIN * 60000 || hechos[clave]) continue;
+      if (!tokens) tokens = leerTokens_(s);
+      const titulo = k ? a.titulo.replace(/^Te toca/, 'Recuerda: te toca') : a.titulo;
+      enviar_(s, tokens, titulo, a.texto, a.abrir || '', a.id);
+      props.setProperty(clave, String(ahora));
+    }
+  });
+  // limpiar marcas de más de 3 días
+  Object.keys(hechos).forEach(k => { if (k.indexOf('E|') === 0 && ahora - Number(hechos[k]) > 3 * 86400000) props.deleteProperty(k); });
+}
+function leerTokens_(s) {
+  const j = get_(BASE + 'laura/' + s.uid + '/avisos?pageSize=20', s.token);
+  return ((j && j.documents) || []).map(d => ({ name: d.name, token: d.fields && d.fields.token && d.fields.token.stringValue })).filter(x => x.token);
+}
+function enviar_(s, tokens, titulo, texto, abrir, tag) {
+  const oauth = ScriptApp.getOAuthToken();
+  let n = 0;
+  tokens.forEach(d => {
+    const r = UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/' + PROYECTO + '/messages:send', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { Authorization: 'Bearer ' + oauth, 'x-goog-user-project': PROYECTO },
+      payload: JSON.stringify({ message: { token: d.token, data: { title: titulo, body: texto, abrir: abrir, tag: String(tag || 'laura').slice(0, 60) }, webpush: { headers: { Urgency: 'high', TTL: '3600' } } } })
+    });
+    const c = r.getResponseCode();
+    console.log('Aviso «' + titulo + '» → ' + c + (c === 200 ? '' : ' ' + r.getContentText().slice(0, 300)));
+    if (c === 200) n++;
+    else if (c === 404 || /UNREGISTERED/.test(r.getContentText())) {
+      UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + d.name, { method: 'delete', headers: { Authorization: 'Bearer ' + s.token }, muteHttpExceptions: true });
+    }
+  });
+  return n;
+}
+function avisoPrueba() {
+  const s = entrar_();
+  const n = enviar_(s, leerTokens_(s), 'Prueba de Laura', 'Si ves esto, los avisos funcionan.', 'hoy', 'prueba');
+  SpreadsheetApp.getUi().alert('Aviso de prueba', n ? 'Enviado a tu iPhone.' : 'No hay ningún iPhone con los avisos activados. Actívalos en la app: Hoy › Ajustes › Activar los avisos.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+/* ---------------- Copia de los datos (cada madrugada) ---------------- */
+function leerTodo_() {
+  const s = entrar_();
+  const D = {}; let page = '', n = 0;
+  do {
+    const j = get_(BASE + 'laura/' + s.uid + '/r?pageSize=300' + (page ? '&pageToken=' + encodeURIComponent(page) : ''), s.token);
+    ((j && j.documents) || []).forEach(doc => {
+      const f = doc.fields || {}, col = f.col && f.col.stringValue, d = f.d && f.d.stringValue;
+      if (!col || !d) return;
+      try { const r = JSON.parse(d); if (!r.borrado) { (D[col] = D[col] || []).push(r); n++; } } catch (e) {}
+    });
+    page = (j && j.nextPageToken) || '';
+  } while (page);
+  D.total = n;
+  return D;
+}
+const TZ = 'Europe/Madrid';
+const f_ = (ms, p) => ms ? Utilities.formatDate(new Date(ms), TZ, p || 'dd/MM/yyyy HH:mm') : '';
+const h_ = ms => f_(ms, 'HH:mm');
+function escribir_(ss, nombre, cab, filas) {
+  let sh = ss.getSheetByName(nombre); if (!sh) sh = ss.insertSheet(nombre);
+  sh.clearContents(); sh.clearFormats();
+  const datos = [cab].concat(filas);
+  sh.getRange(1, 1, datos.length, cab.length).setValues(datos.map(r => cab.map((_, i) => r[i] === undefined || r[i] === null ? '' : r[i])));
+  sh.getRange(1, 1, 1, cab.length).setFontWeight('bold').setBackground('#1D1B16').setFontColor('#F3EFE6');
+  sh.setFrozenRows(1); sh.autoResizeColumns(1, cab.length);
+}
+function actualizar() {
+  const D = leerTodo_(), ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ev = (D.eventos || []).sort((a, b) => ini_(b) - ini_(a));
+  escribir_(ss, 'Crisis', ['Fecha', 'Laura', 'Dolor', 'Pinchazos', 'Fin', 'Duración (min)', 'A los 15 min', 'Como siempre', 'Intensidad', 'Lado', 'Te despertó', 'Zona horaria'],
+    ev.map(e => [f_(ini_(e), 'dd/MM/yyyy'), h_(e.laura), h_(e.dolor), (e.pinchazos || []).map(h_).join(', '), h_(e.fin), e.fin ? Math.round((e.fin - ini_(e)) / 60000) : '', { sin: 'Sin dolor', mejor: 'Mejor', igual: 'Igual' }[e.resp15] || '', e.como === 'distinta' ? 'Distinta' : e.como === 'siempre' ? 'Sí' : '', e.intensidad || '', e.lado === 'izq' ? 'Izquierdo' : 'Derecho', e.desperto ? 'Sí' : '', e.tz || '']));
+  escribir_(ss, 'Efectos', ['Fecha', 'Qué', 'Lado', 'Cuánto', 'Dura', 'Pulso', 'Tensión'], (D.efectos || []).sort((a, b) => b.t - a.t).map(r => [f_(r.t), (r.tipos || []).join(', '), r.lado, r.cuanto, r.dura, r.pulso, r.tension]));
+  escribir_(ss, 'Comidas', ['Fecha', 'Momento', 'Comida', 'Bebida', 'Vigilado', 'Fuera de casa'], (D.comidas || []).sort((a, b) => b.t - a.t).map(r => [f_(r.t), r.momento, (r.items || []).join(', '), (r.bebidas || []).join(', '), (r.vig || []).join(', '), r.fuera ? 'Sí' : '']));
+  const meds = {}; (D.meds || []).forEach(m => meds[m.id] = m.nombre);
+  escribir_(ss, 'Tomas', ['Toca', 'Medicina', 'Tomada a las', 'Estado'], (D.tomas || []).sort((a, b) => b.t - a.t).map(t => { const p = (t.slot || '').split('|'); return [p[0] === 'sup' ? '' : p[0] + ' ' + p[1], meds[t.medId] || (String(t.medId).indexOf('tanda:') === 0 ? 'Corticoide' : t.medId), f_(t.t), { tomada: 'Tomada', otra: 'A otra hora', olvidada: 'No tomada' }[t.estado] || t.estado]; }));
+  escribir_(ss, 'Sueño', ['Se durmió', 'Se despertó', 'Horas', 'Calidad'], (D.suenos || []).sort((a, b) => b.dormir - a.dormir).map(s => [f_(s.dormir), f_(s.despertar), s.despertar ? Math.round((s.despertar - s.dormir) / 360000) / 10 : '', s.calidad || '']));
+  escribir_(ss, 'Días', ['Día', 'Dolor de fondo', 'Agua', 'Ánimo', 'Qué pasó'], (D.dias || []).sort((a, b) => b.id.localeCompare(a.id)).map(d => [d.id, d.fondo, d.agua, d.animo, (d.chips || []).join(', ')]));
+  return D.total;
+}
+function ini_(e) { return Math.min.apply(null, [e.laura, e.dolor, (e.pinchazos || [])[0], e.creado].filter(Boolean)); }

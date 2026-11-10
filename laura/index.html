@@ -1,0 +1,1312 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Laura">
+<meta name="theme-color" content="#0d100d">
+<title>Laura</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ink:#1d1b16; --sub:#4f4a40; --cream:#f3efe6; --chip:#efe9dc; --white:#fff; --line:#e2dccf;
+  --tomato:#e4572e; --butter:#f3c74f; --sky:#8cc0ea; --sage:#b9d6a5; --warn:#fbe7a6;
+  --n-bg:#0d100d; --n-fg:#c9d3bf; --n-sub:#8f9c84; --n-card:#151915;
+  --laura:#1b2219; --laura-fg:#c9d3bf; --laura-sub:#8f9c84;
+  --dolor:#33230f; --dolor-fg:#efc993; --dolor-sub:#c19d6c;
+  --suma:#172029; --suma-fg:#b9cde0; --suma-sub:#8aa1b6;
+  --neu:#1a1c1a; --neu-fg:#b8beb2; --neu-sub:#8b9186;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--cream);color:var(--ink);font-family:Figtree,-apple-system,system-ui,sans-serif;font-size:16px;-webkit-text-size-adjust:100%}
+body.noche{background:var(--n-bg);color:var(--n-fg)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none;padding:0}
+.G{font-family:'Bricolage Grotesque',Figtree,sans-serif;font-weight:700;letter-spacing:-0.02em}
+#app{max-width:520px;margin:0 auto;min-height:100vh;position:relative}
+.wrap{padding:calc(var(--safe-t) + 18px) 14px calc(var(--safe-b) + 110px);display:flex;flex-direction:column;gap:10px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;padding:10px 8px 6px;gap:10px}
+.h1{font-size:40px;line-height:1;letter-spacing:-0.03em}
+.h3{font-size:21px}
+.small{font-size:13px;line-height:1.45;color:var(--sub)}
+.muted{color:var(--sub)}
+.card{background:var(--white);border-radius:28px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.card.sky{background:var(--sky)} .card.tomato{background:var(--tomato);color:#1a0f0a} .card.butter{background:var(--butter)} .card.sage{background:var(--sage)} .card.warn{background:var(--warn)} .card.ink{background:var(--ink);color:var(--cream)}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.grow{flex:1 1 auto;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;background:var(--chip);font-size:15px;min-height:42px}
+.chip.on{background:var(--ink);color:var(--cream)}
+.card.sage .chip{background:var(--white)} .card.sage .chip.on{background:var(--ink)}
+.dot{width:8px;height:8px;border-radius:4px;background:var(--tomato);display:inline-block}
+.seg{display:grid;gap:8px;grid-template-columns:repeat(var(--n,3),minmax(0,1fr))}
+.seg button{padding:12px 4px;border-radius:16px;background:var(--chip);font-size:15px;min-height:46px}
+.seg button.on{background:var(--ink);color:var(--cream);font-weight:600}
+.card.tomato .seg button{background:rgba(26,15,10,.15)}
+.btn{height:56px;border-radius:20px;background:var(--ink);color:var(--cream);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;width:100%;padding:0 16px}
+.btn.light{background:var(--white);color:var(--ink)} .btn.chipc{background:var(--chip);color:var(--ink)} .btn.danger{background:#f6d7cc;color:#7a2210}
+.btn.small{height:44px;font-size:15px;border-radius:16px;width:auto}
+.tiles{display:grid;grid-template-columns:repeat(var(--n,2),minmax(0,1fr));gap:8px}
+.tile{border-radius:18px;background:var(--chip);padding:12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile .v{font-size:26px} .tile .l{font-size:12px}
+.bar{height:12px;border-radius:6px;background:rgba(29,27,22,.12);overflow:hidden}
+.bar>i{display:block;height:12px;border-radius:6px;background:var(--ink)}
+.list .it{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--chip);font-size:15px;align-items:center}
+.list .it:last-child{border-bottom:none}
+input.f,select.f,textarea.f{width:100%;min-height:50px;border-radius:16px;border:none;background:var(--chip);padding:0 14px;font-size:17px}
+textarea.f{padding:12px 14px;min-height:90px;resize:none}
+.card.sage input.f{background:var(--white)}
+label.lab{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--sub)}
+.tm{border-radius:18px;background:var(--chip);padding:10px 14px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--sub)}
+.tm input{border:none;background:transparent;font-size:22px;font-weight:600;color:var(--ink);padding:0;min-height:30px;width:100%}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--cream);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:var(--safe-b);z-index:20}
+nav.tabs button{height:64px;font-size:14px;color:var(--sub)}
+nav.tabs button.on{color:var(--ink);font-weight:700}
+.strip{display:grid;grid-template-columns:repeat(30,minmax(0,1fr));gap:2px}
+.strip span{height:22px;border-radius:4px;background:var(--chip)}
+.heat{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:3px}
+.heat span{height:30px;border-radius:6px}
+.hours{height:110px;display:grid;grid-template-columns:repeat(24,minmax(0,1fr));column-gap:2px;align-items:end;border-bottom:1px solid #c9c2b4}
+.hours span{background:var(--ink);border-radius:4px 4px 0 0;min-height:2px}
+.back{font-size:15px;font-weight:600;padding:8px 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--safe-b) + 92px);background:var(--ink);color:var(--cream);padding:12px 16px;border-radius:16px;font-size:15px;display:flex;gap:14px;align-items:center;z-index:50;max-width:92vw;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b) + 20px)}
+.toast button{font-weight:700;text-decoration:underline}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--cream);width:100%;max-width:520px;border-radius:28px 28px 0 0;padding:20px 16px calc(var(--safe-b) + 20px);display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
+/* Pantalla de crisis (noche) */
+.n-wrap{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;gap:10px;padding:calc(var(--safe-t) + 16px) 14px calc(var(--safe-b) + 16px)}
+.n-top{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;font-size:14px;color:var(--n-sub);gap:8px}
+.n-grid{flex:1 1 auto;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1.35fr;gap:10px;min-height:420px}
+.tilebtn{border-radius:34px;padding:22px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;gap:4px;min-height:120px;width:100%}
+.tilebtn .t{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;letter-spacing:-0.03em;line-height:1}
+.tilebtn .s{font-size:15px}
+.tilebtn:disabled{opacity:.45}
+.t-laura{background:var(--laura);color:var(--laura-fg)} .t-laura .s{color:var(--laura-sub)}
+.t-dolor{background:var(--dolor);color:var(--dolor-fg)} .t-dolor .s{color:var(--dolor-sub)}
+.t-suma{background:var(--suma);color:var(--suma-fg)} .t-suma .s{color:var(--suma-sub)}
+.t-neu{background:var(--neu);color:var(--neu-fg)} .t-neu .s{color:var(--neu-sub)}
+.n-status{padding:6px 8px 8px;display:flex;flex-direction:column;gap:2px}
+.n-status .k{font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.n-status .big{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:64px;line-height:1;color:#dfe6d6;letter-spacing:-0.03em}
+.n-card{border-radius:28px;background:var(--n-card);padding:18px;display:flex;flex-direction:column;gap:12px}
+.n-btn{height:56px;border-radius:22px;background:var(--n-card);color:#b7c7a8;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:600;width:100%}
+.n-small{font-size:13px;color:var(--n-sub)}
+.n-seg{display:grid;gap:8px}
+.n-seg button{height:56px;border-radius:18px;background:#1f241e;color:var(--neu-fg);font-size:16px;font-weight:600}
+.n-seg button.on{background:var(--dolor);color:var(--dolor-fg)}
+.n-link{color:#b7c7a8;font-size:14px;padding:8px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+/* =========================================================
+   LAURA · app personal de Sena para la cefalea en racimos
+   Todo se guarda primero en el móvil (funciona sin internet)
+   y se copia a su nube de Firebase cuando hay conexión.
+   ========================================================= */
+const APP_VER = '1.0';
+const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
+const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
+const MIN = 60000, HORA = 3600000, DIA = 86400000;
+
+/* ---------------- Utilidades ---------------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const now = () => Date.now();
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const pad = n => ('0' + n).slice(-2);
+const plural = (n, a, b) => n + ' ' + (n === 1 ? a : b);
+const lista = l => l.length <= 1 ? (l[0] || '') : l.slice(0, -1).join(', ') + ' y ' + l[l.length - 1];
+
+/* ---------------- Horas y zonas horarias ----------------
+   Cada registro guarda el instante (ms) y la zona donde estabas.
+   «Hora de casa» = zona de Ajustes (Madrid por defecto). */
+const tzHere = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid'; } catch (e) { return 'Europe/Madrid'; } };
+const fmtCache = {};
+function partes(ms, tz) {
+  const k = tz || 'local';
+  if (!fmtCache[k]) fmtCache[k] = new Intl.DateTimeFormat('en-GB', { timeZone: tz || undefined, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short' });
+  const o = {}; fmtCache[k].formatToParts(new Date(ms)).forEach(p => o[p.type] = p.value);
+  return { y: +o.year, m: +o.month, d: +o.day, h: +o.hour % 24, mi: +o.minute, wd: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(o.weekday) };
+}
+const dayKey = (ms, tz) => { const p = partes(ms, tz); return p.y + '-' + pad(p.m) + '-' + pad(p.d); };
+const hhmm = (ms, tz) => { const p = partes(ms, tz); return pad(p.h) + ':' + pad(p.mi); };
+function offsetMin(ms, tz) { const p = partes(ms, tz); return Math.round((Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi) - Math.floor(ms / MIN) * MIN) / MIN); }
+function epochDe(day, hm, tz) {
+  const [y, m, d] = day.split('-').map(Number), [h, mi] = (hm || '00:00').split(':').map(Number);
+  const guess = Date.UTC(y, m - 1, d, h, mi);
+  let t = guess - offsetMin(guess, tz) * MIN;
+  t = guess - offsetMin(t, tz) * MIN;
+  return t;
+}
+const sumarDias = (day, n) => { const [y, m, d] = day.split('-').map(Number); const x = new Date(Date.UTC(y, m - 1, d + n)); return x.getUTCFullYear() + '-' + pad(x.getUTCMonth() + 1) + '-' + pad(x.getUTCDate()); };
+const DIAS_L = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+function fechaLarga(day) { const [y, m, d] = day.split('-').map(Number); const wd = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7; return cap(DIAS_L[wd]) + ' ' + d + ' de ' + MESES[m - 1]; }
+function fechaCorta(day) { const [y, m, d] = day.split('-').map(Number); return d + ' ' + MESES[m - 1].slice(0, 3); }
+function cuandoDia(day) { const hoy = dayKey(now()); if (day === hoy) return 'Hoy'; if (day === sumarDias(hoy, -1)) return 'Ayer'; return fechaLarga(day); }
+const homeTz = () => (CFG().homeTz || 'Europe/Madrid');
+const lejos = () => offsetMin(now(), tzHere()) !== offsetMin(now(), homeTz());
+const ciudad = tz => (tz || '').split('/').pop().replace(/_/g, ' ');
+function difHoras() { const d = (offsetMin(now(), tzHere()) - offsetMin(now(), homeTz())) / 60; return (d > 0 ? '+' : '−') + Math.abs(d) + ' h'; }
+function durTxt(ms) { const m = Math.max(0, Math.round(ms / MIN)); if (m < 60) return m + ' min'; const h = Math.floor(m / 60), r = m % 60; return h + ' h' + (r ? ' ' + pad(r) : ''); }
+function haceTxt(ms) { const m = Math.round((now() - ms) / MIN); if (m < 1) return 'ahora'; if (m < 60) return 'hace ' + m + ' min'; const h = Math.round(m / 60); if (h < 36) return 'hace ' + h + ' h'; return 'hace ' + Math.round(h / 24) + ' días'; }
+
+/* ---------------- Base de datos local ---------------- */
+let DB = (() => { try { return JSON.parse(localStorage.getItem(KEY_DB)) || {}; } catch (e) { return {}; } })();
+COLS.forEach(c => { if (!Array.isArray(DB[c])) DB[c] = []; });
+function guardar() { try { localStorage.setItem(KEY_DB, JSON.stringify(DB)); } catch (e) { toast('No queda espacio en el móvil para guardar'); } }
+const vivos = c => DB[c].filter(r => !r.borrado);
+const porId = (c, id) => DB[c].find(r => r.id === id);
+function poner(col, rec) {
+  rec.upd = now();
+  if (!rec.id) rec.id = uid();
+  const i = DB[col].findIndex(r => r.id === rec.id);
+  if (i < 0) DB[col].push(rec); else DB[col][i] = rec;
+  guardar(); SYNC.marcar(col, rec.id); planCambiado();
+  return rec;
+}
+function borrar(col, id) { const r = porId(col, id); if (!r) return; r.borrado = true; poner(col, r); }
+
+/* ---------------- Ajustes ---------------- */
+const CFG_DEF = { id: 'cfg', lado: 'der', margen: 15, ronca: '', tabaco: 'diario', cig: '', homeTz: 'Europe/Madrid', tomasHora: 'casa', plumas: 0, avisoPlumas: 3, vigilados: ['alcohol', 'embutido', 'queso curado'], diasCrisis: 0 };
+function CFG() { const c = DB.cfg.find(r => r.id === 'cfg'); return Object.assign({}, CFG_DEF, c || {}); }
+function setCfg(cambios) { const c = Object.assign(CFG(), cambios); poner('cfg', c); }
+
+/* ---------------- Crisis (eventos) ----------------
+   Un evento junta: Laura (síntomas premonitorios) → dolor → pinchazos → fin. */
+const abierto = () => vivos('eventos').filter(e => !e.fin && !e.pasado).sort((a, b) => inicioEv(b) - inicioEv(a))[0] || null;
+const inicioEv = e => Math.min(...[e.laura, e.dolor, (e.pinchazos || [])[0]].filter(Boolean).concat([e.creado || now()]));
+const esCrisis = e => !!(e.dolor || (e.pinchazos || []).length);
+const pinchazos24 = () => { const t = now() - DIA; let n = 0; vivos('eventos').forEach(e => (e.pinchazos || []).forEach(p => { if (p > t) n++; })); return n; };
+const ultimoPinchazo = () => { let m = 0; vivos('eventos').forEach(e => (e.pinchazos || []).forEach(p => { if (p > m) m = p; })); return m; };
+function puedePinchar() {
+  const n = pinchazos24(), u = ultimoPinchazo();
+  if (n >= 2) { const lista24 = []; vivos('eventos').forEach(e => (e.pinchazos || []).forEach(p => { if (p > now() - DIA) lista24.push(p); })); lista24.sort(); return { ok: false, desde: lista24[0] + DIA, n }; }
+  if (u && now() - u < HORA) return { ok: false, desde: u + HORA, n };
+  return { ok: true, n };
+}
+function durmiendoAhora() { const s = vivos('suenos').filter(x => x.dormir && !x.despertar).sort((a, b) => b.dormir - a.dormir)[0]; return s && now() - s.dormir < 16 * HORA ? s : null; }
+function ultimaCrisis() { let m = 0; vivos('eventos').forEach(e => { if (esCrisis(e)) { const t = e.dolor || (e.pinchazos || [])[0]; if (t > m) m = t; } }); return m; }
+function diasSinDolor() { const u = ultimaCrisis(); if (!u) return null; return Math.floor((now() - u) / DIA); }
+function rachaMaxima() {
+  const l = vivos('eventos').filter(esCrisis).map(e => e.dolor || e.pinchazos[0]).sort((a, b) => a - b);
+  let m = 0; for (let i = 1; i < l.length; i++) m = Math.max(m, Math.floor((l[i] - l[i - 1]) / DIA));
+  if (l.length) m = Math.max(m, Math.floor((now() - l[l.length - 1]) / DIA));
+  return m;
+}
+function diasConSumaMes(tz) {
+  const mes = dayKey(now(), tz).slice(0, 7), s = new Set();
+  vivos('eventos').forEach(e => (e.pinchazos || []).forEach(p => { const d = dayKey(p, tz); if (d.startsWith(mes)) s.add(d); }));
+  return s.size;
+}
+
+/* ---------------- Medicación ---------------- */
+const preventivos = () => vivos('meds').filter(m => m.tipo === 'preventivo' && m.activo !== false);
+const suplementos = () => vivos('meds').filter(m => m.tipo === 'suplemento' && m.activo !== false);
+function tzTomas() { return CFG().tomasHora === 'local' ? tzHere() : homeTz(); }
+function tandaActiva(day) { return vivos('tandas').find(t => { const p = pautaTanda(t); return p.length && day >= p[0].dia && day <= p[p.length - 1].dia; }); }
+function pautaTanda(t) {
+  const out = []; let dosis = Number(t.dosisIni) || 0; const baja = Number(t.bajada) || 0, cada = Math.max(1, Number(t.cada) || 1), fin = Number(t.dosisFin) || 0;
+  let day = t.inicio, i = 0;
+  if (!day || !dosis) return out;
+  while (dosis > 0 && i < 120) {
+    for (let k = 0; k < cada && i < 120; k++, i++) { out.push({ dia: day, dosis }); day = sumarDias(day, 1); }
+    if (!baja) break;
+    dosis = Math.round((dosis - baja) * 100) / 100;
+    if (dosis < fin) break;
+  }
+  return out;
+}
+/* Tomas programadas de un día: [{slot, hora, meds:[{id,nombre,dosis}]}] */
+function tomasDelDia(day) {
+  const porHora = {};
+  preventivos().forEach(m => {
+    if (m.desde && day < m.desde) return;
+    (m.horas || []).forEach(h => { (porHora[h] = porHora[h] || []).push({ id: m.id, nombre: m.nombre, dosis: m.dosis }); });
+  });
+  const t = tandaActiva(day);
+  if (t) { const p = pautaTanda(t).find(x => x.dia === day); if (p) { const h = t.hora || '09:00'; (porHora[h] = porHora[h] || []).push({ id: 'tanda:' + t.id, nombre: t.nombre || 'Corticoide', dosis: p.dosis + ' mg' }); } }
+  return Object.keys(porHora).sort().map(h => ({ day, hora: h, meds: porHora[h], t: epochDe(day, h, tzTomas()) }));
+}
+const slotId = (day, hora, medId) => day + '|' + hora + '|' + medId;
+const tomaDe = (day, hora, medId) => vivos('tomas').find(t => t.slot === slotId(day, hora, medId));
+function pendientesAhora() {
+  const tz = tzTomas(), hoy = dayKey(now(), tz), out = [];
+  [sumarDias(hoy, -1), hoy, sumarDias(hoy, 1)].forEach(d => tomasDelDia(d).forEach(s => {
+    const meds = s.meds.filter(m => !tomaDe(d, s.hora, m.id));
+    if (meds.length) out.push(Object.assign({}, s, { meds }));
+  }));
+  // Lo que toca: lo atrasado de las últimas 6 h y lo de las próximas 18 h
+  return out.filter(s => s.t > now() - 6 * HORA && s.t < now() + 18 * HORA).sort((a, b) => a.t - b.t);
+}
+function adherencia(medId, dias) {
+  const tz = tzTomas(), hoy = dayKey(now(), tz); let prog = 0, ok = 0, tarde = 0; const tira = [];
+  const m = porId('meds', medId);
+  for (let i = dias - 1; i >= 0; i--) {
+    const d = sumarDias(hoy, -i); let p = 0, o = 0, t = 0;
+    if (m && (!m.desde || d >= m.desde)) (m.horas || []).forEach(h => { const ts = epochDe(d, h, tz); if (ts > now()) return; p++; const x = tomaDe(d, h, medId); if (x) { o++; if (x.estado === 'otra') t++; } });
+    prog += p; ok += o; tarde += t; tira.push(p ? (o === p ? (t ? 'tarde' : 'ok') : o ? 'media' : 'no') : 'nada');
+  }
+  return { prog, ok, tarde, tira };
+}
+
+/* ---------------- Comida ---------------- */
+const CAT = {
+  alcohol: ['vino', 'cerveza', 'cana', 'copa', 'ron', 'ginebra', 'gin', 'whisky', 'vodka', 'vermut', 'vermu', 'sidra', 'cava', 'champan', 'champagne', 'licor', 'chupito', 'tequila', 'calimocho', 'sangria', 'tinto de verano', 'pacharan', 'orujo', 'brandy', 'cubata'],
+  embutido: ['jamon', 'chorizo', 'salchichon', 'salami', 'fuet', 'lomo embuchado', 'mortadela', 'bacon', 'beicon', 'salchicha', 'pepperoni', 'sobrasada', 'morcilla', 'longaniza', 'pavo fiambre', 'fiambre', 'cecina', 'butifarra', 'panceta'],
+  'queso curado': ['queso curado', 'curado', 'parmesano', 'manchego', 'roquefort', 'queso azul', 'cabrales', 'gorgonzola', 'gouda', 'emmental', 'gruyere', 'idiazabal', 'pecorino']
+};
+function categorias(item) { const n = norm(item), out = []; Object.keys(CAT).forEach(c => { if (CAT[c].some(w => n.includes(w))) out.push(c); }); return out; }
+function vigiladosDe(items) { const v = CFG().vigilados || []; const out = new Set(); items.forEach(i => { categorias(i).forEach(c => { if (v.includes(c)) out.add(c); }); v.forEach(x => { if (!CAT[x] && norm(i).includes(norm(x))) out.add(x); }); }); return [...out]; }
+function frecuentes(momento) {
+  const c = {};
+  vivos('comidas').forEach(r => { if (momento && r.momento !== momento) return; (r.items || []).forEach(i => { const k = norm(i); if (!c[k]) c[k] = { txt: i, n: 0 }; c[k].n++; }); });
+  return Object.values(c).sort((a, b) => b.n - a.n);
+}
+function momentoPorHora(h) { return h < 5 ? 'Picoteo' : h < 11 ? 'Desayuno' : h < 13 ? 'Picoteo' : h < 17 ? 'Comida' : h < 20 ? 'Merienda' : 'Cena'; }
+
+/* =========================================================
+   NUBE (Firebase): solo para Sena. Cada registro es un documento
+   en laura/{su cuenta}/r. Si no hay internet, se guarda la lista
+   de pendientes y se sube en cuanto vuelve.
+   ========================================================= */
+const FB_CONFIG = { apiKey: 'AIzaSyDXdrRm69cympP9-zd1MOl5lGfVWJVcCqo', authDomain: 'laura-8a65c.firebaseapp.com', projectId: 'laura-8a65c', storageBucket: 'laura-8a65c.firebasestorage.app', messagingSenderId: '710521295313', appId: '1:710521295313:web:f23fd7d248200f54d810f0' };
+const FB_VER = '10.12.2';
+const VAPID = 'BEud5XhyFgYZeuEl6O3sUkyozTvwAXo9ZQUDqyUhpcPEaPwQCsKJQ2lO_SQGT38yyEXIzROSm_K-hlOWnPss18I';
+const fnvHash = t => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); };
+const SYNC = {
+  fb: null, user: null, unsub: null, status: 'off', timer: 0, ultimo: 0, subiendo: false, aplicando: false,
+  meta: (() => { try { return JSON.parse(localStorage.getItem(KEY_SYNC)) || {}; } catch (e) { return {}; } })(),
+  guardarMeta() { try { localStorage.setItem(KEY_SYNC, JSON.stringify(this.meta)); } catch (e) {} },
+  async cargar() {
+    if (this.fb) return this.fb;
+    const base = 'https://www.gstatic.com/firebasejs/' + FB_VER + '/';
+    const [A, Au, F] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+    const app = A.initializeApp(FB_CONFIG, 'laura'), auth = Au.getAuth(app), db = F.getFirestore(app);
+    auth.languageCode = 'es';
+    const rcol = u => F.collection(db, 'laura', u, 'r');
+    const leer = snap => { const out = []; snap.forEach(d => { const x = d.data(); out.push({ col: x.col, d: x.d, st: x.st ? x.st.toMillis() : 0, local: d.metadata.hasPendingWrites }); }); return out; };
+    this.app = app; this.F = F;
+    this.fb = {
+      onAuth: cb => Au.onAuthStateChanged(auth, u => cb(u ? { uid: u.uid, email: u.email } : null)),
+      entrar: (e, p) => Au.signInWithEmailAndPassword(auth, e, p).then(c => ({ uid: c.user.uid, email: c.user.email })),
+      crear: (e, p) => Au.createUserWithEmailAndPassword(auth, e, p).then(c => ({ uid: c.user.uid, email: c.user.email })),
+      olvido: e => Au.sendPasswordResetEmail(auth, e),
+      salir: () => Au.signOut(auth),
+      bajar: async (u, desde) => leer(await F.getDocs(desde ? F.query(rcol(u), F.where('st', '>', F.Timestamp.fromMillis(desde))) : rcol(u))),
+      escuchar: (u, desde, cb, err) => F.onSnapshot(F.query(rcol(u), F.where('st', '>', F.Timestamp.fromMillis(desde || 0))), s => cb(leer(s)), err),
+      subir: async (u, lista) => {
+        for (let i = 0; i < lista.length; i += 400) {
+          const b = F.writeBatch(db);
+          lista.slice(i, i + 400).forEach(x => b.set(F.doc(db, 'laura', u, 'r', x.col + '~' + x.rec.id), { col: x.col, id: x.rec.id, upd: x.rec.upd || 0, d: JSON.stringify(x.rec), st: F.serverTimestamp() }));
+          await b.commit();
+        }
+      },
+      guardarPlan: (u, plan) => F.setDoc(F.doc(db, 'laura', u, 'estado', 'plan'), { d: JSON.stringify(plan), t: F.serverTimestamp() }),
+      guardarAviso: (u, id, datos) => F.setDoc(F.doc(db, 'laura', u, 'avisos', id), Object.assign({ t: F.serverTimestamp() }, datos)),
+      borrarAviso: (u, id) => F.deleteDoc(F.doc(db, 'laura', u, 'avisos', id))
+    };
+    return this.fb;
+  },
+  async arrancar() {
+    if (!this.meta.uid) return;
+    this.status = 'conectando';
+    try {
+      const fb = await this.cargar();
+      fb.onAuth(u => {
+        if (u && u.uid === this.meta.uid) { this.user = u; this.conectar(); }
+        else if (!u) { this.user = null; this.status = 'off'; }
+      });
+    } catch (e) { this.status = 'sin-red'; }
+  },
+  marcar(col, id) {
+    if (!this.meta.uid || this.aplicando) return;
+    this.meta.pend = this.meta.pend || {};
+    this.meta.pend[col + '~' + id] = 1; this.guardarMeta();
+    clearTimeout(this.timer); this.timer = setTimeout(() => this.subir(), 1200);
+  },
+  async subir() {
+    if (!this.user || this.subiendo) return;
+    const keys = Object.keys(this.meta.pend || {});
+    if (!keys.length) return;
+    this.subiendo = true;
+    try {
+      const lista = keys.map(k => { const i = k.indexOf('~'); const col = k.slice(0, i), id = k.slice(i + 1); const rec = (DB[col] || []).find(r => r.id === id); return rec ? { col, rec } : null; }).filter(Boolean);
+      await this.fb.subir(this.user.uid, lista);
+      keys.forEach(k => delete this.meta.pend[k]);
+      this.guardarMeta(); this.ultimo = now(); this.status = 'ok';
+    } catch (e) {
+      this.status = 'sin-red';
+      clearTimeout(this.timer); this.timer = setTimeout(() => this.subir(), 30000);
+    }
+    this.subiendo = false;
+    if (Object.keys(this.meta.pend || {}).length) { clearTimeout(this.timer); this.timer = setTimeout(() => this.subir(), 1500); }
+  },
+  aplicar(lista) {
+    let n = 0, max = this.meta.desde || 0;
+    this.aplicando = true;
+    lista.forEach(x => {
+      if (x.local || !x.st) return;
+      if (x.st > max) max = x.st;
+      let r; try { r = JSON.parse(x.d); } catch (e) { return; }
+      if (!r || !r.id || !DB[x.col]) return;
+      const i = DB[x.col].findIndex(y => y.id === r.id);
+      if (i < 0) { DB[x.col].push(r); n++; }
+      else if ((r.upd || 0) > (DB[x.col][i].upd || 0)) { DB[x.col][i] = r; n++; }
+    });
+    this.aplicando = false;
+    this.meta.desde = max; this.guardarMeta();
+    if (n) { guardar(); repintar(); planCambiado(); }
+    return n;
+  },
+  async conectar() {
+    if (this.unsub || !this.user) return;
+    this.status = 'sincronizando';
+    try {
+      const fb = this.fb, u = this.user.uid;
+      if (!this.meta.inicial) {
+        try { localStorage.setItem('laura-antes-de-la-nube', JSON.stringify(DB)); } catch (e) {}
+        const remoto = await fb.bajar(u, 0);
+        const enNube = {};
+        remoto.forEach(x => { try { const r = JSON.parse(x.d); enNube[x.col + '~' + r.id] = r.upd || 0; } catch (e) {} });
+        this.meta.desde = 0; this.aplicar(remoto);
+        this.meta.pend = this.meta.pend || {};
+        COLS.forEach(c => DB[c].forEach(r => { const k = c + '~' + r.id; if (!(k in enNube) || (r.upd || 0) > enNube[k]) this.meta.pend[k] = 1; }));
+        this.meta.inicial = true; this.guardarMeta();
+      }
+      await this.subir();
+      this.unsub = fb.escuchar(u, this.meta.desde || 0, l => { this.aplicar(l); this.ultimo = now(); this.status = 'ok'; }, () => { this.unsub = null; this.status = 'sin-red'; });
+      this.ultimo = now(); this.status = 'ok';
+      subirPlan(true); revisarAviso(); repintar();
+    } catch (e) { this.unsub = null; this.status = 'sin-red'; }
+  },
+  async entrar(email, pass, nueva) {
+    const fb = await this.cargar();
+    const u = nueva ? await fb.crear(email, pass) : await fb.entrar(email, pass);
+    if (this.meta.uid && this.meta.uid !== u.uid) this.meta = {};
+    this.user = u; this.meta.uid = u.uid; this.meta.email = u.email || email; this.guardarMeta();
+    await this.conectar();
+  },
+  async salir() {
+    try { if (this.unsub) this.unsub(); } catch (e) {}
+    this.unsub = null;
+    try { await this.fb.salir(); } catch (e) {}
+    this.user = null; this.meta = {}; this.guardarMeta(); this.status = 'off';
+  }
+};
+window.addEventListener('online', () => { if (SYNC.user) { SYNC.subir(); subirPlan(true); } });
+
+/* =========================================================
+   PLAN DE AVISOS: la app calcula qué avisos tocan los próximos
+   7 días y lo deja en la nube. La hoja de Google lo mira cada
+   minuto y manda el aviso al iPhone cuando llega la hora.
+   ========================================================= */
+function calcularPlan() {
+  const tz = tzTomas(), hoy = dayKey(now(), tz), avisos = [];
+  const casa = tz === homeTz() && lejos();
+  for (let i = -1; i < 7; i++) {
+    const d = sumarDias(hoy, i);
+    tomasDelDia(d).forEach(s => {
+      const meds = s.meds.filter(m => !tomaDe(d, s.hora, m.id));
+      if (!meds.length || s.t < now() - 45 * MIN) return;
+      avisos.push({ id: 'toma|' + d + '|' + s.hora, t: s.t, rep: 3, cada: 15, abrir: 'hoy',
+        titulo: 'Te toca: ' + lista(meds.map(m => m.nombre)),
+        texto: (meds.map(m => m.dosis).filter(Boolean).length ? lista(meds.map(m => m.nombre + (m.dosis ? ' ' + m.dosis : ''))) + ' · ' : '') + s.hora + (casa ? ' hora de casa' : '') + '. Toca para marcarla.' });
+    });
+  }
+  // A los 15 minutos de un pinchazo: ¿cómo estás?
+  const e = abierto();
+  if (e && (e.pinchazos || []).length && !e.resp15) {
+    const p = e.pinchazos[e.pinchazos.length - 1];
+    avisos.push({ id: 'p15|' + p, t: p + 15 * MIN, rep: 1, cada: 0, abrir: 'inicio', titulo: '¿Cómo estás?', texto: 'Han pasado 15 minutos del pinchazo. Toca para contestar.' });
+  }
+  // Cita: la tarde de antes
+  vivos('citas').forEach(c => {
+    if (!c.t || c.t < now()) return;
+    const dia = dayKey(c.t, tzHere()), t = epochDe(sumarDias(dia, -1), '20:00', tzHere());
+    if (t > now() - HORA) avisos.push({ id: 'cita|' + c.id + '|' + c.t, t, rep: 1, cada: 0, abrir: 'consulta', titulo: 'Mañana: ' + (c.tipo || 'Neurología'), texto: 'A las ' + hhmm(c.t, tzHere()) + (c.lugar ? ' · ' + c.lugar : '') + '. Tienes ' + plural((c.preguntas || []).filter(q => !q.hecho).length, 'pregunta apuntada', 'preguntas apuntadas') + '.' });
+  });
+  // Pocas plumas
+  const c = CFG();
+  if (c.plumas > 0 && c.plumas <= (c.avisoPlumas || 3)) avisos.push({ id: 'plumas|' + c.plumas, t: now(), rep: 1, cada: 0, abrir: 'medicinas', titulo: 'Quedan ' + plural(c.plumas, 'pluma', 'plumas') + ' de sumatriptán', texto: 'Acuérdate de pedir la receta.' });
+  return { v: 1, gen: now(), avisos: avisos.sort((a, b) => a.t - b.t).slice(0, 80) };
+}
+let planTimer = 0;
+function planCambiado() { clearTimeout(planTimer); planTimer = setTimeout(() => subirPlan(), 2500); }
+async function subirPlan(forzar) {
+  if (!SYNC.user || !SYNC.fb) return;
+  const plan = calcularPlan(), firma = JSON.stringify(plan.avisos);
+  if (!forzar && firma === SYNC.meta.planFirma && now() - (SYNC.meta.planT || 0) < 6 * HORA) return;
+  try { await SYNC.fb.guardarPlan(SYNC.user.uid, plan); SYNC.meta.planFirma = firma; SYNC.meta.planT = now(); SYNC.guardarMeta(); } catch (e) {}
+}
+
+/* ---------- Avisos en este iPhone ---------- */
+async function activarAvisos() {
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) { toast(standalone ? 'Este móvil no admite avisos (hace falta iOS 16.4 o más nuevo)' : 'Abre Laura desde el icono de la pantalla de inicio para activar los avisos'); return; }
+  if (!SYNC.user) { toast('Primero conecta la nube en Ajustes'); return; }
+  const per = await Notification.requestPermission();
+  if (per !== 'granted') { toast('Sin permiso: actívalo en Ajustes del iPhone › Notificaciones › Laura'); return; }
+  try {
+    await SYNC.cargar();
+    const M = await import('https://www.gstatic.com/firebasejs/' + FB_VER + '/firebase-messaging.js');
+    const reg = await navigator.serviceWorker.ready;
+    const msg = M.getMessaging(SYNC.app);
+    try { await M.deleteToken(msg); } catch (e) {}
+    try { const sub = await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+    let token = null, ultimo = null;
+    for (let i = 0; i < 3 && !token; i++) {
+      try { token = await M.getToken(msg, { vapidKey: VAPID, serviceWorkerRegistration: reg }); }
+      catch (e) { ultimo = e; await new Promise(r => setTimeout(r, 1500)); }
+    }
+    if (!token) throw ultimo || new Error('sin token');
+    const id = fnvHash(token);
+    await SYNC.fb.guardarAviso(SYNC.user.uid, id, { token, nombre: 'iPhone de Sena' });
+    SYNC.meta.aviso = { id }; SYNC.guardarMeta(); avisoRevisado = now();
+    subirPlan(true); repintar(); toast('Avisos activados');
+  } catch (e) { toast('No se han podido activar los avisos: ' + ((e && (e.code || e.message)) || e)); }
+}
+let avisoRevisado = 0;
+async function revisarAviso() {
+  if (!SYNC.meta.aviso || !SYNC.user || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  if (now() - avisoRevisado < 10 * MIN) return;
+  avisoRevisado = now();
+  try {
+    const M = await import('https://www.gstatic.com/firebasejs/' + FB_VER + '/firebase-messaging.js');
+    const reg = await navigator.serviceWorker.ready;
+    const token = await M.getToken(M.getMessaging(SYNC.app), { vapidKey: VAPID, serviceWorkerRegistration: reg });
+    if (!token) return;
+    const id = fnvHash(token);
+    await SYNC.fb.guardarAviso(SYNC.user.uid, id, { token, nombre: 'iPhone de Sena' });
+    if (SYNC.meta.aviso.id !== id) { try { await SYNC.fb.borrarAviso(SYNC.user.uid, SYNC.meta.aviso.id); } catch (e) {} SYNC.meta.aviso = { id }; SYNC.guardarMeta(); }
+  } catch (e) {}
+}
+function errNube(e) {
+  const c = (e && e.code) || '';
+  return ({
+    'auth/invalid-email': 'El correo no es válido.', 'auth/missing-password': 'Escribe la contraseña.',
+    'auth/weak-password': 'La contraseña es muy corta: mínimo 6 caracteres.',
+    'auth/email-already-in-use': 'Ya hay una cuenta con ese correo. Pulsa «Entrar».',
+    'auth/invalid-credential': 'Correo o contraseña incorrectos.', 'auth/wrong-password': 'Correo o contraseña incorrectos.',
+    'auth/user-not-found': 'No hay ninguna cuenta con ese correo.', 'auth/too-many-requests': 'Demasiados intentos. Espera un poco.',
+    'auth/network-request-failed': 'No hay conexión a internet.'
+  })[c] || 'No se ha podido. ' + (c ? '(' + String(c).replace('auth/', '') + ')' : 'Comprueba la conexión.');
+}
+
+/* =========================================================
+   PANTALLAS
+   ========================================================= */
+const S = { pant: 'inicio', tab: 'hoy', sheet: null, cierre: null, undo: null, filtro: 'todo', ver: 40, f: {} };
+const seg = (opts, sel, a, extra) => `<div class="seg" style="--n:${opts.length}">${opts.map(o => { const [v, t] = Array.isArray(o) ? o : [o, o]; return `<button class="${v === sel ? 'on' : ''}" data-a="${a}" data-v="${esc(v)}"${extra || ''}>${esc(t)}</button>`; }).join('')}</div>`;
+const segM = (opts, sel, a) => `<div class="seg" style="--n:${Math.min(opts.length, 3)}">${opts.map(o => `<button class="${(sel || []).includes(o) ? 'on' : ''}" data-a="${a}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+const chipsM = (opts, sel, a) => `<div class="chips">${opts.map(o => `<button class="chip ${(sel || []).includes(o) ? 'on' : ''}" data-a="${a}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+const tile = (l, v, s, bg) => `<div class="tile" ${bg ? `style="background:${bg}"` : ''}><span class="l">${l}</span><span class="v G">${v}</span>${s ? `<span class="l">${s}</span>` : ''}</div>`;
+const h3 = (t, r) => `<div class="between"><span class="G h3">${t}</span>${r ? `<span class="small">${r}</span>` : ''}</div>`;
+const topBar = (t, right) => `<div class="top"><span class="G h1">${t}</span>${right || ''}</div>`;
+const backBtn = (a, t) => `<button class="back" data-a="${a || 'volver'}">‹ ${t || 'Volver'}</button>`;
+const ICON_GEAR = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg>';
+const ICON_MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>';
+const ICON_SUN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"></path></svg>';
+const ICON_ARROW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
+
+function repintar() {
+  const app = $('#app'); if (!app) return;
+  const noche = S.pant === 'inicio';
+  document.body.classList.toggle('noche', noche);
+  const mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.content = noche ? '#0d100d' : '#f3efe6';
+  let h = '';
+  try {
+    if (noche) h = pInicio();
+    else {
+      const f = { hoy: pHoy, registro: pRegistro, medicinas: pMedicinas, patrones: pPatrones, consulta: pConsulta, ajustes: pAjustes, distinta: pDistinta, efecto: pEfecto, comida: pComida, pasada: pPasada, med: pMed, tanda: pTanda }[S.pant] || pHoy;
+      h = `<div class="wrap">${f()}</div>` + navHTML();
+    }
+  } catch (e) { console.error(e); h = `<div class="wrap"><div class="card warn"><b>Algo ha fallado al pintar esta pantalla.</b><span class="small">${esc(e.message)}</span><button class="btn" data-a="ir" data-v="hoy">Ir a Hoy</button></div></div>`; }
+  if (S.sheet) h += `<div class="sheet-bg" data-a="cerrar-sheet"><div class="sheet" data-stop="1">${S.sheet()}</div></div>`;
+  const y = window.scrollY;
+  app.innerHTML = h;
+  if (S.mantenerScroll) window.scrollTo(0, y);
+  S.mantenerScroll = false;
+}
+function navHTML() {
+  const t = { hoy: 'hoy', registro: 'registro', efecto: 'registro', comida: 'hoy', pasada: 'registro', distinta: 'registro', medicinas: 'medicinas', med: 'medicinas', tanda: 'medicinas', patrones: 'patrones', consulta: 'patrones', ajustes: 'hoy' }[S.pant] || 'hoy';
+  return `<nav class="tabs">${[['hoy', 'Hoy'], ['registro', 'Registro'], ['medicinas', 'Medicinas'], ['patrones', 'Patrones']].map(([k, n]) => `<button class="${t === k ? 'on' : ''}" data-a="ir" data-v="${k}">${n}</button>`).join('')}</nav>`;
+}
+function ir(p) { S.pant = p; S.sheet = null; window.scrollTo(0, 0); repintar(); }
+
+/* ---------------- Inicio: botones de crisis ---------------- */
+function lugarTxt() { const tz = tzHere(); return lejos() ? ciudad(tz) + ' · ' + difHoras() : ciudad(tz); }
+function pInicio() {
+  const e = abierto(), c = CFG();
+  const sin = !navigator.onLine ? ' · sin conexión, se guarda igual' : '';
+  const top = (r) => `<div class="n-top"><span>${hhmm(now())} · ${esc(lugarTxt())}${sin}</span><span>${r}</span></div>`;
+  const undo = S.undo ? `<button class="n-link" data-a="deshacer">Deshacer</button>` : '<span></span>';
+  if (S.cierre) return pCierre();
+  if (!e) {
+    const p = puedePinchar(), s = durmiendoAhora(), h = partes(now()).h;
+    let sueno = '';
+    if (s && h >= 5 && h < 15) sueno = `<button class="n-btn" data-a="despertar">${ICON_SUN}Me he despertado</button>`;
+    else if (!s && (h >= 19 || h < 5)) sueno = `<button class="n-btn" data-a="dormir">${ICON_MOON}Me voy a dormir</button>`;
+    else if (s) sueno = `<div class="n-small" style="text-align:center;padding:4px">Durmiendo desde las ${hhmm(s.dormir)}</div>`;
+    return `<div class="n-wrap">${top('Lado ' + (c.lado === 'izq' ? 'izquierdo' : 'derecho'))}
+      <div class="n-grid">
+        <button class="tilebtn t-laura" data-a="laura"><span class="t" style="font-size:36px">Laura</span><span class="s">aviso, sin dolor</span></button>
+        <button class="tilebtn t-suma" data-a="pinchar" style="justify-content:space-between"><span class="t" style="font-size:44px">${p.n}/2</span><span><span class="t" style="font-size:26px;display:block">Me pincho</span><span class="s">sumatriptán · 24 h</span></span></button>
+        <button class="tilebtn t-dolor" data-a="dolor" style="grid-column:span 2"><span class="t" style="font-size:72px;letter-spacing:-0.04em">Dolor</span><span class="s" style="font-size:16px">empieza a contar</span></button>
+      </div>
+      ${sueno}
+      <button class="n-btn" data-a="ir" data-v="hoy">Abrir la app ${ICON_ARROW}</button>
+      ${S.undo ? `<div style="text-align:center">${undo}</div>` : ''}
+    </div>`;
+  }
+  const pin = e.pinchazos || [], ult = pin[pin.length - 1];
+  const detalle = [e.laura ? 'Laura ' + hhmm(e.laura) : '', e.dolor ? 'dolor ' + hhmm(e.dolor) : '', pin.length ? 'pinchazo ' + pin.map(x => hhmm(x)).join(' y ') : ''].filter(Boolean).join(' · ');
+  const pp = puedePinchar();
+  if (pin.length) {
+    const min = Math.floor((now() - ult) / MIN);
+    const r = e.resp15;
+    const segundo = pp.ok
+      ? `<button class="tilebtn t-suma" data-a="pinchar" style="min-height:70px;padding:16px 22px"><span class="t" style="font-size:22px">Segundo pinchazo</span><span class="s">${pp.n} de 2 en 24 h</span></button>`
+      : `<div class="n-card" style="border:1px dashed #2c3640;background:transparent;flex-direction:row;justify-content:space-between;font-size:14px;color:var(--suma-sub)"><span>Segundo pinchazo</span><span>${pp.n >= 2 ? 'ya llevas 2 en 24 h' : 'a partir de las ' + hhmm(pp.desde)}</span></div>`;
+    return `<div class="n-wrap">${top('Sumatriptán ' + pp.n + '/2')}
+      <div class="n-status"><span class="k" style="color:#9fb6cc">Pinchazo</span><span class="big">${min} min</span><span class="n-small">${esc(detalle)}</span></div>
+      <div class="n-card" style="background:var(--suma)"><span style="font-size:16px;font-weight:600;color:var(--suma-fg)">¿Cómo estás${min >= 12 ? ' a los 15 minutos' : ''}?</span>
+        <div class="n-seg" style="grid-template-columns:repeat(3,1fr)">${[['sin', 'Sin dolor'], ['mejor', 'Mejor'], ['igual', 'Igual']].map(([v, t]) => `<button class="${r === v ? 'on' : ''}" style="background:${r === v ? '#3b4f63' : '#24313d'};color:#d3e1ee" data-a="resp15" data-v="${v}">${t}</button>`).join('')}</div>
+        <span class="n-small" style="color:var(--suma-sub)">A los 15 minutos te llega un aviso para contestarlo.</span></div>
+      <button class="tilebtn t-neu" data-a="fin" style="flex:1 1 auto;min-height:110px"><span class="t" style="font-size:40px">Se ha ido</span><span class="s">cierra y guarda</span></button>
+      ${!e.dolor ? `<button class="n-btn" data-a="dolor" style="background:var(--dolor);color:var(--dolor-fg)">Empieza el dolor</button>` : ''}
+      ${segundo}
+      <div style="display:flex;justify-content:space-between">${undo}<button class="n-link" data-a="ir" data-v="hoy">Ir a la app</button></div>
+    </div>`;
+  }
+  if (e.dolor) {
+    return `<div class="n-wrap">${top('Lado ' + (e.lado === 'izq' ? 'izquierdo' : 'derecho'))}
+      <div class="n-status"><span class="k" style="color:#d9ab72">Dolor</span><span class="big">${durTxt(now() - e.dolor)}</span><span class="n-small">${esc(detalle)}</span></div>
+      <button class="tilebtn t-suma" data-a="pinchar" style="flex:1.4 1 0"><span class="t" style="font-size:40px">Me he pinchado</span><span class="s">sumatriptán · ${pp.n} de 2 en 24 h</span></button>
+      <button class="tilebtn t-neu" data-a="fin" style="flex:0.8 1 0"><span class="t" style="font-size:30px">Se ha ido</span><span class="s">sin pincharme</span></button>
+      <div style="display:flex;justify-content:space-between">${undo}<button class="n-link" data-a="ir" data-v="hoy">Ir a la app</button></div>
+    </div>`;
+  }
+  return `<div class="n-wrap">${top('Lado ' + (e.lado === 'izq' ? 'izquierdo' : 'derecho'))}
+    <div class="n-status"><span class="k" style="color:#a9b99a">Laura</span><span class="big">${durTxt(now() - e.laura)}</span><span class="n-small">desde las ${hhmm(e.laura)}</span></div>
+    <button class="tilebtn t-dolor" data-a="dolor" style="flex:1.3 1 0"><span class="t" style="font-size:40px">Empieza el dolor</span><span class="s">pasa a crisis, se guarda junto</span></button>
+    <div style="flex:1 1 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="tilebtn t-suma" data-a="pinchar"><span class="t" style="font-size:26px">Me pincho ya</span><span class="s">antes del dolor · ${pp.n}/2</span></button>
+      <button class="tilebtn t-neu" data-a="fin"><span class="t" style="font-size:26px">Se ha ido</span><span class="s">sin dolor</span></button>
+    </div>
+    <div style="display:flex;justify-content:space-between">${undo}<button class="n-link" data-a="ir" data-v="hoy">Ir a la app</button></div>
+  </div>`;
+}
+function pCierre() {
+  const e = porId('eventos', S.cierre); if (!e) { S.cierre = null; return pInicio(); }
+  const pin = e.pinchazos || [];
+  const filas = [e.laura ? ['Laura', e.laura, '#a9b99a'] : null, e.dolor ? ['Dolor', e.dolor, '#d9ab72'] : null].concat(pin.map((p, i) => ['Pinchazo' + (pin.length > 1 ? ' ' + (i + 1) : ''), p, '#9fb6cc'])).concat([[esCrisis(e) ? 'Sin dolor' : 'Se fue', e.fin, '#8f9c84']]).filter(Boolean);
+  const total = e.fin - inicioEv(e);
+  if (!esCrisis(e)) {
+    return `<div class="n-wrap"><div class="n-top"><span>${esc(lugarTxt())}</span><span>Guardado</span></div>
+      <div class="n-status"><span class="big" style="font-size:44px">Laura se fue.</span><span class="n-small">${durTxt(total)} sin llegar el dolor</span></div>
+      <div class="n-card">${filas.map(f => `<div class="between" style="font-size:15px"><span style="color:${f[2]}">${f[0]}</span><span>${hhmm(f[1])}</span></div>`).join('')}</div>
+      <div style="flex:1"></div>
+      <button class="n-btn" data-a="cierre-ok">Listo</button>
+      <div style="display:flex;justify-content:space-between"><button class="n-link" data-a="deshacer-fin">Deshacer</button><button class="n-link" data-a="cierre-app">Ir a la app</button></div></div>`;
+  }
+  return `<div class="n-wrap"><div class="n-top"><span>${esc(lugarTxt())}</span><span>Guardado</span></div>
+    <div class="n-status"><span class="big" style="font-size:44px">Ya pasó.</span><span class="n-small">${durTxt(total)} en total</span></div>
+    <div class="n-card">${filas.map(f => `<div class="between" style="font-size:15px"><span style="color:${f[2]}">${f[0]}</span><span>${hhmm(f[1])}</span></div>`).join('')}</div>
+    <div class="n-card"><span style="font-size:15px;font-weight:600">¿Ha sido como siempre?</span>
+      <div class="n-seg" style="grid-template-columns:1fr 1fr"><button style="background:var(--laura);color:var(--laura-fg)" data-a="como" data-v="siempre">Sí, como siempre</button><button style="background:var(--dolor);color:var(--dolor-fg)" data-a="como" data-v="distinta">Distinta</button></div>
+      <span class="n-small">Lado ${e.lado === 'izq' ? 'izquierdo' : 'derecho'} · <button class="n-small" style="text-decoration:underline" data-a="otro-lado">cambiar de lado</button></span></div>
+    <div class="n-card"><span style="font-size:15px;font-weight:600">¿Cuánto llegó a doler? <span style="font-weight:400;color:var(--n-sub)">(opcional)</span></span>
+      <div class="n-seg" style="grid-template-columns:repeat(5,1fr)">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="${e.intensidad === n ? 'on' : ''}" style="height:52px" data-a="intensidad" data-v="${n}">${n}</button>`).join('')}</div></div>
+    <div style="display:flex;justify-content:space-between"><button class="n-link" data-a="deshacer-fin">Deshacer</button><button class="n-link" data-a="cierre-app">Ir a la app</button></div></div>`;
+}
+
+/* ---------------- Crisis distinta ---------------- */
+const DISTINTO = ['Otro lado', 'Más larga', 'Más fuerte', 'No paró con el pinchazo', 'Volvió al rato', 'Dolor en otro sitio', 'Hormigueo o debilidad', 'Algo en la vista', 'Mareo fuerte', 'Otra cosa'];
+const AUTONOM = ['Lagrimeo', 'Ojo rojo', 'Nariz tapada o moqueo', 'Párpado caído', 'Párpado hinchado', 'Sudor en la cara', 'No podía estar quieto', 'Náuseas'];
+function pDistinta() {
+  const e = porId('eventos', S.f.evId); if (!e) return pHoy();
+  const d = e.distinta || {};
+  return `${backBtn('ir', 'Hoy').replace('data-a="ir"', 'data-a="ir" data-v="hoy"')}${topBar('Crisis distinta', `<span class="small">${cuandoDia(dayKey(inicioEv(e)))} · ${hhmm(inicioEv(e))}</span>`)}
+  <div class="card">${h3('¿Qué ha sido distinto?')}${chipsM(DISTINTO, d.que, 'dist-que')}</div>
+  <div class="card">${h3('En el lado del dolor notaste', 'opcional')}${chipsM(AUTONOM, d.sint, 'dist-sint')}</div>
+  <label class="lab">Cuéntalo con tus palabras<textarea class="f" data-in="dist-txt" placeholder="Escribe o dicta…">${esc(d.txt || '')}</textarea></label>
+  <div class="card warn"><b style="color:#6b4e00">Llama al 112 si…</b><span style="font-size:14px;line-height:1.5">Es el peor dolor de tu vida y distinto al habitual · viene con debilidad, cara torcida o dificultad para hablar · pierdes visión · tienes fiebre o el cuello rígido.</span></div>
+  <span class="small">Se apunta como «crisis distinta» y sale destacada en el informe para el neurólogo.</span>
+  <button class="btn" data-a="dist-guardar">Guardar</button>`;
+}
+
+/* ---------------- Hoy ---------------- */
+const CHIPS_DIA = ['Bolo', 'Vuelo', 'Dormí fuera', 'Siesta', 'Alcohol', 'Fumé más de lo normal', 'Estrés'];
+function diaRec(day) { return vivos('dias').find(d => d.id === day) || { id: day }; }
+function setDia(day, cambios) { const d = Object.assign({}, diaRec(day), cambios); delete d.borrado; poner('dias', d); }
+function ultimoSueno() { return vivos('suenos').filter(s => s.dormir && now() - s.dormir < 20 * HORA).sort((a, b) => b.dormir - a.dormir)[0] || null; }
+function suenoHabitual() {
+  const l = vivos('suenos').filter(s => s.dormir && s.despertar).slice(-14);
+  if (!l.length) return { dormir: '00:30', despertar: '08:30' };
+  const med = arr => { const v = arr.map(x => { const p = partes(x); let m = p.h * 60 + p.mi; if (m < 12 * 60) m += 1440; return m; }).sort((a, b) => a - b); const m = v[Math.floor(v.length / 2)] % 1440; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
+  const med2 = arr => { const v = arr.map(x => { const p = partes(x); return p.h * 60 + p.mi; }).sort((a, b) => a - b); const m = v[Math.floor(v.length / 2)]; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
+  return { dormir: med(l.map(s => s.dormir)), despertar: med2(l.map(s => s.despertar)) };
+}
+function pHoy() {
+  const c = CFG(), h = partes(now()).h, hoy = dayKey(now());
+  let out = topBar('Hoy', `<div class="row">${lejos() ? `<span class="chip" style="background:#fff;font-size:13px;min-height:34px">${esc(ciudad(tzHere()))} · ${difHoras()}</span>` : ''}<button aria-label="Ajustes" data-a="ir" data-v="ajustes" style="width:44px;height:44px;border-radius:22px;background:#fff;display:flex;align-items:center;justify-content:center">${ICON_GEAR}</button></div>`);
+  out += `<span class="small" style="padding:0 8px">${fechaLarga(hoy)} · ${hhmm(now())}</span>`;
+  if (S.nuevaVersion) out += `<div class="card ink"><b>Hay una versión nueva de Laura</b><button class="btn light" data-a="actualizar">Actualizar</button></div>`;
+  if (!SYNC.meta.uid) out += `<div class="card warn"><b>Conecta tu nube</b><span style="font-size:14px">Para tener copia de tus datos y recibir los avisos de las pastillas.</span><button class="btn" data-a="ir" data-v="ajustes">Conectar</button></div>`;
+  const e = abierto();
+  if (e) out += `<button class="card ink" data-a="ir" data-v="inicio" style="text-align:left"><span class="G h3" style="color:#efc993">${e.dolor || (e.pinchazos || []).length ? 'Tienes una crisis abierta' : 'Laura está abierta'}</span><span style="font-size:14px">Toca para seguir con los botones de crisis</span></button>`;
+  // Sin dolor
+  const ds = diasSinDolor();
+  if (ds === null) out += `<div class="card sky"><span style="font-size:14px;font-weight:600">Sin crisis apuntadas todavía</span><span style="font-size:14px">Cuando apuntes la primera, aquí verás los días que llevas sin dolor.</span></div>`;
+  else { const pct = Math.min(100, Math.round(ds / 90 * 100)); const f3 = dayKey(ultimaCrisis() + 90 * DIA);
+    out += `<div class="card sky"><span style="font-size:14px;font-weight:600">Sin dolor</span><span class="G" style="font-size:56px;letter-spacing:-0.04em;line-height:.95">${plural(ds, 'día', 'días')}</span><div class="bar"><i style="width:${pct}%"></i></div><div class="between" style="font-size:13px"><span>${Math.min(ds, 90)} de 90 días</span><span>${ds >= 90 ? '¡3 meses!' : '3 meses el ' + fechaCorta(f3)}</span></div></div>`; }
+  // Sueño (por la mañana)
+  if (h >= 5 && h < 14) {
+    const s = ultimoSueno(), hab = suenoHabitual();
+    const dorm = s ? hhmm(s.dormir) : hab.dormir, desp = s && s.despertar ? hhmm(s.despertar) : (s ? '' : hab.despertar);
+    const dur = s && s.despertar ? durTxt(s.despertar - s.dormir) : '';
+    out += `<div class="card">${h3('Anoche dormiste', dur)}
+      <div class="tiles"><label class="tm">Te dormiste<input type="time" value="${dorm}" data-in="sueno-dormir"></label><label class="tm">Te despertaste<input type="time" value="${desp}" data-in="sueno-despertar"></label></div>
+      ${seg(['Bien', 'Regular', 'Mal'], s && s.calidad, 'sueno-calidad')}
+      <span class="small">${s ? (s.auto ? 'Con tus botones: «Me voy a dormir» (+' + c.margen + ' min)' + (s.despertar ? ' y «Me he despertado».' : '.') : 'Apuntado a mano.') : 'Vienen puestas tus horas de siempre: toca cómo dormiste para guardarlo.'}</span></div>`;
+  }
+  // Pastillas
+  const pend = pendientesAhora();
+  if (!preventivos().length && !tandaActiva(dayKey(now(), tzTomas()))) out += `<div class="card tomato"><span class="G h3">Añade tu medicación</span><span style="font-size:14px">Verapamilo, topiramato y sus horas, para que Laura te avise.</span><button class="btn" style="background:#1a0f0a;color:#fbe3d8" data-a="ir" data-v="medicinas">Añadir</button></div>`;
+  else if (pend.length) {
+    const s = pend[0], ya = s.t <= now() + 15 * MIN, casa = tzTomas() === homeTz() && lejos();
+    out += `<div class="card tomato"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:600">${s.t < now() - 20 * MIN ? 'Te tocaba ' + haceTxt(s.t) : ya ? 'Te toca ahora' : 'Próxima toma'}</span><span class="G" style="font-size:28px">${esc(lista(s.meds.map(m => m.nombre)))}</span><span style="font-size:14px">${esc(s.meds.map(m => m.dosis).filter(Boolean).join(' · '))}${casa ? ' · hora de casa' : ''}${s.day !== dayKey(now(), tzTomas()) ? ' · ' + cuandoDia(s.day).toLowerCase() : ''}</span></span><span class="G" style="font-size:34px">${casa ? hhmm(s.t) : s.hora}</span></div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px"><button class="btn" style="background:#1a0f0a;color:#fbe3d8" data-a="tomar" data-v="${s.day}|${s.hora}">${s.meds.length > 1 ? 'Tomadas' : 'Tomada'}</button><button class="btn" style="background:rgba(26,15,10,.15);color:#1a0f0a;font-size:14px" data-a="tomar-otra" data-v="${s.day}|${s.hora}">A otra hora</button></div></div>`;
+  }
+  // Ayer / hoy: dolor de fondo, agua, ánimo
+  const tarde = h >= 18, dk = tarde ? hoy : sumarDias(hoy, -1), dd = diaRec(dk), et = tarde ? 'hoy' : 'ayer';
+  out += `<div class="card">${h3('Dolor de fondo ' + et, 'entre crisis')}${seg(['No', 'Leve', 'Molesto'], dd.fondo, 'dia-fondo', ` data-d="${dk}"`)}${h3('Agua ' + et)}${seg(['Poca', 'Normal', 'Mucha'], dd.agua, 'dia-agua', ` data-d="${dk}"`)}${h3('Ánimo ' + et)}${seg(['Bien', 'Regular', 'Mal'], dd.animo, 'dia-animo', ` data-d="${dk}"`)}</div>`;
+  // Comida
+  const mom = momentoPorHora(h), hechos = vivos('comidas').filter(r => dayKey(r.t) === hoy).map(r => r.momento);
+  const frec = frecuentes(mom).slice(0, 6);
+  out += `<div class="card sage"><div class="between" style="align-items:center"><span class="G h3">${mom}</span><button class="btn small" data-a="comida-nueva" data-v="${mom}">Apuntar</button></div>
+    <div class="seg" style="--n:4;font-size:12px">${['Desayuno', 'Comida', 'Merienda', 'Cena'].map(m => `<button style="font-size:12px;padding:8px 0;min-height:36px;${hechos.includes(m) ? 'background:#1d1b16;color:#f3efe6;font-weight:600' : 'background:transparent;border:2px dashed #1d1b16'}" data-a="comida-nueva" data-v="${m}">${m}</button>`).join('')}</div>
+    ${frec.length ? `<div class="chips">${frec.map(f => `<button class="chip" data-a="comida-rapida" data-v="${esc(f.txt)}" data-m="${mom}">${esc(f.txt)}</button>`).join('')}</div><span class="small" style="color:#2d3a24">Lo que más tomas a esta hora: un toque y queda apuntado.</span>` : `<span class="small" style="color:#2d3a24">Apunta lo que comes y bebes: con el tiempo, aquí saldrá lo de siempre para apuntarlo con un toque.</span>`}</div>`;
+  // Qué ha pasado
+  const dh = diaRec(hoy);
+  out += `<div class="card"><span style="font-size:15px;font-weight:600">¿Qué ha pasado hoy?</span>${chipsM(CHIPS_DIA, dh.chips, 'dia-chip')}</div>`;
+  if (c.plumas > 0 && c.plumas <= c.avisoPlumas) out += `<div class="card butter"><span class="G h3">Quedan ${plural(c.plumas, 'pluma', 'plumas')}</span><span style="font-size:14px">Acuérdate de pedir la receta de sumatriptán.</span></div>`;
+  const cita = proximaCita();
+  if (cita && cita.t - now() < 14 * DIA) out += `<button class="card" data-a="ir" data-v="consulta" style="text-align:left"><span class="small">Próxima cita</span><span class="G h3">${esc(cita.tipo || 'Neurología')} · ${fechaCorta(dayKey(cita.t))} ${hhmm(cita.t)}</span></button>`;
+  out += `<button class="card ink" data-a="ir" data-v="inicio" style="flex-direction:row;justify-content:space-between;align-items:center;color:#efc993"><span class="G h3">Botones de crisis</span><span style="font-size:13px;text-align:right">Laura · Dolor<br>Me pincho</span></button>`;
+  return out;
+}
+
+/* ---------------- Registro ---------------- */
+function itemsRegistro() {
+  const it = [];
+  vivos('eventos').forEach(e => it.push({ t: inicioEv(e), tipo: esCrisis(e) ? 'crisis' : 'laura', r: e }));
+  vivos('efectos').forEach(r => it.push({ t: r.t, tipo: 'efecto', r }));
+  vivos('comidas').forEach(r => it.push({ t: r.t, tipo: 'comida', r }));
+  vivos('suenos').forEach(r => it.push({ t: r.dormir, tipo: 'sueno', r }));
+  return it.sort((a, b) => b.t - a.t);
+}
+function pRegistro() {
+  const f = S.filtro;
+  let out = topBar('Registro');
+  out += `<div class="tiles" style="--n:3"><button class="btn light small" style="width:100%" data-a="ir" data-v="efecto">+ Efecto</button><button class="btn light small" style="width:100%" data-a="comida-nueva">+ Comida</button><button class="btn light small" style="width:100%" data-a="ir" data-v="pasada">+ Crisis</button></div>`;
+  out += `<div class="chips">${[['todo', 'Todo'], ['crisis', 'Crisis'], ['laura', 'Laura'], ['efecto', 'Efectos'], ['comida', 'Comida'], ['sueno', 'Sueño']].map(([v, t]) => `<button class="chip ${f === v ? 'on' : ''}" data-a="filtro" data-v="${v}">${t}</button>`).join('')}</div>`;
+  const items = itemsRegistro().filter(x => f === 'todo' || x.tipo === f);
+  if (!items.length) return out + `<div class="card"><span class="small">Todavía no hay nada apuntado${f !== 'todo' ? ' de este tipo' : ''}.</span></div>`;
+  let dia = '';
+  items.slice(0, S.ver).forEach(x => {
+    const d = dayKey(x.t);
+    if (d !== dia) { dia = d; out += `<span style="font-size:14px;font-weight:600;padding:8px 8px 0">${cuandoDia(d)}</span>`; }
+    out += itemHTML(x);
+  });
+  if (items.length > S.ver) out += `<button class="btn chipc" data-a="ver-mas">Ver más</button>`;
+  return out;
+}
+function itemHTML(x) {
+  const r = x.r, lugar = r.tz && r.tz !== homeTz() ? ' · ' + ciudad(r.tz) : '';
+  if (x.tipo === 'crisis' || x.tipo === 'laura') {
+    const pin = r.pinchazos || [];
+    const cel = [r.laura ? ['Laura', r.laura, '#dfe8d6'] : null, r.dolor ? ['Dolor', r.dolor, '#f6dcc0'] : null].concat(pin.map(p => ['Pinchazo', p, '#d6e4f1'])).concat([r.fin ? ['Fin', r.fin, '#efe9dc'] : ['Abierta', now(), '#fbe7a6']]).filter(Boolean);
+    const extra = [lugar.slice(3), r.desperto ? 'te despertó' : '', r.resp15 ? { sin: 'sin dolor a los 15 min', mejor: 'mejor a los 15 min', igual: 'igual a los 15 min' }[r.resp15] : '', r.lado === 'izq' ? 'lado izquierdo' : ''].filter(Boolean).join(' · ');
+    return `<button class="card" data-a="detalle" data-c="eventos" data-v="${r.id}" style="text-align:left"><div class="between"><span class="G" style="font-size:20px">${x.tipo === 'crisis' ? 'Crisis' + (r.intensidad ? ' · ' + r.intensidad + '/10' : '') : 'Laura'}</span><span class="small">${x.tipo === 'laura' ? (pin.length ? 'cortada con pinchazo' : 'se fue sola') : r.como === 'distinta' ? '<b style="color:#a33515">distinta</b>' : r.como === 'siempre' ? 'como siempre' : ''}</span></div>
+      <div class="seg" style="--n:${cel.length};font-size:12px">${cel.map(c => `<span style="padding:8px 0;border-radius:12px;background:${c[2]};text-align:center;font-size:12px">${c[0]}<br><b>${hhmm(c[1])}</b></span>`).join('')}</div>${extra ? `<span class="small">${esc(extra)}</span>` : ''}</button>`;
+  }
+  if (x.tipo === 'efecto') return `<button class="card" data-a="detalle" data-c="efectos" data-v="${r.id}" style="text-align:left"><div class="between"><span class="G" style="font-size:20px">${esc(lista(r.tipos || []) || 'Efecto')}</span><span class="small">${hhmm(r.t)}</span></div><span class="small">${esc([r.lado ? { izq: 'Lado izquierdo', der: 'Lado derecho', ambos: 'Ambos lados' }[r.lado] : '', r.cuanto, r.dura, r.pulso ? r.pulso + ' lpm' : '', r.tension].filter(Boolean).join(' · ') + lugar)}</span></button>`;
+  if (x.tipo === 'comida') return `<button class="card" data-a="detalle" data-c="comidas" data-v="${r.id}" style="text-align:left;padding:14px 18px"><div class="between"><span style="font-size:15px"><b>${hhmm(r.t)} · ${esc(r.momento)}</b></span>${(r.vig || []).length ? `<span class="small"><span class="dot"></span> ${esc(lista(r.vig))}</span>` : ''}</div><span style="font-size:15px">${esc(lista((r.items || []).concat(r.bebidas || [])))}${r.fuera ? ' · fuera de casa' : ''}</span></button>`;
+  if (x.tipo === 'sueno') return `<button class="card" data-a="detalle" data-c="suenos" data-v="${r.id}" style="text-align:left;padding:14px 18px"><div class="between"><span style="font-size:15px"><b>Sueño</b></span><span class="small">${r.calidad || ''}</span></div><span style="font-size:15px">${hhmm(r.dormir)} – ${r.despertar ? hhmm(r.despertar) + ' · ' + durTxt(r.despertar - r.dormir) : 'sin hora de despertar'}</span></button>`;
+  return '';
+}
+function sheetDetalle(col, id) {
+  const r = porId(col, id); if (!r) return '';
+  let extra = '';
+  if (col === 'eventos') {
+    const d = r.distinta || {};
+    extra = `<div class="list">${[['Laura', r.laura], ['Dolor', r.dolor]].filter(x => x[1]).map(x => `<div class="it"><span>${x[0]}</span><span>${hhmm(x[1])}</span></div>`).join('')}${(r.pinchazos || []).map(p => `<div class="it"><span>Pinchazo</span><span>${hhmm(p)}</span></div>`).join('')}${r.fin ? `<div class="it"><span>Fin</span><span>${hhmm(r.fin)}</span></div>` : ''}</div>
+      ${esCrisis(r) ? `<span class="small">¿Como siempre?</span>${seg([['siempre', 'Como siempre'], ['distinta', 'Distinta']], r.como, 'det-como', ` data-id="${r.id}"`)}<span class="small">Intensidad</span><div class="seg" style="--n:10">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="${r.intensidad === n ? 'on' : ''}" style="padding:10px 0;font-size:14px" data-a="det-int" data-id="${r.id}" data-v="${n}">${n}</button>`).join('')}</div>` : ''}
+      ${(d.que || []).length || d.txt ? `<span class="small"><b>Distinta:</b> ${esc(lista(d.que || []))}${d.txt ? ' · ' + esc(d.txt) : ''}</span>` : ''}`;
+  }
+  return `<div class="between"><span class="G h3">${{ eventos: 'Crisis', efectos: 'Efecto secundario', comidas: 'Comida', suenos: 'Sueño' }[col]}</span><span class="small">${cuandoDia(dayKey(r.t || r.dormir || inicioEv(r)))}</span></div>${extra}
+    <button class="btn danger" data-a="borrar" data-c="${col}" data-v="${id}">Borrar</button><button class="btn chipc" data-a="cerrar-sheet">Cerrar</button>`;
+}
+
+/* ---------------- Efecto secundario ---------------- */
+const EFECTOS = ['Manos dormidas', 'Hormigueo en la cara', 'Temblor en la cara', 'Hormigueo en los pies', 'Mareo al levantarme', 'Mareo', 'Visión borrosa', 'Pulso lento', 'Palpitaciones', 'Estreñimiento', 'Tobillos hinchados', 'Encías', 'Cansancio', 'Me cuesta hablar o recordar', 'Ánimo bajo', 'Poco apetito', 'Dolor en el costado', 'Presión en el pecho'];
+function pEfecto() {
+  const f = S.f.efecto = S.f.efecto || { tipos: [], hora: hhmm(now()) };
+  const u = ultimoPinchazo(), tomas = vivos('tomas').filter(t => t.t > now() - DIA).sort((a, b) => b.t - a.t);
+  const ctx = [u && now() - u < 12 * HORA ? 'último pinchazo ' + haceTxt(u) : '', tomas[0] ? 'última pastilla ' + haceTxt(tomas[0].t) : ''].filter(Boolean).join(' · ');
+  return `<button class="back" data-a="ir" data-v="registro">‹ Registro</button>${topBar('Efecto secundario')}
+  ${ctx ? `<span class="small" style="padding:0 8px">Se guarda solo: ${esc(ctx)} y tus dosis de ahora.</span>` : ''}
+  <div class="card">${h3('¿Qué notas?')}${chipsM(EFECTOS, f.tipos, 'ef-tipo')}<input class="f" placeholder="Otra cosa…" value="${esc(f.otro || '')}" data-in="ef-otro"></div>
+  <div class="card">${h3('Lado')}${seg([['izq', 'Izq.'], ['der', 'Der.'], ['ambos', 'Ambos'], ['', '—']], f.lado, 'ef-lado')}${h3('Cuánto')}${seg(['Leve', 'Moderado', 'Fuerte'], f.cuanto, 'ef-cuanto')}${h3('Cuánto dura')}${seg(['Minutos', 'Horas', 'Todo el día'], f.dura, 'ef-dura')}</div>
+  <div class="card">${h3('Si tienes tensiómetro', 'opcional')}<div class="tiles"><label class="tm">Pulso<input inputmode="numeric" placeholder="lpm" value="${esc(f.pulso || '')}" data-in="ef-pulso"></label><label class="tm">Tensión<input placeholder="120/80" value="${esc(f.tension || '')}" data-in="ef-tension"></label></div></div>
+  <div class="card"><label class="lab">Hora<input class="f" type="time" value="${f.hora}" data-in="ef-hora"></label></div>
+  <div class="card warn"><b style="color:#6b4e00">Llama al 112 si…</b><span style="font-size:14px;line-height:1.5">Aparece de golpe en un solo lado con debilidad, cara torcida o dificultad para hablar · visión borrosa con dolor de ojo u ojo rojo · presión en el pecho que no se va tras el pinchazo · desmayo o pulso muy lento.</span></div>
+  <button class="btn" data-a="ef-guardar">Guardar</button>`;
+}
+
+/* ---------------- Comida ---------------- */
+function pComida() {
+  const f = S.f.comida = S.f.comida || { momento: momentoPorHora(partes(now()).h), hora: hhmm(now()), items: [], bebidas: [], q: '' };
+  const q = norm(f.q), sug = q.length >= 2 ? frecuentes().filter(x => norm(x.txt).includes(q) && !f.items.some(i => norm(i) === norm(x.txt))).slice(0, 4) : [];
+  const frec = frecuentes(f.momento).filter(x => !f.items.some(i => norm(i) === norm(x.txt))).slice(0, 8);
+  const vig = vigiladosDe(f.items.concat(f.bebidas));
+  return `<button class="back" data-a="ir" data-v="hoy">‹ Hoy</button>${topBar('Comida', `<span class="small">${cuandoDia(dayKey(now()))}</span>`)}
+  ${seg(['Desayuno', 'Comida', 'Merienda', 'Cena', 'Picoteo'], f.momento, 'co-mom')}
+  <div class="card" style="padding:10px 18px"><div class="between" style="align-items:center"><span>Hora</span><input type="time" value="${f.hora}" data-in="co-hora" style="border:none;background:var(--chip);border-radius:12px;padding:8px 10px;font-size:17px;font-weight:600"></div></div>
+  <div class="card sage"><span class="G h3">¿Qué has ${({ Desayuno: 'desayunado', Comida: 'comido', Merienda: 'merendado', Cena: 'cenado', Picoteo: 'picado' })[f.momento]}?</span>
+    <div class="row"><input class="f grow" placeholder="Escribe y pulsa Añadir" value="${esc(f.q)}" data-in="co-q" enterkeyhint="done"><button class="btn small" data-a="co-add">Añadir</button></div>
+    ${sug.map(s => `<button class="card" style="padding:12px 16px;text-align:left;border-radius:18px" data-a="co-item" data-v="${esc(s.txt)}">${esc(s.txt)} <span class="small">· ya la tienes, ${plural(s.n, 'vez', 'veces')}</span></button>`).join('')}
+    ${f.items.length ? `<div class="chips">${f.items.map(i => `<button class="chip on" data-a="co-quitar" data-v="${esc(i)}">${esc(i)} ✕</button>`).join('')}</div>` : ''}
+    ${frec.length ? `<span class="small" style="color:#2d3a24">Lo de siempre a esta hora</span><div class="chips">${frec.map(x => `<button class="chip" data-a="co-item" data-v="${esc(x.txt)}">${esc(x.txt)}</button>`).join('')}</div>` : ''}</div>
+  <div class="card">${h3('Para beber')}${segM(['Agua', 'Café', 'Refresco', 'Cerveza', 'Vino', 'Copa'], f.bebidas, 'co-beb')}</div>
+  ${vig.length ? `<div class="card"><span style="font-size:15px"><span class="dot"></span> Vigilado: <b>${esc(lista(vig))}</b></span><span class="small">Se marca solo. Puedes cambiar la lista en Ajustes.</span></div>` : ''}
+  <button class="chip ${f.fuera ? 'on' : ''}" data-a="co-fuera" style="align-self:flex-start">Comí fuera de casa</button>
+  <button class="btn" data-a="co-guardar">Guardar ${f.momento.toLowerCase()}</button>`;
+}
+
+/* ---------------- Crisis pasada ---------------- */
+function pPasada() {
+  const f = S.f.pasada = S.f.pasada || { dia: dayKey(now()), laura: '', dolor: hhmm(now() - HORA), pinchazo: '', fin: hhmm(now()), como: 'siempre', plumas: true };
+  return `<button class="back" data-a="ir" data-v="registro">‹ Registro</button>${topBar('Crisis pasada')}
+  <span class="small" style="padding:0 8px">Para apuntar una crisis que no registraste en el momento. Deja en blanco lo que no hubo.</span>
+  <div class="card"><label class="lab">Día<input class="f" type="date" value="${f.dia}" data-in="pa-dia"></label>
+    <div class="tiles"><label class="tm">Laura<input type="time" value="${f.laura}" data-in="pa-laura"></label><label class="tm">Dolor<input type="time" value="${f.dolor}" data-in="pa-dolor"></label><label class="tm">Pinchazo<input type="time" value="${f.pinchazo}" data-in="pa-pinchazo"></label><label class="tm">Se fue<input type="time" value="${f.fin}" data-in="pa-fin"></label></div></div>
+  <div class="card">${h3('¿Como siempre?')}${seg([['siempre', 'Como siempre'], ['distinta', 'Distinta']], f.como, 'pa-como')}${h3('Intensidad', 'opcional')}<div class="seg" style="--n:10">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="${f.int === n ? 'on' : ''}" style="padding:10px 0;font-size:14px" data-a="pa-int" data-v="${n}">${n}</button>`).join('')}</div></div>
+  <button class="chip ${f.plumas ? 'on' : ''}" data-a="pa-plumas" style="align-self:flex-start">Si te pinchaste, descontar la pluma</button>
+  <button class="btn" data-a="pa-guardar">Guardar</button>`;
+}
+
+/* ---------------- Medicinas ---------------- */
+function pMedicinas() {
+  const c = CFG(), pp = puedePinchar(), dm = diasConSumaMes();
+  let out = topBar('Medicinas', `<button class="btn small" data-a="med-nueva">+ Añadir</button>`);
+  out += `<div class="card butter"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600">Para cortar la crisis</span><span class="G" style="font-size:28px">Sumatriptán 6 mg</span></span>
+    <div class="tiles" style="--n:3">${tile('Plumas', c.plumas, '', 'rgba(29,27,22,.08)')}${tile('Días este mes', dm, 'de 10', 'rgba(29,27,22,.08)')}${tile('En 24 h', pp.n + '/2', '', 'rgba(29,27,22,.08)')}</div>
+    <div class="bar"><i style="width:${Math.min(100, dm * 10)}%;${dm >= 10 ? 'background:#a33515' : ''}"></i></div>
+    <span style="font-size:13px">${dm >= 10 ? '<b>Llevas 10 días o más este mes.</b> Usarlo tanto puede empeorar los dolores: coméntalo con tu neurólogo.' : 'A partir de 10 días al mes te aviso, porque usarlo tanto puede empeorar los dolores.'}</span>
+    <div class="row"><span class="grow" style="font-size:14px">Plumas en casa</span><button class="btn small light" data-a="plumas" data-v="-1">−</button><button class="btn small light" data-a="plumas" data-v="1">+</button><button class="btn small light" data-a="plumas" data-v="6">+6</button></div>
+    <span style="font-size:13px">Cada pinchazo descuenta una pluma solo. Te aviso cuando queden ${c.avisoPlumas}.</span></div>`;
+  const prev = preventivos();
+  prev.forEach(m => {
+    const a = adherencia(m.id, 30), col = { ok: '#1d1b16', tarde: '#9b958a', media: '#c9c2b4', no: '#f0a487', nada: '#efe9dc' };
+    out += `<div class="card"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span class="small">Preventiva</span><span class="G" style="font-size:26px">${esc(m.nombre)}</span><span class="small">${esc(m.dosis || '')}${(m.horas || []).length ? ' · ' + m.horas.join(' y ') : ''}</span></span><button class="btn small chipc" data-a="med-editar" data-v="${m.id}">Editar</button></div>
+      <div class="strip">${a.tira.map(t => `<span style="background:${col[t]}"></span>`).join('')}</div>
+      <div class="between small"><span>${a.ok} de ${a.prog} tomas en 30 días</span><span>${a.tarde} a otra hora</span></div>
+      ${/verapamil/i.test(m.nombre) ? `<div class="tile" style="font-size:13px;line-height:1.45">Para hablar de bajar la dosis tu neurólogo pide 3 meses sin dolor. Llevas ${plural(diasSinDolor() || 0, 'día', 'días')}.${ultimaPrueba('Electro') ? ' · Último electro: ' + fechaCorta(ultimaPrueba('Electro').fecha) : ''}</div>` : ''}
+      ${(m.historial || []).length > 1 ? `<span class="small">Cambios de dosis: ${m.historial.map(x => fechaCorta(x.fecha) + ' → ' + esc(x.dosis)).join(' · ')}</span>` : ''}</div>`;
+  });
+  if (prev.length) out += `<span class="small" style="padding:0 8px">Avisos: a la hora de la toma y, si no la marcas, otra vez a los 15 y a los 30 min. Gris = tomada a otra hora.</span>`;
+  // Corticoides
+  const tandas = vivos('tandas').sort((a, b) => (b.inicio || '').localeCompare(a.inicio || ''));
+  const t = tandas[0];
+  if (t) {
+    const p = pautaTanda(t), maxD = Math.max(...p.map(x => x.dosis), 1), fin = p.length ? p[p.length - 1].dia : t.inicio, hoy = dayKey(now());
+    const enCurso = hoy >= t.inicio && hoy <= fin;
+    const tras = !enCurso && hoy > fin ? diasSinDolorDesde(epochDe(sumarDias(fin, 1), '00:00', homeTz())) : null;
+    const anyo = tandas.filter(x => x.inicio >= sumarDias(hoy, -365)).length;
+    out += `<div class="card sky"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600">Tanda de corticoides${enCurso ? ' · en curso' : ''}</span><span class="G" style="font-size:26px">${esc(t.nombre || 'Corticoide')}</span><span style="font-size:14px">${fechaCorta(t.inicio)} – ${fechaCorta(fin)} · ${t.dosisIni} mg bajando ${t.bajada || 0} mg cada ${t.cada || 1} días</span></span><button class="btn small light" data-a="tanda-editar" data-v="${t.id}">Editar</button></div>
+      <div style="height:76px;display:grid;grid-template-columns:repeat(${p.length},minmax(0,1fr));column-gap:2px;align-items:end;border-bottom:1px solid rgba(29,27,22,.3)">${p.map(x => `<span style="height:${Math.round(x.dosis / maxD * 70) + 2}px;border-radius:3px 3px 0 0;background:${x.dia === hoy ? '#e4572e' : '#1d1b16'}"></span>`).join('')}</div>
+      <div class="tiles">${enCurso ? tile('Hoy', (p.find(x => x.dia === hoy) || {}).dosis + ' mg', 'a las ' + (t.hora || '09:00'), 'rgba(29,27,22,.08)') : tile('Desde que acabó', tras == null ? '—' : plural(tras.dias, 'día', 'días'), tras && tras.sigue ? 'sin dolor, de momento' : 'hasta la siguiente crisis', 'rgba(29,27,22,.08)')}${tile('En 12 meses', plural(anyo, 'tanda', 'tandas'), '', 'rgba(29,27,22,.08)')}</div>
+      <button class="btn" data-a="tanda-nueva">Nueva tanda</button></div>`;
+  } else out += `<div class="card sky">${h3('Tandas de corticoides')}<span style="font-size:14px">Cuando hagas una tanda, pones la dosis inicial y cómo baja, y Laura te avisa cada día de cuánto toca.</span><button class="btn" data-a="tanda-nueva">Nueva tanda</button></div>`;
+  // Suplementos
+  const sups = suplementos();
+  out += `<div class="card">${h3('Suplementos', 'sin horario')}${sups.length ? `<div class="list">${sups.map(m => { const u = vivos('tomas').filter(x => x.medId === m.id).sort((a, b) => b.t - a.t)[0]; return `<div class="it"><span style="display:flex;flex-direction:column"><b>${esc(m.nombre)}</b><span class="small">${esc(m.dosis || '')}${u ? ' · ' + haceTxt(u.t) : ''}</span></span><span class="row"><button class="btn small chipc" data-a="med-editar" data-v="${m.id}">Editar</button><button class="btn small" data-a="sup-tomar" data-v="${m.id}">Tomada</button></span></div>`; }).join('')}</div>` : '<span class="small">Melatonina, vitaminas… Un toque cuando los tomas.</span>'}<button class="btn chipc" data-a="med-nueva" data-v="suplemento">+ Añadir suplemento</button></div>`;
+  // Viaje
+  const dv = S.f.viaje || 3, plum = Math.min(dv * 2, dv * 2);
+  out += `<div class="card">${h3('¿Te vas de viaje?')}<div class="row"><span class="grow">Días fuera</span><button class="btn small chipc" data-a="viaje" data-v="-1">−</button><span class="G h3" style="min-width:34px;text-align:center">${dv}</span><button class="btn small chipc" data-a="viaje" data-v="1">+</button></div>
+    <div class="list">${prev.map(m => `<div class="it"><span>${esc(m.nombre)}</span><b>${(m.horas || []).length * (dv + 2)} tomas</b></div>`).join('')}<div class="it"><span>Plumas de sumatriptán</span><b>hasta ${plum}${c.plumas < plum ? ' · tienes ' + c.plumas : ''}</b></div></div>
+    <span class="small">Incluye 2 días de margen en las pastillas. Lleva la medicación y el informe médico (en inglés si sales de España) en el equipaje de mano.</span></div>`;
+  return out;
+}
+function ultimaPrueba(tipo) { return vivos('pruebas').filter(p => (p.tipo || '').toLowerCase().includes(tipo.toLowerCase())).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''))[0]; }
+function diasSinDolorDesde(t0) { const l = vivos('eventos').filter(esCrisis).map(e => e.dolor || e.pinchazos[0]).filter(x => x >= t0).sort((a, b) => a - b); return l.length ? { dias: Math.floor((l[0] - t0) / DIA), sigue: false } : { dias: Math.max(0, Math.floor((now() - t0) / DIA)), sigue: true }; }
+function pMed() {
+  const f = S.f.med;
+  return `<button class="back" data-a="ir" data-v="medicinas">‹ Medicinas</button>${topBar(f.id ? 'Editar' : 'Añadir')}
+  <div class="card"><label class="lab">Nombre<input class="f" value="${esc(f.nombre || '')}" data-in="med-nombre" placeholder="Verapamilo"></label>
+  <label class="lab">Dosis<input class="f" value="${esc(f.dosis || '')}" data-in="med-dosis" placeholder="240 mg"></label>
+  ${h3('Tipo')}${seg([['preventivo', 'Con horario'], ['suplemento', 'Sin horario']], f.tipo, 'med-tipo')}</div>
+  ${f.tipo === 'preventivo' ? `<div class="card">${h3('Horas de las tomas', CFG().tomasHora === 'local' ? 'hora del sitio donde estés' : 'hora de casa')}${(f.horas || []).map((h, i) => `<div class="row"><input class="f grow" type="time" value="${h}" data-in="med-hora" data-i="${i}"><button class="btn small chipc" data-a="med-hora-quitar" data-v="${i}">Quitar</button></div>`).join('')}<button class="btn chipc" data-a="med-hora-add">+ Otra hora</button>
+    <label class="lab">Desde el día<input class="f" type="date" value="${f.desde || dayKey(now())}" data-in="med-desde"></label></div>` : ''}
+  <button class="btn" data-a="med-guardar">Guardar</button>
+  ${f.id ? `<button class="btn danger" data-a="med-borrar">Dejar de tomarla</button>` : ''}`;
+}
+function pTanda() {
+  const f = S.f.tanda, p = pautaTanda(f);
+  return `<button class="back" data-a="ir" data-v="medicinas">‹ Medicinas</button>${topBar(f.id ? 'Tanda' : 'Nueva tanda')}
+  <div class="card"><label class="lab">Medicamento<input class="f" value="${esc(f.nombre || '')}" data-in="ta-nombre" placeholder="Prednisona"></label>
+    <label class="lab">Empieza el día<input class="f" type="date" value="${f.inicio || ''}" data-in="ta-inicio"></label>
+    <div class="tiles"><label class="tm">Dosis inicial (mg)<input inputmode="decimal" value="${esc(f.dosisIni || '')}" data-in="ta-ini"></label><label class="tm">Baja (mg)<input inputmode="decimal" value="${esc(f.bajada || '')}" data-in="ta-baja"></label><label class="tm">Cada (días)<input inputmode="numeric" value="${esc(f.cada || '')}" data-in="ta-cada"></label><label class="tm">Hora<input type="time" value="${f.hora || '09:00'}" data-in="ta-hora"></label></div>
+    <span class="small">Pon la pauta exacta que te dio el neurólogo. Si no baja, deja «Baja» en 0 y la tanda dura los días de «Cada».</span><button class="btn chipc" data-a="ta-calc">Ver cómo queda</button></div>
+  ${p.length ? `<div class="card">${h3('Así queda', p.length + ' días')}<div class="list">${p.map(x => `<div class="it"><span>${fechaLarga(x.dia)}</span><b>${x.dosis} mg</b></div>`).join('')}</div></div>` : ''}
+  <button class="btn" data-a="ta-guardar">Guardar tanda</button>${f.id ? `<button class="btn danger" data-a="ta-borrar">Borrar tanda</button>` : ''}`;
+}
+
+/* ---------------- Patrones ---------------- */
+function crisisL() { return vivos('eventos').filter(esCrisis).map(e => ({ e, t: e.dolor || e.pinchazos[0] })).sort((a, b) => a.t - b.t); }
+function analisisComida() {
+  const com = vivos('comidas'); if (!com.length) return { dias: 0, crisis: 0, listo: false, items: [] };
+  const desde = Math.min(...com.map(c => c.t));
+  const diasCom = new Set(com.map(c => dayKey(c.t)));
+  const cr = crisisL().filter(x => x.t >= desde);
+  const listo = diasCom.size >= 14 && cr.length >= 3;
+  const items = {};
+  const add = (k, txt) => { if (!items[k]) items[k] = { txt, antes: 0, dias: new Set() }; return items[k]; };
+  com.forEach(c => { const its = (c.items || []).concat(c.bebidas || []); its.forEach(i => add(norm(i), i).dias.add(dayKey(c.t))); (c.vig || vigiladosDe(its)).forEach(v => add('#' + v, cap(v)).dias.add(dayKey(c.t))); });
+  cr.forEach(x => { const vis = new Set(); com.filter(c => c.t < x.t && c.t > x.t - DIA).forEach(c => { const its = (c.items || []).concat(c.bebidas || []); its.forEach(i => vis.add(norm(i))); vigiladosDe(its).forEach(v => vis.add('#' + v)); }); vis.forEach(k => { if (items[k]) items[k].antes++; }); });
+  const res = Object.values(items).map(x => ({ txt: x.txt, antes: x.antes, pctDias: Math.round(x.dias.size / diasCom.size * 100), pctCrisis: cr.length ? Math.round(x.antes / cr.length * 100) : 0 })).filter(x => x.antes >= 2 && x.pctCrisis > x.pctDias + 15).sort((a, b) => (b.pctCrisis - b.pctDias) - (a.pctCrisis - a.pctDias)).slice(0, 6);
+  return { dias: diasCom.size, crisis: cr.length, listo, items: res };
+}
+function analisisFactores() {
+  const dias = vivos('dias').filter(d => (d.chips || []).length || d.fondo || d.agua);
+  const cr = crisisL(); const out = [];
+  if (dias.length < 14 || cr.length < 3) return null;
+  const crisisEn = day => cr.some(x => { const d = dayKey(x.t); return d === day || d === sumarDias(day, 1); });
+  CHIPS_DIA.forEach(ch => {
+    const con = dias.filter(d => (d.chips || []).includes(ch)), sin = dias.filter(d => !(d.chips || []).includes(ch));
+    if (con.length < 2) return;
+    const a = con.filter(d => crisisEn(d.id)).length, b = sin.filter(d => crisisEn(d.id)).length;
+    out.push({ ch, con: con.length, a, pa: Math.round(a / con.length * 100), pb: sin.length ? Math.round(b / sin.length * 100) : 0 });
+  });
+  return out.sort((x, y) => (y.pa - y.pb) - (x.pa - x.pb));
+}
+function pPatrones() {
+  const cr = crisisL(), hoy = dayKey(now());
+  let out = topBar('Patrones') + `<div class="seg" style="--n:2"><button class="on">Patrones</button><button style="background:#fff" data-a="ir" data-v="consulta">Consulta</button></div>`;
+  const sem = cr.filter(x => x.t > now() - 7 * DIA).length, ant = cr.filter(x => x.t > now() - 35 * DIA && x.t <= now() - 7 * DIA).length / 4;
+  const fondo = vivos('dias').filter(d => d.id.startsWith(hoy.slice(0, 7)) && d.fondo && d.fondo !== 'No').length;
+  const ds = diasSinDolor();
+  out += `<div class="tiles">${tile('Crisis esta semana', sem, 'antes ' + (Math.round(ant * 10) / 10).toString().replace('.', ',') + '/sem', '#fff')}${tile('Días con suma', diasConSumaMes(), 'este mes', '#fff')}${tile('Sin dolor ahora', ds == null ? '—' : plural(ds, 'día', 'días'), 'récord ' + rachaMaxima(), '#fff')}${tile('Dolor de fondo', plural(fondo, 'día', 'días'), 'este mes', '#fff')}</div>`;
+  // Temporadas: 26 semanas
+  const lunes = sumarDias(hoy, -partes(now()).wd), semanas = [];
+  for (let i = 25; i >= 0; i--) { const ini = sumarDias(lunes, -7 * i), fin = sumarDias(ini, 7); semanas.push({ ini, n: cr.filter(x => { const d = dayKey(x.t); return d >= ini && d < fin; }).length, tanda: vivos('tandas').some(t => t.inicio >= ini && t.inicio < fin) }); }
+  const colr = n => ['#efe9dc', '#f5c9b9', '#f0a487', '#ea7f59', '#e4572e', '#c4431f', '#a33515', '#82290f'][Math.min(7, n)];
+  out += `<div class="card">${h3('Temporadas con dolor')}<div class="heat">${semanas.map(s => `<span title="${s.n}" style="background:${colr(s.n)};${s.tanda ? 'box-shadow:inset 0 -5px 0 #8cc0ea' : ''}"></span>`).join('')}</div><div class="between small"><span>hace 6 meses</span><span>esta semana</span></div><span class="small">Cada cuadro es una semana: más oscuro, más crisis. La raya azul marca cuando empezó una tanda de corticoides.</span></div>`;
+  // Horas
+  if (cr.length) {
+    const hh = new Array(24).fill(0); cr.forEach(x => hh[partes(x.t, homeTz()).h]++); const mx = Math.max(...hh, 1);
+    const top = hh.indexOf(mx);
+    out += `<div class="card">${h3('A qué hora empiezan', 'hora de casa')}<span class="small">Más a menudo entre las ${top} y las ${(top + 1) % 24}</span><div class="hours">${hh.map(n => `<span style="height:${n ? Math.round(n / mx * 104) + 2 : 2}px"></span>`).join('')}</div><div class="tiles" style="--n:4;font-size:11px;color:var(--sub);gap:0"><span>00 h</span><span>06 h</span><span>12 h</span><span>18 h</span></div></div>`;
+  }
+  // Laura
+  const lau = vivos('eventos').filter(e => e.laura && e.laura > now() - 90 * DIA);
+  if (lau.length) {
+    const pinch = lau.filter(e => (e.pinchazos || []).some(p => !e.dolor || p < e.dolor)).length, crisis = lau.filter(e => e.dolor && !((e.pinchazos || []).some(p => p < e.dolor))).length, solas = lau.filter(e => !esCrisis(e)).length;
+    out += `<div class="card">${h3('Veces que vino Laura', 'últimos 3 meses')}<div class="tiles" style="--n:3">${tile('Te pinchaste', pinch)}${tile('Acabó en crisis', crisis)}${tile('Se fue sola', solas)}</div></div>`;
+  }
+  // Comida
+  const ac = analisisComida();
+  out += `<div class="card sage">${h3('Comida antes de una crisis')}`;
+  if (!ac.listo) out += `<div class="between" style="font-size:14px;font-weight:600"><span>Recogiendo datos</span><span>${Math.min(ac.dias, 14)} de 14 días · ${Math.min(ac.crisis, 3)} de 3 crisis</span></div><div class="bar"><i style="width:${Math.round((Math.min(ac.dias, 14) / 14 * .5 + Math.min(ac.crisis, 3) / 3 * .5) * 100)}%"></i></div><span style="font-size:14px;line-height:1.5">Las pistas saldrán con 14 días de comidas apuntadas y 3 crisis. Antes podrían ser casualidades.</span>`;
+  else if (!ac.items.length) out += `<span style="font-size:14px">Con ${ac.dias} días y ${ac.crisis} crisis, ninguna comida aparece antes de las crisis más de lo normal.</span>`;
+  else out += `<div class="list">${ac.items.map(x => `<div class="it" style="border-color:rgba(29,27,22,.12)"><b>${esc(x.txt)}</b><span>antes del ${x.pctCrisis} % de las crisis · ${x.pctDias} % de los días</span></div>`).join('')}</div><span class="small" style="color:#2d3a24">Son pistas para comentar con tu neurólogo, no conclusiones.</span>`;
+  out += `</div>`;
+  const af = analisisFactores();
+  if (af && af.length) out += `<div class="card">${h3('Lo que pasó antes', 'el día o el anterior')}<div class="list">${af.slice(0, 6).map(x => `<div class="it"><b>${esc(x.ch)}</b><span>crisis ${x.pa} % · sin ello ${x.pb} %</span></div>`).join('')}</div><span class="small">Porcentaje de días con crisis ese día o el siguiente.</span></div>`;
+  // Sueño
+  const su = vivos('suenos').filter(s => s.despertar && s.dormir > now() - 30 * DIA);
+  if (su.length >= 3) {
+    const media = su.reduce((a, s) => a + (s.despertar - s.dormir), 0) / su.length;
+    const fuera = vivos('dias').filter(d => d.id >= sumarDias(hoy, -30) && (d.chips || []).includes('Dormí fuera')).length;
+    out += `<div class="card">${h3('Sueño', 'últimos 30 días')}<div class="list"><div class="it"><span>Te duermes, de media</span><b>${suenoHabitual().dormir}</b></div><div class="it"><span>Duermes, de media</span><b>${durTxt(media)}</b></div><div class="it"><span>Noches fuera de casa</span><b>${fuera}</b></div></div></div>`;
+  }
+  const mal = vivos('dias').filter(d => d.animo === 'Mal' && d.id >= sumarDias(hoy, -7)).length;
+  out += `<div class="card">${h3('Cómo lo llevas')}<span style="font-size:15px">Ánimo «mal» ${plural(mal, 'día', 'días')} esta semana</span><span class="small">Va también al informe de la consulta. Si en algún momento piensas en hacerte daño, llama al 024: es gratis y atiende las 24 h.</span></div>`;
+  return out;
+}
+
+/* ---------------- Consulta ---------------- */
+const proximaCita = () => vivos('citas').filter(c => c.t && c.t > now() - 2 * HORA).sort((a, b) => a.t - b.t)[0] || null;
+const citasPasadas = () => vivos('citas').filter(c => c.t && c.t <= now() - 2 * HORA).sort((a, b) => b.t - a.t);
+function informe() {
+  const prev = citasPasadas()[0], desde = prev ? prev.t : now() - 90 * DIA;
+  const sem = Math.max(1, (now() - desde) / (7 * DIA));
+  const cr = crisisL().filter(x => x.t >= desde), ev = vivos('eventos').filter(e => inicioEv(e) >= desde);
+  const pin = []; ev.forEach(e => (e.pinchazos || []).forEach(p => pin.push(p)));
+  const diasSuma = {}; pin.forEach(p => { const d = dayKey(p); diasSuma[d] = (diasSuma[d] || 0) + 1; });
+  const meses = {}; Object.keys(diasSuma).forEach(d => { meses[d.slice(0, 7)] = (meses[d.slice(0, 7)] || 0) + 1; });
+  const maxMes = Math.max(0, ...Object.values(meses)), max24 = Math.max(0, ...Object.values(diasSuma));
+  const resp = ev.filter(e => e.resp15), sin15 = resp.filter(e => e.resp15 === 'sin').length;
+  const lau = ev.filter(e => e.laura), lauCr = lau.filter(e => e.dolor && !(e.pinchazos || []).some(p => p < e.dolor)).length, lauPin = lau.filter(e => (e.pinchazos || []).some(p => !e.dolor || p < e.dolor)).length, lauSola = lau.filter(e => !esCrisis(e)).length;
+  const atip = ev.filter(e => e.como === 'distinta').length;
+  const ints = cr.map(x => x.e.intensidad).filter(Boolean), intM = ints.length ? (ints.reduce((a, b) => a + b, 0) / ints.length).toFixed(1).replace('.', ',') : null;
+  const lados = cr.filter(x => x.e.lado === 'izq').length;
+  const hh = new Array(24).fill(0); cr.forEach(x => hh[partes(x.t, homeTz()).h]++); const hTop = cr.length ? hh.indexOf(Math.max(...hh)) : null;
+  const desp = cr.filter(x => x.e.desperto).length;
+  const prevs = preventivos().map(m => { const a = adherencia(m.id, Math.min(90, Math.ceil((now() - desde) / DIA))); return `${m.nombre} ${m.dosis || ''} (adherencia ${a.prog ? Math.round(a.ok / a.prog * 100) : '—'} %)` + ((m.historial || []).slice(1).filter(h => epochDe(h.fecha, '12:00', homeTz()) >= desde).length ? '; cambio de dosis: ' + m.historial.slice(1).filter(h => epochDe(h.fecha, '12:00', homeTz()) >= desde).map(h => fechaCorta(h.fecha) + ' → ' + h.dosis).join(', ') : ''); });
+  const tandas = vivos('tandas').filter(t => t.inicio >= dayKey(now() - 365 * DIA));
+  const efs = {}; vivos('efectos').filter(r => r.t >= desde).forEach(r => (r.tipos || []).forEach(t => { efs[t] = efs[t] || new Set(); efs[t].add(dayKey(r.t)); }));
+  const efTxt = Object.keys(efs).sort((a, b) => efs[b].size - efs[a].size).map(k => ({ 'Hormigueo en la cara': 'parestesias faciales', 'Manos dormidas': 'parestesias en manos', 'Hormigueo en los pies': 'parestesias en pies', 'Visión borrosa': 'visión borrosa', 'Mareo': 'mareo', 'Mareo al levantarme': 'mareo ortostático', 'Pulso lento': 'bradicardia referida', 'Estreñimiento': 'estreñimiento', 'Tobillos hinchados': 'edema maleolar', 'Encías': 'alteraciones gingivales', 'Me cuesta hablar o recordar': 'dificultad de lenguaje o memoria', 'Ánimo bajo': 'ánimo bajo', 'Presión en el pecho': 'opresión torácica' }[k] || k.toLowerCase()) + ' ' + efs[k].size + ' d').join(', ');
+  const dias = vivos('dias').filter(d => epochDe(d.id, '12:00', homeTz()) >= desde);
+  const fondo = dias.filter(d => d.fondo && d.fondo !== 'No').length, mal = dias.filter(d => d.animo === 'Mal').length;
+  const su = vivos('suenos').filter(s => s.despertar && s.dormir >= desde), suM = su.length ? durTxt(su.reduce((a, s) => a + s.despertar - s.dormir, 0) / su.length) : null;
+  const fuera = dias.filter(d => (d.chips || []).includes('Dormí fuera')).length, c = CFG();
+  const L = [];
+  L.push(`Periodo: ${fechaCorta(dayKey(desde))} – ${fechaCorta(dayKey(now()))}${prev ? ' (desde la última cita)' : ' (últimos 90 días)'}.`);
+  L.push(`Crisis de cefalea en racimos: ${cr.length} (${(Math.round(cr.length / sem * 10) / 10).toString().replace('.', ',')}/semana)${intM ? ', intensidad media ' + intM + '/10' : ''}; ${cr.length ? (lados ? lados + ' en lado izquierdo, resto derecho' : 'todas en lado derecho') : ''}${hTop != null ? '; franja más frecuente ' + hTop + '–' + ((hTop + 1) % 24) + ' h' : ''}${desp ? '; ' + desp + ' con despertar nocturno' : ''}. Intervalo libre de dolor actual: ${diasSinDolor() == null ? '—' : diasSinDolor() + ' días'} (máximo ${rachaMaxima()}). Crisis atípicas: ${atip}.`);
+  L.push(`Tratamiento sintomático: sumatriptán 6 mg s.c., ${pin.length} dosis; máximo ${maxMes} días/mes con sumatriptán y ${max24} dosis/24 h. Respuesta libre de dolor a los 15 min: ${sin15} de ${resp.length}.`);
+  L.push(`Síntomas premonitorios: ${lau.length} episodios; ${lauCr} seguidos de crisis, ${lauPin} tratados con sumatriptán, ${lauSola} sin crisis posterior.`);
+  L.push(`Tratamiento preventivo: ${prevs.length ? prevs.join('; ') : '—'}.`);
+  L.push(`Corticoterapia: ${plural(tandas.length, 'ciclo', 'ciclos')} en 12 meses${tandas[0] ? ' (último desde ' + fechaCorta(tandas.sort((a, b) => b.inicio.localeCompare(a.inicio))[0].inicio) + ')' : ''}.`);
+  L.push(`Efectos adversos: ${efTxt || 'ninguno registrado'}. Dolor interictal: ${fondo} días.`);
+  L.push(`Sueño y otros factores: sueño medio ${suM || '—'}; ${fuera} noches fuera de domicilio; tabaquismo ${c.tabaco === 'diario' ? 'diario' + (c.cig ? ' (' + c.cig + ' cig/día)' : '') : c.tabaco === 'aveces' ? 'ocasional' : 'no'}${c.ronca === 'si' ? '; ronquidos o pausas respiratorias referidos' : c.ronca === 'nose' ? '; desconoce si ronca' : ''}; ánimo bajo ${mal} días.`);
+  return L;
+}
+function pConsulta() {
+  const c = proximaCita();
+  let out = topBar('Consulta') + `<div class="seg" style="--n:2"><button style="background:#fff" data-a="ir" data-v="patrones">Patrones</button><button class="on">Consulta</button></div>`;
+  if (c) {
+    out += `<div class="card sky"><span style="font-size:13px;font-weight:600">Próxima cita</span><span class="G" style="font-size:26px">${esc(c.tipo || 'Neurología')} · ${fechaCorta(dayKey(c.t))} ${hhmm(c.t)}</span><span style="font-size:14px">${esc(c.lugar || '')}${c.lugar ? ' · ' : ''}te aviso la tarde de antes</span><button class="btn small light" style="align-self:flex-start" data-a="cita-editar" data-v="${c.id}">Editar</button></div>`;
+    out += `<div class="card">${h3('Preguntas para llevar')}${(c.preguntas || []).map((q, i) => `<button class="row" style="text-align:left;font-size:15px;line-height:1.4;align-items:flex-start" data-a="preg" data-v="${i}"><span style="width:20px;height:20px;flex-shrink:0;border-radius:6px;border:2px solid #1d1b16;${q.hecho ? 'background:#1d1b16' : ''}"></span><span style="${q.hecho ? 'text-decoration:line-through;color:#4f4a40' : ''}">${esc(q.txt)}</span></button>`).join('')}
+      <div class="row"><input class="f grow" placeholder="Añadir pregunta" data-in="preg-txt" value="${esc(S.f.preg || '')}"><button class="btn small" data-a="preg-add">Añadir</button></div></div>`;
+  } else out += `<div class="card sky">${h3('Próxima cita')}<span style="font-size:14px">Apúntala y te aviso la tarde de antes, con tus preguntas.</span><button class="btn" data-a="cita-nueva">Añadir cita</button></div>`;
+  out += `<div class="card"><div class="between" style="align-items:center">${h3('Informe para el neurólogo')}<button class="btn small chipc" data-a="copiar-informe">Copiar</button></div><div style="font-size:14px;line-height:1.55;display:flex;flex-direction:column;gap:8px">${informe().map(l => { const i = l.indexOf(':'); return `<span><b>${esc(l.slice(0, i + 1))}</b>${esc(l.slice(i + 1))}</span>`; }).join('')}</div></div>`;
+  const pr = vivos('pruebas').sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  out += `<div class="card">${h3('Pruebas')}${pr.length ? `<div class="list">${pr.map(p => `<div class="it"><span>${esc(p.tipo)}</span><span class="row"><span class="small">${fechaCorta(p.fecha)}${p.res ? ' · ' + esc(p.res) : ''}</span><button class="small" data-a="prueba-borrar" data-v="${p.id}">✕</button></span></div>`).join('')}</div>` : ''}
+    <div class="seg" style="--n:3">${['Electro', 'Análisis', 'Vista'].map(t => `<button class="${S.f.pruebaTipo === t ? 'on' : ''}" data-a="prueba-tipo" data-v="${t}">${t}</button>`).join('')}</div>
+    <div class="row"><input class="f" type="date" style="width:46%" value="${S.f.pruebaFecha || dayKey(now())}" data-in="prueba-fecha"><input class="f grow" placeholder="Resultado" value="${esc(S.f.pruebaRes || '')}" data-in="prueba-res"></div><button class="btn chipc" data-a="prueba-add">+ Añadir prueba</button></div>`;
+  const pas = citasPasadas();
+  out += `<div class="card">${h3('Citas anteriores')}${pas.length ? `<div class="list">${pas.map(p => `<div class="it"><span>${fechaCorta(dayKey(p.t))} · ${esc(p.tipo || 'Neurología')}</span><button class="small" data-a="cita-editar" data-v="${p.id}">${esc(p.notas || 'Añadir notas')}</button></div>`).join('')}</div>` : '<span class="small">Aquí quedarán las citas que pasen, con lo que te dijeron.</span>'}${c ? '<button class="btn chipc" data-a="cita-nueva">+ Otra cita</button>' : ''}</div>`;
+  return out;
+}
+function sheetCita() {
+  const f = S.f.cita;
+  return `<span class="G h3">${f.id ? 'Cita' : 'Nueva cita'}</span>
+    <label class="lab">Consulta<input class="f" value="${esc(f.tipo || 'Neurología')}" data-in="cita-tipo"></label>
+    <div class="tiles"><label class="lab">Día<input class="f" type="date" value="${f.dia || ''}" data-in="cita-dia"></label><label class="lab">Hora<input class="f" type="time" value="${f.hora || '10:00'}" data-in="cita-hora"></label></div>
+    <label class="lab">Lugar<input class="f" value="${esc(f.lugar || '')}" data-in="cita-lugar" placeholder="Hospital, consulta…"></label>
+    <label class="lab">Qué te dijeron<textarea class="f" data-in="cita-notas">${esc(f.notas || '')}</textarea></label>
+    <button class="btn" data-a="cita-guardar">Guardar</button>${f.id ? '<button class="btn danger" data-a="cita-borrar">Borrar cita</button>' : ''}<button class="btn chipc" data-a="cerrar-sheet">Cancelar</button>`;
+}
+
+/* ---------------- Ajustes ---------------- */
+function pAjustes() {
+  const c = CFG(), m = SYNC.meta;
+  let out = `<button class="back" data-a="ir" data-v="hoy">‹ Hoy</button>` + topBar('Ajustes');
+  out += `<span class="small" style="padding:0 8px">Lo que solo se pregunta una vez. Lo puedes cambiar cuando quieras.</span>`;
+  out += `<div class="card">${h3('Tu dolor suele ser')}${seg([['izq', 'Izquierda'], ['der', 'Derecha']], c.lado, 'cfg', ' data-k="lado"')}<span class="small">Las crisis se apuntan con este lado. Si alguna vez cambia, lo marcas al cerrarla.</span></div>`;
+  out += `<div class="card">${h3('Desde que dejas el móvil hasta que te duermes')}${seg([[5, '5 min'], [15, '15 min'], [30, '30 min']].map(x => [String(x[0]), x[1]]), String(c.margen), 'cfg', ' data-k="margen"')}</div>`;
+  out += `<div class="card">${h3('¿Roncas o te han dicho que dejas de respirar dormido?')}${seg([['no', 'No'], ['si', 'Sí'], ['nose', 'No sé']], c.ronca, 'cfg', ' data-k="ronca"')}${c.ronca === 'si' || c.ronca === 'nose' ? '<span class="small">Coméntaselo a tu neurólogo: sale en el informe.</span>' : ''}</div>`;
+  out += `<div class="card">${h3('Tabaco')}${seg([['no', 'No fumo'], ['aveces', 'A veces'], ['diario', 'A diario']], c.tabaco, 'cfg', ' data-k="tabaco"')}<label class="lab">Más o menos al día<input class="f" inputmode="numeric" value="${esc(c.cig || '')}" data-in="cfg-cig" placeholder="cigarrillos"></label></div>`;
+  const zonas = [...new Set(['Europe/Madrid', 'Atlantic/Canary', 'Europe/Lisbon', 'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Mexico_City', 'America/Bogota', 'America/Argentina/Buenos_Aires', tzHere(), c.homeTz])];
+  out += `<div class="card">${h3('Tu hora de casa')}<select class="f" data-in="cfg-home">${zonas.map(z => `<option value="${z}" ${z === c.homeTz ? 'selected' : ''}>${esc(z.replace(/_/g, ' '))}</option>`).join('')}</select>${h3('Las pastillas, por la hora…')}${seg([['casa', 'De casa'], ['local', 'De donde esté']], c.tomasHora, 'cfg', ' data-k="tomasHora"')}<span class="small">Para viajes con mucha diferencia horaria, pregunta a tu neurólogo cómo ir cambiando las horas.</span></div>`;
+  out += `<div class="card">${h3('Comidas vigiladas')}<div class="chips">${(c.vigilados || []).map(v => `<button class="chip on" data-a="vig-quitar" data-v="${esc(v)}"><span class="dot"></span>${esc(v)} ✕</button>`).join('')}</div><div class="row"><input class="f grow" placeholder="Vigilar otra (p. ej. chocolate)" data-in="vig-txt" value="${esc(S.f.vig || '')}"><button class="btn small" data-a="vig-add">Añadir</button></div><span class="small">El alcohol, el embutido y el queso curado se reconocen solos aunque los escribas de otra forma.</span></div>`;
+  // Nube
+  if (!m.uid) {
+    const f = S.f.login = S.f.login || {};
+    out += `<div class="card ink">${h3('Tu nube')}<span style="font-size:14px">Copia de todo y avisos en el iPhone. Solo tú puedes ver tus datos.</span>
+      <input class="f" type="email" autocomplete="username" placeholder="Correo" value="${esc(f.email || '')}" data-in="login-email" style="background:#fff;color:#1d1b16">
+      <input class="f" type="password" autocomplete="current-password" placeholder="Contraseña (mínimo 6)" data-in="login-pass" style="background:#fff;color:#1d1b16">
+      ${f.err ? `<span style="font-size:14px;color:#f6c2b0">${esc(f.err)}</span>` : ''}
+      <div class="tiles"><button class="btn light" data-a="login" data-v="nueva">Crear cuenta</button><button class="btn light" data-a="login" data-v="entrar">Entrar</button></div></div>`;
+  } else {
+    const est = { ok: 'Sincronizado' + (SYNC.ultimo ? ' ' + haceTxt(SYNC.ultimo) : ''), sincronizando: 'Sincronizando…', conectando: 'Conectando…', 'sin-red': 'Sin conexión: se subirá en cuanto vuelva internet', off: 'Hay que volver a entrar' }[SYNC.status] || '';
+    const pend = Object.keys(m.pend || {}).length;
+    const avisos = m.aviso && typeof Notification !== 'undefined' && Notification.permission === 'granted';
+    out += `<div class="card">${h3('Tu nube', SYNC.status === 'ok' ? 'Conectada' : '')}<span style="font-size:15px;overflow-wrap:anywhere">${esc(m.email || '')}</span><span class="small">${est}${pend ? ' · ' + plural(pend, 'cambio pendiente', 'cambios pendientes') : ''}</span>
+      ${SYNC.status === 'off' ? `<input class="f" type="password" placeholder="Contraseña" data-in="login-pass"><button class="btn" data-a="relogin">Entrar</button>` : ''}
+      ${avisos ? `<div class="tile">Avisos activados en este iPhone</div><button class="btn chipc" data-a="avisos-on">Volver a activar los avisos</button>` : `<button class="btn" data-a="avisos-on">Activar los avisos en este iPhone</button><span class="small">Abre Laura desde el icono de la pantalla de inicio para poder activarlos.</span>`}
+      <button class="btn chipc" data-a="logout">Salir de la cuenta</button></div>`;
+  }
+  out += `<div class="card">${h3('Avisos')}<div class="list"><div class="it"><span>Pastillas</span><span class="small">a su hora + 2 repeticiones</span></div><div class="it"><span>Tras el pinchazo</span><span class="small">a los 15 min</span></div><div class="it"><span>Cita</span><span class="small">la tarde de antes</span></div><div class="it"><span>Avisar con pocas plumas</span><span class="row"><button class="btn small chipc" data-a="cfg-plumas-av" data-v="-1">−</button><b>${c.avisoPlumas}</b><button class="btn small chipc" data-a="cfg-plumas-av" data-v="1">+</button></span></div></div></div>`;
+  out += `<div class="card">${h3('Tus datos')}<span class="small">Se guardan en este iPhone y, si la conectas, en tu nube. Funciona sin conexión.</span><button class="btn chipc" data-a="exportar">Copia de seguridad</button><button class="btn chipc" data-a="importar">Recuperar una copia</button></div>`;
+  out += `<span class="small" style="text-align:center;padding:8px">Laura ${APP_VER}</span>`;
+  return out;
+}
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+let toastTimer = 0;
+function toast(msg, deshacer) {
+  if (deshacer && document.body.classList.contains('noche')) { clearTimeout(toastTimer); toastTimer = setTimeout(() => { S.undo = null; if (S.pant === 'inicio') repintar(); }, 10000); return; }
+  const old = document.querySelector('.toast'); if (old) old.remove();
+  const d = document.createElement('div'); d.className = 'toast';
+  d.innerHTML = `<span>${esc(msg)}</span>${deshacer ? '<button data-a="deshacer">Deshacer</button>' : ''}`;
+  document.body.appendChild(d);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { d.remove(); if (deshacer) { S.undo = null; if (S.pant === 'inicio') repintar(); } }, deshacer ? 10000 : 3500);
+}
+function guardarUndo(col, id) { const r = id && porId(col, id); S.undo = { col, id, antes: r ? JSON.parse(JSON.stringify(r)) : null, plumas: CFG().plumas, cierre: S.cierre }; }
+function deshacer() {
+  const u = S.undo; if (!u) return;
+  if (u.antes) poner(u.col, u.antes); else (u.multi || (u.id ? [u.id] : [])).forEach(id => { const r = porId(u.col, id); if (r) { r.borrado = true; poner(u.col, r); } });
+  if (CFG().plumas !== u.plumas) setCfg({ plumas: u.plumas });
+  S.cierre = u.cierre || null; S.undo = null;
+  const t = document.querySelector('.toast'); if (t) t.remove();
+  repintar();
+}
+function nuevoEvento(campos) {
+  const e = Object.assign({ id: uid(), creado: now(), tz: tzHere(), lado: CFG().lado, pinchazos: [], desperto: !!durmiendoAhora() }, campos);
+  guardarUndo('eventos', null); S.undo.id = e.id; poner('eventos', e);
+  return e;
+}
+function pinchar(forzar) {
+  const pp = puedePinchar();
+  if (!pp.ok && !forzar) {
+    S.sheet = () => `<span class="G h3">${pp.n >= 2 ? 'Ya llevas 2 pinchazos en 24 h' : 'Hace menos de 1 hora del último'}</span><span style="font-size:15px;line-height:1.5">El prospecto dice como máximo 2 inyecciones de 6 mg en 24 h, separadas al menos 1 hora. ${pp.n >= 2 ? 'El siguiente sería a partir de las ' + hhmm(pp.desde) + '.' : 'El segundo sería a partir de las ' + hhmm(pp.desde) + '.'} Si el dolor no cede, consulta con tu médico.</span><button class="btn" data-a="cerrar-sheet">Entendido</button><button class="btn chipc" data-a="pinchar-forzar">Apuntarlo igualmente</button>`;
+    repintar(); return;
+  }
+  const e = abierto(), c = CFG();
+  if (e) { guardarUndo('eventos', e.id); e.pinchazos = (e.pinchazos || []).concat([now()]); poner('eventos', e); }
+  else nuevoEvento({ dolor: now(), pinchazos: [now()] });
+  if (c.plumas > 0) setCfg({ plumas: c.plumas - 1 });
+  S.sheet = null; repintar(); toast('Pinchazo apuntado', true);
+}
+const ACC = {
+  ir: v => { if (v === 'inicio') S.cierre = null; ir(v); },
+  volver: () => ir('hoy'),
+  'cerrar-sheet': () => { S.sheet = null; repintar(); },
+  deshacer,
+  laura: () => { nuevoEvento({ laura: now() }); repintar(); toast('Laura apuntada', true); },
+  dolor: () => { const e = abierto(); if (e) { guardarUndo('eventos', e.id); e.dolor = now(); poner('eventos', e); } else nuevoEvento({ dolor: now() }); repintar(); toast('Dolor apuntado', true); },
+  pinchar: () => pinchar(false),
+  'pinchar-forzar': () => pinchar(true),
+  fin: () => { const e = abierto(); if (!e) return; guardarUndo('eventos', e.id); e.fin = now(); poner('eventos', e); S.cierre = e.id; repintar(); },
+  'deshacer-fin': () => { const e = porId('eventos', S.cierre); if (e) { e.fin = null; poner('eventos', e); } S.cierre = null; S.undo = null; repintar(); },
+  resp15: v => { const e = abierto(); if (!e) return; guardarUndo('eventos', e.id); e.resp15 = v; if (v === 'sin') { e.fin = now(); S.cierre = e.id; } poner('eventos', e); repintar(); },
+  como: v => { const e = porId('eventos', S.cierre); if (!e) return; e.como = v; poner('eventos', e); if (v === 'distinta') { S.f.evId = e.id; S.cierre = null; ir('distinta'); } else { S.cierre = null; S.undo = null; repintar(); toast('Guardada'); } },
+  'otro-lado': () => { const e = porId('eventos', S.cierre); if (!e) return; e.lado = e.lado === 'izq' ? 'der' : 'izq'; poner('eventos', e); repintar(); },
+  intensidad: v => { const e = porId('eventos', S.cierre); if (!e) return; e.intensidad = +v; poner('eventos', e); repintar(); },
+  'cierre-ok': () => { S.cierre = null; S.undo = null; repintar(); },
+  'cierre-app': () => { S.cierre = null; S.undo = null; ir('hoy'); },
+  dormir: () => { const s = { id: uid(), dormir: now() + CFG().margen * MIN, tz: tzHere(), auto: true }; guardarUndo('suenos', null); S.undo.id = s.id; poner('suenos', s); repintar(); toast('Buenas noches', true); },
+  despertar: () => { const s = durmiendoAhora(); if (!s) return; guardarUndo('suenos', s.id); s.despertar = now(); poner('suenos', s); repintar(); toast('Buenos días · ' + durTxt(s.despertar - s.dormir) + ' de sueño', true); },
+  'dist-que': v => { const e = porId('eventos', S.f.evId); const d = e.distinta = e.distinta || {}; d.que = tog(d.que, v); poner('eventos', e); S.mantenerScroll = true; repintar(); },
+  'dist-sint': v => { const e = porId('eventos', S.f.evId); const d = e.distinta = e.distinta || {}; d.sint = tog(d.sint, v); poner('eventos', e); S.mantenerScroll = true; repintar(); },
+  'dist-guardar': () => { toast('Crisis distinta guardada'); ir('registro'); },
+  'sueno-calidad': v => { guardarSuenoManual({ calidad: v }); },
+  tomar: v => { const [d, h] = v.split('|'); marcarToma(d, h, now(), 'tomada'); },
+  'tomar-otra': v => { const [d, h] = v.split('|'); S.f.otra = { d, h, hora: hhmm(now()) }; S.sheet = () => `<span class="G h3">¿A qué hora te la tomaste?</span><input class="f" type="time" value="${S.f.otra.hora}" data-in="otra-hora"><div class="tiles"><button class="btn" data-a="otra-ok">Guardar</button><button class="btn chipc" data-a="otra-no">No me la tomé</button></div><button class="btn chipc" data-a="cerrar-sheet">Cancelar</button>`; repintar(); },
+  'otra-ok': () => { const o = S.f.otra; let t = epochDe(dayKey(now()), o.hora, tzHere()); if (t > now() + 5 * MIN) t -= DIA; S.sheet = null; marcarToma(o.d, o.h, t, 'otra'); },
+  'otra-no': () => { const o = S.f.otra; S.sheet = null; marcarToma(o.d, o.h, now(), 'olvidada'); },
+  'dia-fondo': (v, el) => { setDia(el.dataset.d, { fondo: v }); S.mantenerScroll = true; repintar(); },
+  'dia-agua': (v, el) => { setDia(el.dataset.d, { agua: v }); S.mantenerScroll = true; repintar(); },
+  'dia-animo': (v, el) => { setDia(el.dataset.d, { animo: v }); S.mantenerScroll = true; repintar(); },
+  'dia-chip': v => { const d = dayKey(now()); setDia(d, { chips: tog(diaRec(d).chips, v) }); S.mantenerScroll = true; repintar(); },
+  'comida-nueva': v => { S.f.comida = { momento: v || momentoPorHora(partes(now()).h), hora: hhmm(now()), items: [], bebidas: [], q: '' }; ir('comida'); },
+  'comida-rapida': (v, el) => { const r = { id: uid(), t: now(), tz: tzHere(), momento: el.dataset.m, items: [v], bebidas: [], vig: vigiladosDe([v]) }; guardarUndo('comidas', null); S.undo.id = r.id; poner('comidas', r); S.mantenerScroll = true; repintar(); toast(v + ' apuntado', true); },
+  filtro: v => { S.filtro = v; S.ver = 40; repintar(); },
+  'ver-mas': () => { S.ver += 40; S.mantenerScroll = true; repintar(); },
+  detalle: (v, el) => { const col = el.dataset.c; S.sheet = () => sheetDetalle(col, v); repintar(); },
+  borrar: (v, el) => { borrar(el.dataset.c, v); S.sheet = null; repintar(); toast('Borrado'); },
+  'det-como': (v, el) => { const e = porId('eventos', el.dataset.id); e.como = v; poner('eventos', e); if (v === 'distinta') { S.f.evId = e.id; ir('distinta'); } else repintar(); },
+  'det-int': (v, el) => { const e = porId('eventos', el.dataset.id); e.intensidad = +v; poner('eventos', e); repintar(); },
+  'ef-tipo': v => { S.f.efecto.tipos = tog(S.f.efecto.tipos, v); S.mantenerScroll = true; repintar(); },
+  'ef-lado': v => { S.f.efecto.lado = v; S.mantenerScroll = true; repintar(); },
+  'ef-cuanto': v => { S.f.efecto.cuanto = v; S.mantenerScroll = true; repintar(); },
+  'ef-dura': v => { S.f.efecto.dura = v; S.mantenerScroll = true; repintar(); },
+  'ef-guardar': () => {
+    const f = S.f.efecto, tipos = f.tipos.concat(f.otro ? [f.otro.trim()] : []).filter(Boolean);
+    if (!tipos.length) { toast('Elige qué notas'); return; }
+    let t = epochDe(dayKey(now()), f.hora, tzHere()); if (t > now() + 5 * MIN) t -= DIA;
+    const meds = preventivos().map(m => m.nombre + ' ' + (m.dosis || ''));
+    poner('efectos', { id: uid(), t, tz: tzHere(), tipos, lado: f.lado || '', cuanto: f.cuanto || '', dura: f.dura || '', pulso: f.pulso || '', tension: f.tension || '', ctx: { pinchazo: ultimoPinchazo() || null, meds } });
+    S.f.efecto = null; toast('Efecto guardado'); ir('registro');
+  },
+  'co-mom': v => { S.f.comida.momento = v; S.mantenerScroll = true; repintar(); },
+  'co-add': () => { const q = (S.f.comida.q || '').trim(); if (!q) return; const ya = frecuentes().find(x => norm(x.txt) === norm(q)); S.f.comida.items.push(ya ? ya.txt : q); S.f.comida.q = ''; repintar(); },
+  'co-item': v => { S.f.comida.items.push(v); S.f.comida.q = ''; S.mantenerScroll = true; repintar(); },
+  'co-quitar': v => { S.f.comida.items = S.f.comida.items.filter(i => i !== v); S.mantenerScroll = true; repintar(); },
+  'co-beb': v => { S.f.comida.bebidas = tog(S.f.comida.bebidas, v); S.mantenerScroll = true; repintar(); },
+  'co-fuera': () => { S.f.comida.fuera = !S.f.comida.fuera; S.mantenerScroll = true; repintar(); },
+  'co-guardar': () => {
+    const f = S.f.comida; if ((f.q || '').trim()) f.items.push(f.q.trim());
+    if (!f.items.length && !f.bebidas.length) { toast('Apunta qué has tomado'); return; }
+    let t = epochDe(dayKey(now()), f.hora, tzHere()); if (t > now() + 5 * MIN) t -= DIA;
+    poner('comidas', { id: uid(), t, tz: tzHere(), momento: f.momento, items: f.items, bebidas: f.bebidas, fuera: !!f.fuera, vig: vigiladosDe(f.items.concat(f.bebidas)) });
+    S.f.comida = null; toast(f.momento + ' guardado'); ir('hoy');
+  },
+  'pa-como': v => { S.f.pasada.como = v; repintar(); },
+  'pa-int': v => { S.f.pasada.int = +v; S.mantenerScroll = true; repintar(); },
+  'pa-plumas': () => { S.f.pasada.plumas = !S.f.pasada.plumas; repintar(); },
+  'pa-guardar': () => {
+    const f = S.f.pasada, tz = tzHere(), T = h => h ? epochDe(f.dia, h, tz) : null;
+    const lau = T(f.laura), dol = T(f.dolor), pin = T(f.pinchazo); let fin = T(f.fin);
+    const ini = Math.min(...[lau, dol, pin].filter(Boolean));
+    if (!isFinite(ini)) { toast('Pon al menos una hora'); return; }
+    if (!fin || fin < ini) fin = fin ? fin + DIA : ini + 30 * MIN;
+    const e = { id: uid(), creado: now(), pasado: true, tz, lado: CFG().lado, laura: lau, dolor: dol || (pin ? pin : null), pinchazos: pin ? [pin] : [], fin, como: f.como, intensidad: f.int || null };
+    poner('eventos', e);
+    if (pin && f.plumas && CFG().plumas > 0) setCfg({ plumas: CFG().plumas - 1 });
+    S.f.pasada = null; if (f.como === 'distinta') { S.f.evId = e.id; ir('distinta'); } else { toast('Crisis guardada'); ir('registro'); }
+  },
+  plumas: v => { setCfg({ plumas: Math.max(0, CFG().plumas + Number(v)) }); S.mantenerScroll = true; repintar(); },
+  'med-nueva': v => { S.f.med = { tipo: v === 'suplemento' ? 'suplemento' : 'preventivo', horas: v === 'suplemento' ? [] : ['09:00'], desde: dayKey(now()) }; ir('med'); },
+  'med-editar': v => { S.f.med = JSON.parse(JSON.stringify(porId('meds', v))); ir('med'); },
+  'med-tipo': v => { S.f.med.tipo = v; if (v === 'preventivo' && !(S.f.med.horas || []).length) S.f.med.horas = ['09:00']; repintar(); },
+  'med-hora-add': () => { S.f.med.horas = (S.f.med.horas || []).concat(['21:00']); repintar(); },
+  'med-hora-quitar': v => { S.f.med.horas.splice(+v, 1); repintar(); },
+  'med-guardar': () => {
+    const f = S.f.med; if (!(f.nombre || '').trim()) { toast('Pon el nombre'); return; }
+    f.nombre = f.nombre.trim(); f.horas = (f.horas || []).filter(Boolean).sort();
+    const antes = f.id && porId('meds', f.id);
+    f.historial = f.historial || [];
+    if (!antes || (antes.dosis || '') !== (f.dosis || '')) f.historial.push({ fecha: dayKey(now()), dosis: f.dosis || '' });
+    f.activo = true; poner('meds', f); S.f.med = null; toast('Guardado'); ir('medicinas');
+  },
+  'med-borrar': () => { const f = S.f.med; const m = porId('meds', f.id); m.activo = false; m.hasta = dayKey(now()); poner('meds', m); S.f.med = null; ir('medicinas'); },
+  'sup-tomar': v => { const m = porId('meds', v); const r = { id: uid(), medId: v, slot: 'sup|' + now() + '|' + v, t: now(), estado: 'tomada' }; guardarUndo('tomas', null); S.undo.id = r.id; poner('tomas', r); S.mantenerScroll = true; repintar(); toast(m.nombre + ' tomada', true); },
+  'tanda-nueva': () => { S.f.tanda = { nombre: 'Prednisona', inicio: dayKey(now()), dosisIni: '', bajada: '', cada: '', hora: '09:00' }; ir('tanda'); },
+  'tanda-editar': v => { S.f.tanda = JSON.parse(JSON.stringify(porId('tandas', v))); ir('tanda'); },
+  'ta-calc': () => repintar(),
+  'ta-guardar': () => { const f = S.f.tanda; if (!f.inicio || !Number(f.dosisIni)) { toast('Pon el día de inicio y la dosis'); return; } poner('tandas', f); S.f.tanda = null; toast('Tanda guardada'); ir('medicinas'); },
+  'ta-borrar': () => { borrar('tandas', S.f.tanda.id); S.f.tanda = null; ir('medicinas'); },
+  viaje: v => { S.f.viaje = Math.max(1, (S.f.viaje || 3) + Number(v)); S.mantenerScroll = true; repintar(); },
+  'cita-nueva': () => { S.f.cita = { tipo: 'Neurología', dia: '', hora: '10:00' }; S.sheet = sheetCita; repintar(); },
+  'cita-editar': v => { const c = porId('citas', v); S.f.cita = Object.assign({}, c, { dia: dayKey(c.t), hora: hhmm(c.t) }); S.sheet = sheetCita; repintar(); },
+  'cita-guardar': () => { const f = S.f.cita; if (!f.dia) { toast('Pon el día'); return; } const c = Object.assign(f.id ? porId('citas', f.id) : { id: uid(), preguntas: [] }, { tipo: f.tipo || 'Neurología', lugar: f.lugar || '', notas: f.notas || '', t: epochDe(f.dia, f.hora || '10:00', tzHere()) }); poner('citas', c); S.sheet = null; repintar(); },
+  'cita-borrar': () => { borrar('citas', S.f.cita.id); S.sheet = null; repintar(); },
+  preg: v => { const c = proximaCita(); c.preguntas[+v].hecho = !c.preguntas[+v].hecho; poner('citas', c); S.mantenerScroll = true; repintar(); },
+  'preg-add': () => { const t = (S.f.preg || '').trim(); if (!t) return; const c = proximaCita(); c.preguntas = (c.preguntas || []).concat([{ txt: t }]); poner('citas', c); S.f.preg = ''; S.mantenerScroll = true; repintar(); },
+  'copiar-informe': async () => { const txt = 'Informe de Laura (registro personal de cefalea en racimos)\n\n' + informe().join('\n\n'); try { await navigator.clipboard.writeText(txt); toast('Informe copiado'); } catch (e) { S.sheet = () => `<span class="G h3">Copia el informe</span><textarea class="f" style="min-height:300px">${esc(txt)}</textarea><button class="btn" data-a="cerrar-sheet">Cerrar</button>`; repintar(); } },
+  'prueba-tipo': v => { S.f.pruebaTipo = v; S.mantenerScroll = true; repintar(); },
+  'prueba-add': () => { if (!S.f.pruebaTipo) { toast('Elige el tipo de prueba'); return; } poner('pruebas', { id: uid(), tipo: S.f.pruebaTipo, fecha: S.f.pruebaFecha || dayKey(now()), res: S.f.pruebaRes || '' }); S.f.pruebaTipo = S.f.pruebaRes = ''; S.mantenerScroll = true; repintar(); },
+  'prueba-borrar': v => { borrar('pruebas', v); S.mantenerScroll = true; repintar(); },
+  cfg: (v, el) => { const k = el.dataset.k; setCfg({ [k]: k === 'margen' ? Number(v) : v }); S.mantenerScroll = true; repintar(); },
+  'cfg-plumas-av': v => { setCfg({ avisoPlumas: Math.max(1, CFG().avisoPlumas + Number(v)) }); S.mantenerScroll = true; repintar(); },
+  'vig-add': () => { const t = norm(S.f.vig); if (!t) return; setCfg({ vigilados: [...new Set((CFG().vigilados || []).concat([t]))] }); S.f.vig = ''; S.mantenerScroll = true; repintar(); },
+  'vig-quitar': v => { setCfg({ vigilados: (CFG().vigilados || []).filter(x => x !== v) }); S.mantenerScroll = true; repintar(); },
+  login: async v => {
+    const f = S.f.login || {}; f.err = '';
+    try { await SYNC.entrar((f.email || '').trim(), f.pass || '', v === 'nueva'); S.f.login = null; toast('Nube conectada'); }
+    catch (e) { f.err = errNube(e); }
+    repintar();
+  },
+  relogin: async () => { try { await SYNC.entrar(SYNC.meta.email, (S.f.login || {}).pass || '', false); toast('Conectado'); } catch (e) { toast(errNube(e)); } repintar(); },
+  logout: async () => { await SYNC.salir(); repintar(); },
+  'avisos-on': () => activarAvisos(),
+  exportar: async () => {
+    const txt = JSON.stringify({ app: 'laura', v: 1, fecha: now(), DB });
+    const file = new File([txt], 'laura-copia-' + dayKey(now()) + '.json', { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Copia de Laura' }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(txt); toast('Copia copiada: pégala en Notas o en un correo'); } catch (e) { toast('No se ha podido copiar'); }
+  },
+  importar: () => { S.sheet = () => `<span class="G h3">Recuperar una copia</span><span class="small">Pega aquí el texto de la copia. Se junta con lo que hay: no se borra nada.</span><textarea class="f" data-in="imp-txt" style="min-height:200px"></textarea><button class="btn" data-a="imp-ok">Recuperar</button><button class="btn chipc" data-a="cerrar-sheet">Cancelar</button>`; repintar(); },
+  'imp-ok': () => {
+    try { const j = JSON.parse(S.f.imp || ''); const src = j.DB || j; let n = 0; COLS.forEach(c => (src[c] || []).forEach(r => { const i = DB[c].findIndex(x => x.id === r.id); if (i < 0 || (r.upd || 0) > (DB[c][i].upd || 0)) { if (i < 0) DB[c].push(r); else DB[c][i] = r; SYNC.marcar(c, r.id); n++; } })); guardar(); S.sheet = null; repintar(); toast(plural(n, 'registro recuperado', 'registros recuperados')); }
+    catch (e) { toast('Ese texto no es una copia de Laura'); }
+  },
+  actualizar: () => { if (window.__swEsperando) window.__swEsperando.postMessage('skipWaiting'); else location.reload(); }
+};
+function tog(arr, v) { arr = (arr || []).slice(); const i = arr.indexOf(v); if (i < 0) arr.push(v); else arr.splice(i, 1); return arr; }
+function marcarToma(day, hora, t, estado) {
+  const s = tomasDelDia(day).find(x => x.hora === hora); if (!s) return;
+  guardarUndo('tomas', null); const ids = [];
+  s.meds.forEach(m => { if (!tomaDe(day, hora, m.id)) { const r = { id: uid(), medId: m.id, slot: slotId(day, hora, m.id), t, estado, tz: tzHere() }; poner('tomas', r); ids.push(r.id); } });
+  S.undo.multi = ids; S.undo.id = ids[0];
+  S.mantenerScroll = true; repintar(); toast(estado === 'olvidada' ? 'Apuntada como no tomada' : (s.meds.length > 1 ? 'Tomadas' : 'Tomada'), true);
+}
+function guardarSuenoManual(cambios) {
+  let s = ultimoSueno();
+  const ins = { dormir: document.querySelector('[data-in="sueno-dormir"]'), desp: document.querySelector('[data-in="sueno-despertar"]') };
+  const hoy = dayKey(now());
+  if (!s) s = { id: uid(), tz: tzHere(), manual: true };
+  if (ins.dormir && ins.dormir.value) { let t = epochDe(hoy, ins.dormir.value, tzHere()); if (t > now()) t -= DIA; if (!s.auto || !s.dormir) s.dormir = t; else if (hhmm(s.dormir) !== ins.dormir.value) s.dormir = t; }
+  if (ins.desp && ins.desp.value) { let t = epochDe(hoy, ins.desp.value, tzHere()); if (t > now() + 5 * MIN) t -= DIA; s.despertar = t; }
+  if (s.despertar && s.dormir && s.despertar < s.dormir) s.dormir -= DIA;
+  Object.assign(s, cambios); poner('suenos', s); S.mantenerScroll = true; repintar();
+}
+
+/* ---------------- Entradas de texto ---------------- */
+const INP = {
+  'dist-txt': v => { const e = porId('eventos', S.f.evId); e.distinta = Object.assign(e.distinta || {}, { txt: v }); poner('eventos', e); },
+  'sueno-dormir': () => guardarSuenoManual({}), 'sueno-despertar': () => guardarSuenoManual({}),
+  'ef-otro': v => S.f.efecto.otro = v, 'ef-pulso': v => S.f.efecto.pulso = v, 'ef-tension': v => S.f.efecto.tension = v, 'ef-hora': v => S.f.efecto.hora = v,
+  'co-hora': v => S.f.comida.hora = v,
+  'pa-dia': v => S.f.pasada.dia = v, 'pa-laura': v => S.f.pasada.laura = v, 'pa-dolor': v => S.f.pasada.dolor = v, 'pa-pinchazo': v => { S.f.pasada.pinchazo = v; }, 'pa-fin': v => S.f.pasada.fin = v,
+  'med-nombre': v => S.f.med.nombre = v, 'med-dosis': v => S.f.med.dosis = v, 'med-desde': v => S.f.med.desde = v,
+  'ta-nombre': v => S.f.tanda.nombre = v, 'ta-inicio': v => { S.f.tanda.inicio = v; }, 'ta-ini': v => { S.f.tanda.dosisIni = v; }, 'ta-baja': v => { S.f.tanda.bajada = v; }, 'ta-cada': v => { S.f.tanda.cada = v; }, 'ta-hora': v => S.f.tanda.hora = v,
+  'cita-tipo': v => S.f.cita.tipo = v, 'cita-dia': v => S.f.cita.dia = v, 'cita-hora': v => S.f.cita.hora = v, 'cita-lugar': v => S.f.cita.lugar = v, 'cita-notas': v => S.f.cita.notas = v,
+  'preg-txt': v => S.f.preg = v, 'prueba-fecha': v => S.f.pruebaFecha = v, 'prueba-res': v => S.f.pruebaRes = v,
+  'cfg-cig': v => setCfg({ cig: v }), 'cfg-home': v => { setCfg({ homeTz: v }); repintar(); },
+  'vig-txt': v => S.f.vig = v, 'login-email': v => { S.f.login = S.f.login || {}; S.f.login.email = v; }, 'login-pass': v => { S.f.login = S.f.login || {}; S.f.login.pass = v; },
+  'otra-hora': v => S.f.otra.hora = v, 'imp-txt': v => S.f.imp = v, 'co-q': null
+};
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-a]');
+  if (!el) return;
+  if (el.dataset.a === 'cerrar-sheet' && ev.target.closest('[data-stop]') && !ev.target.closest('button')) return;
+  const f = ACC[el.dataset.a];
+  if (f) { ev.preventDefault(); f(el.dataset.v, el); }
+});
+document.addEventListener('input', ev => {
+  const el = ev.target, k = el.dataset && el.dataset.in; if (!k) return;
+  if (k === 'co-q') { S.f.comida.q = el.value; const pos = el.selectionStart; repintar(); const n = document.querySelector('[data-in="co-q"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } return; }
+  if (k === 'med-hora') { S.f.med.horas[+el.dataset.i] = el.value; return; }
+  if (['sueno-dormir', 'sueno-despertar', 'cfg-home'].includes(k)) return;
+  if (INP[k]) INP[k](el.value);
+});
+document.addEventListener('change', ev => {
+  const el = ev.target, k = el.dataset && el.dataset.in; if (!k) return;
+  if (['sueno-dormir', 'sueno-despertar', 'cfg-home'].includes(k)) INP[k](el.value);
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.dataset && ev.target.dataset.in === 'co-q') { ev.preventDefault(); ACC['co-add'](); } if (ev.key === 'Enter' && ev.target.dataset && ev.target.dataset.in === 'preg-txt') { ev.preventDefault(); ACC['preg-add'](); } });
+
+/* =========================================================
+   ARRANQUE
+   ========================================================= */
+function desdeAviso(abrir) { if (!abrir) return; if (abrir === 'inicio') { S.cierre = null; ir('inicio'); } else ir(abrir); }
+(function init() {
+  if (!DB.cfg.find(r => r.id === 'cfg')) { DB.cfg.push(Object.assign({}, CFG_DEF, { homeTz: tzHere().startsWith('Europe/') || tzHere().startsWith('Atlantic/') ? tzHere() : 'Europe/Madrid', upd: 0 })); guardar(); }
+  const h = location.hash.replace('#', '');
+  S.pant = ['hoy', 'registro', 'medicinas', 'patrones', 'consulta', 'ajustes'].includes(h) ? h : 'inicio';
+  if (h) history.replaceState(null, '', location.pathname);
+  repintar();
+  SYNC.arrancar();
+  setInterval(() => { if (S.pant === 'inicio' && !S.sheet) repintar(); }, 20000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (abierto() || S.pant !== 'inicio') { /* sigue donde estaba */ } repintar(); revisarAviso(); if (SYNC.user) SYNC.subir(); } });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      const esperar = w => { window.__swEsperando = w; S.nuevaVersion = true; if (S.pant === 'hoy') repintar(); };
+      if (reg.waiting && navigator.serviceWorker.controller) esperar(reg.waiting);
+      reg.addEventListener('updatefound', () => { const w = reg.installing; w && w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) esperar(w); }); });
+    }).catch(() => {});
+    let recargado = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (!recargado && window.__swEsperando) { recargado = true; location.reload(); } });
+    navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.abrir !== undefined) desdeAviso(e.data.abrir); });
+  }
+})();
+
+</script>
+</body>
+</html>
