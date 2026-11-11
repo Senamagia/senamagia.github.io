@@ -436,6 +436,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .dye-d input{width:46px;height:30px;border:0;border-radius:8px;background:var(--field);text-align:center;outline:none}
 .dye-b{width:30px;height:30px;border-radius:15px;background:var(--field);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;color:var(--sec)}
 .dye-b[disabled]{opacity:.3}
+.seg.mini{display:inline-grid;grid-auto-flow:column;gap:2px;padding:2px;flex:0 1 auto}.seg.mini button{font-size:12.5px;padding:6px 8px;min-height:32px}
 </style>
 </head>
 <body>
@@ -475,7 +476,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='2.1';
+const APP_VERSION='2.2';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'escena',n:'Escenario',l:'#6E44D4',d:'#C9A7FF'},{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -696,9 +697,11 @@ function render(){
 function keepScroll(el,html){const y=el.scrollTop;el.innerHTML=html;el.scrollTop=y}
 
 /* ---- Repertorio ---- */
+const autoCoctel=x=>!!(x.rodeado&&x.dur<=180&&x.pot>=4);
+const isCoctel=x=>x.coctel!=null?!!x.coctel:autoCoctel(x);
 function repMatch(x){
   if(repF==='pres'&&!x.pres)return false;
-  if(repF==='coctel'&&!(x.rodeado&&x.dur<=180&&x.pot>=4))return false;
+  if(repF==='coctel'&&!isCoctel(x))return false;
   if(repF==='rodeado'&&!x.rodeado)return false;
   if(repF==='sinmesa'&&x.mesa)return false;
   if(repF.indexOf('e:')===0&&x.emo!==repF.slice(2))return false;
@@ -857,6 +860,7 @@ function fichaHTML(){
      <div class="fr"><span>Número de presentación</span>${tg(F.pres,'fbool','data-k="pres"')}</div></div>
      <div class="note">Los números de presentación son flashes cortos que te dan a conocer en los primeros segundos.</div></div>
    <div><div class="fl">Condiciones</div><div class="fg">
+     <div class="fr"><span>Apto cóctel</span>${tg(isCoctel(F),'fCoctel')}</div>
      <div class="fr"><span>Aguanta público rodeando</span>${tg(F.rodeado,'fbool','data-k="rodeado"')}</div>
      <div class="fr"><span>Necesita mesa</span>${tg(F.mesa,'fbool','data-k="mesa"')}</div>
      <div class="fr"><span>Necesita música</span>${tg(F.musica,'fbool','data-k="musica"')}</div>
@@ -891,6 +895,7 @@ const A={
   fpot:el=>{F.pot=+el.dataset.p;drawSheet()},
   ftipo:el=>{const t=el.dataset.t,i=F.tipos.indexOf(t);if(i>=0)F.tipos.splice(i,1);else F.tipos.push(t);drawSheet()},
   fbool:el=>{F[el.dataset.k]=!F[el.dataset.k];drawSheet()},
+  fCoctel:()=>{F.coctel=!isCoctel(F);drawSheet()},
   freset:el=>{F.reset=el.dataset.k;drawSheet()},
   fmatadd:()=>{F.mat.push(M('','maleta'));drawSheet();const ins=$$('[data-in="F.mat"]');if(ins.length)ins[ins.length-1].focus()},
   fmatdel:el=>{F.mat.splice(+el.dataset.i,1);drawSheet()},
@@ -1105,7 +1110,7 @@ function boloForm(){
      ${BF.otro?`<div class="fg" style="margin-top:10px"><div class="fr"><span>Espectáculo</span><input type="text" class="tin" list="dlOtro" placeholder="Magia a dos…" value="${esc(BF.otroNom||'')}" data-in="BF" data-k="otroNom"></div><div class="fr"><span>Con quién</span><input type="text" class="tin" list="dlCon" placeholder="Opcional" value="${esc(BF.con||'')}" data-in="BF" data-k="con"></div><div class="fr"><span>Duración aprox.</span><input type="number" inputmode="numeric" class="tin" placeholder="min" value="${esc(BF.otroDur||'')}" data-in="BF" data-k="otroDur" style="text-align:right;max-width:90px"></div><div class="fr"><span>Con descanso</span>${tg(!!BF.otroDesc,'bfDesc')}</div></div>
       <datalist id="dlOtro">${[...new Set(D.bolos.map(b=>b.otro&&b.otroNom).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}</datalist><datalist id="dlCon">${[...new Set(D.bolos.map(b=>b.con).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
       <div class="note">Para los bolos que haces con otras personas o con un show que no está en tu app. Cuenta en la agenda y en las cuentas, pero no tiene números que valorar.</div>`:(D.shows.length?'':'<div class="note">Aún no tienes shows. Puedes guardar el bolo igualmente, apuntarlo como «Otro espectáculo» o asignarle un show más tarde.</div>')}</div>
-    <div><div class="fl">Cuándo</div><div class="fg"><div class="fr"><span>Fecha</span><input type="date" value="${esc(BF.date)}" data-in="BF" data-k="date" style="text-align:right;flex:0 1 auto"></div><div class="fr"><span>Hora</span><input type="time" value="${esc(BF.hora)}" data-in="BF" data-k="hora" style="text-align:right;flex:0 1 auto"></div></div></div>
+    <div><div class="fl">Cuándo</div><div class="fg"><div class="fr"><span>Fecha</span><input type="date" value="${esc(BF.date)}" data-in="BF" data-k="date" style="text-align:right;flex:0 1 auto"></div><div class="fr"><span>Hora</span><input type="time" value="${esc(BF.hora)}" data-in="BF" data-k="hora" style="text-align:right;flex:0 1 auto"></div>${BF.id?'':`<div class="fr"><span>Se repite</span><div class="seg mini">${[['','No'],['w','Semanal'],['2w','Quincenal'],['m','Mensual']].map(([k,n])=>`<button class="${(BF._rep||'')===k?'on':''}" data-a="bfRep" data-k="${k}">${n}</button>`).join('')}</div></div>${BF._rep?`<div class="fr"><span>Hasta</span><input type="date" value="${esc(BF._hasta||'')}" data-in="BF" data-k="_hasta" style="text-align:right;flex:0 1 auto"></div><div class="note" style="padding:2px 14px 10px">${repTxt(BF)}</div>`:''}`}</div></div>
     <div><div class="fl">Cliente</div><div class="fg">${inp('cliente','Cliente o empresa')}${inp('contacto','Persona de contacto')}${inp('telefono','Teléfono','tel','inputmode="tel"')}${inp('email','Email','email','inputmode="email"')}</div><div class="note" id="prevNote">${prevNote()}</div></div>
     <div><div class="fl">Lugar</div><div class="fg">${inp('lugar','Lugar (p. ej. Hotel Miramar)')}${inp('direccion','Dirección')}</div></div>
     <div><div class="fl">Evento</div><div class="wrapchips">${EVENTOS.map(e=>`<button class="tc${BF.evento===e[0]?' on':''}" data-a="bfEv" data-k="${e[0]}">${e[1]}</button>`).join('')}</div></div>
@@ -1129,9 +1134,10 @@ function openBolo(id){
     <div class="fg">${row('Contacto',esc(b.contacto||''))}${row('Teléfono',b.telefono?`<a class="link" href="tel:${esc(b.telefono.replace(/\s/g,''))}">${esc(b.telefono)}</a>`:'')}${row('Email',b.email?`<a class="link" href="mailto:${esc(b.email)}">${esc(b.email)}</a>`:'')}${row('Lugar',esc(b.lugar||''))}${row('Dirección',b.direccion?`<a class="link" href="https://maps.apple.com/?q=${encodeURIComponent(b.direccion)}" target="_blank" rel="noopener">${esc(b.direccion)}</a>`:'')}</div>
     ${b.notas?`<div><div class="fl">Notas</div><div class="wi"><p style="color:var(--text);white-space:pre-wrap">${esc(b.notas)}</p></div></div>`:''}
     ${b.eval?`<div><div class="fl">Valoración <span>${RATE[(b.eval.general||3)-1]} · sala ${RATE[(b.eval.energia||3)-1].toLowerCase()}</span></div><div class="fg">${nums.map(i=>`<div class="fr"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.name)}${i.fallo?' <span class="badge">Fallo</span>':''}</span><span style="color:var(--sec);font-size:14px;flex:none">${i.rate?RATE[i.rate-1]:'—'}</span></div>`).join('')}</div>${b.eval.cambiar?`<div class="wi" style="margin-top:10px"><p style="color:var(--text);white-space:pre-wrap">${esc(b.eval.cambiar)}</p></div>`:''}</div>`:''}
-    <div class="act"><button data-a="dayOpen" data-id="${b.id}" style="color:var(--accent);font-weight:600">Ver el día del bolo</button><button data-a="evalBolo" style="color:var(--accent);font-weight:600">${b.eval?'Editar valoración':'Valorar actuación'}</button><button data-a="editBolo">Datos del bolo</button><button class="d" data-a="delBolo">Eliminar bolo</button></div></div>`}});
+    <div class="act"><button data-a="dayOpen" data-id="${b.id}" style="color:var(--accent);font-weight:600">Ver el día del bolo</button><button data-a="evalBolo" style="color:var(--accent);font-weight:600">${b.eval?'Editar valoración':'Valorar actuación'}</button><button data-a="editBolo">Datos del bolo</button><button class="d" data-a="delBolo">Eliminar bolo</button>${b.serie&&D.bolos.filter(x=>x.serie===b.serie&&x.date>=b.date).length>1?'<button class="d" data-a="delSerie">Eliminar este y los siguientes de la serie</button>':''}</div></div>`}});
   S.editBolo=()=>{BF=clone(b);boloForm()};
   S.delBolo=()=>{closeSheet();withUndo('Bolo eliminado',()=>{D.bolos=D.bolos.filter(x=>x.id!==b.id)})};
+  S.delSerie=()=>{closeSheet();const n=D.bolos.filter(x=>x.serie===b.serie&&x.date>=b.date).length;withUndo(pl(n,'bolo eliminado','bolos eliminados'),()=>{D.bolos=D.bolos.filter(x=>!(x.serie===b.serie&&x.date>=b.date))})};
   S.evalBolo=()=>evalForm(b);
 }
 function evalForm(b){
@@ -1157,15 +1163,19 @@ Object.assign(S,{
   newBoloShow:el=>newBolo(el.dataset.id),
   openBolo:el=>openBolo(el.dataset.id),
   bfShow:el=>{BF.otro=false;BF.showId=BF.showId===el.dataset.id?'':el.dataset.id;drawSheet()},
+  bfRep:el=>{BF._rep=el.dataset.k;if(BF._rep&&!BF._hasta){const d=new Date((BF.date||todayStr())+'T00:00');d.setMonth(d.getMonth()+3);BF._hasta=d.toISOString().slice(0,10)}drawSheet()},
   bfOtro:()=>{BF.otro=!BF.otro;if(BF.otro)BF.showId='';drawSheet()},
   bfEv:el=>{BF.evento=el.dataset.k;drawSheet()},
   bfFmt:el=>{BF.formato=el.dataset.k;drawSheet()},
   saveBolo:()=>{const s=D.shows.find(x=>x.id===BF.showId),isNew=!BF.id;BF.cliente=(BF.cliente||'').trim();
     if(BF.otro){BF.showId='';BF.otroNom=(BF.otroNom||'').trim();BF.con=(BF.con||'').trim();BF.showName=BF.otroNom||'Otro espectáculo'}else{BF.con='';BF.showName=s?s.name:(BF.showName||'')}
-    if(!isNew){const i=D.bolos.findIndex(x=>x.id===BF.id);if(i>=0)D.bolos[i]=Object.assign(D.bolos[i],BF)}else{BF.id=uid();BF.eval=null;D.bolos.push(BF)}
+    const rp=BF._rep,hs=BF._hasta;delete BF._rep;delete BF._hasta;let extra=0;
+    if(!isNew){const i=D.bolos.findIndex(x=>x.id===BF.id);if(i>=0)D.bolos[i]=Object.assign(D.bolos[i],BF)}else{BF.id=uid();BF.eval=null;
+      if(rp&&BF.date){const ds=repDates(BF.date,rp,hs);if(ds.length>1){BF.serie=uid();ds.slice(1).forEach(d=>{const c=clone(BF);c.id=uid();c.date=d;delete c.cobro;delete c.dia;D.bolos.push(c);extra++})}}
+      D.bolos.push(BF)}
     save();shoSeg='bolos';tab='sho';
     if(isNew&&BF.date&&BF.date<=todayStr()&&CTA().on){render();openBolo(BF.id);return}
-    closeSheet();toast('Bolo guardado')},
+    closeSheet();toast(extra?'Guardados '+(extra+1)+' bolos de la serie':'Bolo guardado')},
   evRate:el=>{const i=E.items[+el.dataset.k];i.rate=i.rate===+el.dataset.p?0:+el.dataset.p;drawSheet()},
   evFallo:el=>{const i=E.items[+el.dataset.k];i.fallo=!i.fallo;drawSheet()},
   evGen:el=>{E.general=+el.dataset.p;drawSheet()},
@@ -2020,6 +2030,11 @@ function donutHTML(bm){const P=[['factura','Factura','#C9A7FF'],['coop','Coopera
    <div class="lg">${P.filter(([k])=>bm[k]>0).map(([k,n,c])=>`<span><i style="background:${c}"></i>${n}<b>${Math.round(bm[k]/t*100)} %</b></span>`).join('')}</div></div>`}
 
 S.fuentes=()=>openSheet({title:'Fuentes del taller',left:'Cerrar',body:()=>`<div class="wi guide-fu" style="line-height:1.5"><p>El taller creativo de Bambalinas junta varias técnicas clásicas de creatividad. Estas son sus fuentes:</p><ul><li><b>Listado de atributos:</b> Robert P. Crawford, profesor de la Universidad de Nebraska, desde los años 30. <i>The Techniques of Creative Thinking</i> (1954).</li><li><b>Análisis morfológico:</b> Fritz Zwicky, astrofísico suizo, desde los años 40. <i>Discovery, Invention, Research through the Morphological Approach</i> (1969).</li><li><b>Inversión:</b> técnica tradicional de creatividad. Aparece en las listas de preguntas de Alex F. Osborn, <i>Applied Imagination</i> (1953), y en el método SCAMPER de Bob Eberle (1971).</li><li><b>Preposiciones, binomio fantástico e hipótesis fantástica:</b> Gianni Rodari, <i>Gramática de la fantasía</i> (1973).</li><li><b>Árbol de ideas:</b> inspirado en los mapas mentales de Tony Buzan (años 70).</li></ul></div>`});
+function repDates(start,rp,until){const R=[],d0=new Date(start+'T00:00'),u=until?new Date(until+'T00:00'):null,day=d0.getDate();
+  for(let i=0;i<60;i++){let d;if(rp==='m'){d=new Date(d0.getFullYear(),d0.getMonth()+i,1);d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()))}else{d=new Date(d0);d.setDate(d0.getDate()+i*(rp==='2w'?14:7))}
+    if(u&&d>u)break;R.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))}return R}
+function repTxt(B){if(!B.date)return 'Pon la fecha del primer bolo.';const n=repDates(B.date,B._rep,B._hasta).length;const w=DOW[new Date(B.date+'T00:00').getDay()];
+  return (B._rep==='m'?'El día '+(+B.date.split('-')[2])+' de cada mes':(B._rep==='2w'?'Un '+w+' sí y otro no':'Todos los '+(w.endsWith('s')?w:w+'s')))+' · se crearán '+pl(n,'bolo','bolos')+(n>=60?' (máximo)':'')+'. Cada uno lo podrás cambiar por separado.'}
 /* ============ arranque ============ */
 addEventListener('resize',()=>{if(tab==='mon'||tab==='ini')render()});
 render();
