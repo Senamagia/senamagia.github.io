@@ -449,7 +449,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .gcode{font-size:12.5px;font-weight:800;letter-spacing:1.5px;background:var(--field);padding:6px 10px;border-radius:9px;color:var(--accent)}
 .gsub{font-size:14px;color:var(--sec);margin:0 2px 14px}
 .gsplit{margin:0 2px 12px}.gsplit .bar{display:flex;gap:2px;height:9px;border-radius:5px;overflow:hidden}.gsplit small{display:block;font-size:12.5px;color:var(--sec);margin-top:5px}
-.grow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:7px 0;border-bottom:1px solid var(--sep)}.grow:last-child{border-bottom:0}
+
 .grow .t{width:38px;font-size:12px;color:var(--sec);font-variant-numeric:tabular-nums;flex:none}.grow .blk{width:9px;border-radius:5px;flex:none}
 .grow .n{flex:1;min-width:0;display:flex;flex-direction:column}.grow .n b{font-size:15px;overflow-wrap:anywhere}.grow .n small{font-size:12px;color:var(--sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gbolo{display:flex;flex-direction:column;padding:12px;margin-bottom:10px}
@@ -473,6 +473,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 #printArea{display:none}
 @media print{body.printesc>*:not(#printArea){display:none!important}body.printesc{background:#fff!important;color:#000}body.printesc #printArea{display:block;padding:20px;font-family:-apple-system,Helvetica,Arial,sans-serif;color:#000}
   #printArea .esc th,#printArea .esc td{border-bottom:1px solid #ccc;color:#000}#printArea .esc .d,#printArea .esc .tr,#printArea .esc .nt{color:#444}#printArea h1{font-size:22px;margin:0 0 4px}}
+.gdl .row{padding:0}.grow{display:flex;align-items:center;border-bottom:1px solid var(--sep)}.gdl .row:last-child .grow{border-bottom:0}.gin{display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-align:left;padding:7px 0}.gdl .hd{width:38px;height:44px}.gdl .row.drag .grow{background:var(--sheet);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 </style>
 </head>
 <body>
@@ -512,7 +513,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='2.3';
+const APP_VERSION='2.3.1';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'escena',n:'Escenario',l:'#6E44D4',d:'#C9A7FF'},{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -855,7 +856,7 @@ function renderSho(){
   const el=$('#v-sho'),on=CTA().on;if(shoSeg==='cuentas'&&!on)shoSeg='bolos';const isB=shoSeg==='bolos',isC=shoSeg==='cuentas';
   const opts=[['shows','Shows'],['conjunto','Conjunto'],['bolos','Bolos']].concat(on?[['cuentas','Cuentas']]:[]);
   const seg=`<div class="seg" style="grid-template-columns:repeat(${opts.length},minmax(0,1fr));margin:0 0 14px">${opts.map(([k,n])=>`<button class="${shoSeg===k?'on':''}" data-a="segSho" data-k="${k}">${n}</button>`).join('')}</div>`;
-  if(shoSeg==='conjunto'){keepScroll(el,`<div class="wrap">${GV.gid&&gCur()?'':hdr(Object.keys(GRP.map).length?pl(Object.keys(GRP.map).length,'show compartido','shows compartidos'):'Con compañeros')+'<h1>En conjunto</h1>'+seg}${conjuntoHTML()}</div>`);return}
+  if(shoSeg==='conjunto'){setTimeout(()=>{const l=$('#v-sho .gdl');if(l&&!l.dataset.dg){l.dataset.dg=1;enableDrag(l,(from,to)=>{GRP.tx(GV.gid,g=>{const a=g.items||[];if(!a[from])return null;a.splice(to,0,a.splice(from,1)[0]);return g});render()})}},0);keepScroll(el,`<div class="wrap">${GV.gid&&gCur()?'':hdr(Object.keys(GRP.map).length?pl(Object.keys(GRP.map).length,'show compartido','shows compartidos'):'Con compañeros')+'<h1>En conjunto</h1>'+seg}${conjuntoHTML()}</div>`);return}
   if(isC){keepScroll(el,`<div class="wrap">${hdr(CM.mode==='mes'?MESES[CM.m][0].toUpperCase()+MESES[CM.m].slice(1)+' '+CM.y:String(CM.y),`<button class="ibtn fill" data-a="ggNew" aria-label="Nuevo gasto general">${ICON.plus}</button>`)}<h1>Cuentas</h1>${seg}${cuentasHTML()}</div>`);return}
   if(isB){keepScroll(el,`<div class="wrap">${hdr(pl(D.bolos.length,'bolo','bolos'),`<button class="ibtn fill" data-a="newBolo" aria-label="Nuevo bolo">${ICON.plus}</button>`)}<h1>Bolos</h1>${seg}${bolosHTML()}</div>`);return}
   keepScroll(el,`<div class="wrap">${hdr(pl(D.shows.length,'show','shows'),`<button class="ibtn fill" data-a="newShow" aria-label="Nuevo show">${ICON.plus}</button>`)}<h1>Shows</h1>${seg}
@@ -2143,18 +2144,18 @@ function gHojaHTML(g){const M=gMembers(g),I=g.items||[];
   let h='';
   if(tt&&M.length>1)h+=`<div class="gsplit"><div class="bar">${M.map(m=>`<i style="width:${(T[m.u]/tt*100).toFixed(1)}%;background:${m.c}"></i>`).join('')}</div><small>En escena: ${M.map(m=>esc(m.u===gMe()?'tú':m.n)+' '+Math.round(T[m.u]/tt*100)+' %').join(' · ')}</small></div>`;
   let acc=0;
-  h+=I.length?`<div class="card" style="padding:4px 12px">${I.map((x,i)=>{const st=acc;acc+=(+x.dur||0);const e=x.kind==='desc'?{c:'#8F89AE'}:emoOf(x.emo);
-    return `<button class="grow" data-a="gItem" data-i="${i}"><span class="t">${fmt(st)}</span><span class="blk" style="background:${e.c};height:${Math.round(Math.max(22,Math.min(70,(+x.dur||60)/60*6)))}px"></span><span class="n"><b>${esc(x.n||'Sin nombre')}</b><small>${fmt(+x.dur||0)}${x.kind==='desc'?' · descanso':''}${x.mus?' · ♪ '+esc(x.mus):''}${x.tra?' · ↪':''}${x.nota?' · ✎':''}</small></span><span class="gavs">${(x.who||[]).filter(u=>g.miembros[u]).map(u=>gAv(g,u)).join('')}</span></button>`}).join('')}</div>
-     <div class="note" style="margin:8px 4px">Duración total ${mins(acc)} min. Toca un número para decidir quién lo hace o cambiarlo de sitio.</div>`
+  h+=I.length?`<div class="card dl gdl" style="padding:4px 4px 4px 12px">${I.map((x,i)=>{const st=acc;acc+=(+x.dur||0);const e=x.kind==='desc'?{c:'#8F89AE'}:emoOf(x.emo);
+    return `<div class="row"><div class="grow"><button class="gin" data-a="gItem" data-i="${i}"><span class="t">${fmt(st)}</span><span class="blk" style="background:${e.c};height:${Math.round(Math.max(22,Math.min(70,(+x.dur||60)/60*6)))}px"></span><span class="n"><b>${esc(x.n||'Sin nombre')}</b><small>${fmt(+x.dur||0)}${x.kind==='desc'?' · descanso':''}${x.musica?' · ♪ musical':''}${x.mus?' · '+esc(x.mus):''}${x.tra?' · ↪':''}${x.nota?' · ✎':''}</small></span><span class="gavs">${(x.who||[]).filter(u=>g.miembros[u]).map(u=>gAv(g,u)).join('')}</span></button><div class="hd" aria-label="Arrastrar para ordenar">${ICON.handle}</div></div></div>`}).join('')}</div>
+     <div class="note" style="margin:8px 4px">Duración total ${mins(acc)} min. Arrastra ≡ para cambiar el orden y toca un número para decidir quién lo hace.</div>`
     :`<div class="empty"><b>Hoja vacía</b>Añade números de tu repertorio o crea números nuevos para este show.</div>`;
   return h+`<div class="wrapchips" style="margin-top:12px"><button class="tc" data-a="gPick">＋ De mi repertorio</button><button class="tc" data-a="gItemNew">＋ Número nuevo</button><button class="tc" data-a="gDesc">＋ Descanso</button></div>${I.length?`<button class="pill" data-a="gEscaleta" style="margin-top:14px">📋 Ver escaleta</button>`:''}`}
 function escaletaHTML(g){let acc=0;const H=g.hora0||'';const h0=H?t2m(H):null;
   return `<table class="esc"><thead><tr><th>Hora</th><th>Número</th><th>Quién</th><th>Música</th></tr></thead><tbody>${(g.items||[]).map(x=>{const st=acc;acc+=(+x.dur||0);const hh=h0!=null?m2t(h0+Math.floor(st/60)):fmt(st);
-    return `<tr class="${x.kind==='desc'?'desc':''}"><td>${hh}</td><td><b>${esc(x.n)}</b> <span class="d">${fmt(+x.dur||0)}</span>${x.tra?`<div class="tr">↪ ${esc(x.tra)}</div>`:''}${x.nota?`<div class="nt">✎ ${esc(x.nota)}</div>`:''}</td><td>${(x.who||[]).map(u=>esc(gNameF(g,u))).join(', ')}</td><td>${esc(x.mus||'')}</td></tr>`}).join('')}
+    return `<tr class="${x.kind==='desc'?'desc':''}"><td>${hh}</td><td><b>${esc(x.n)}</b> <span class="d">${fmt(+x.dur||0)}</span>${x.tra?`<div class="tr">↪ ${esc(x.tra)}</div>`:''}${x.nota?`<div class="nt">✎ ${esc(x.nota)}</div>`:''}</td><td>${(x.who||[]).map(u=>esc(gNameF(g,u))).join(', ')}</td><td>${x.mus?esc(x.mus):(x.musica?'♪ Sí':'')}</td></tr>`}).join('')}
     <tr class="fin"><td>${h0!=null?m2t(h0+Math.round(acc/60)):fmt(acc)}</td><td colspan="3"><b>Fin</b> · ${mins(acc)} min en total</td></tr></tbody></table>`}
 function escaletaTxt(g){let acc=0;const h0=g.hora0?t2m(g.hora0):null;const L=['ESCALETA · '+g.name,''];
   (g.items||[]).forEach(x=>{const st=acc;acc+=(+x.dur||0);L.push((h0!=null?m2t(h0+Math.floor(st/60)):fmt(st))+'  '+x.n+' ('+fmt(+x.dur||0)+')'+((x.who||[]).length?' · '+(x.who||[]).map(u=>gNameF(g,u)).join(', '):''));
-    if(x.mus)L.push('      ♪ '+x.mus);if(x.tra)L.push('      ↪ '+x.tra);if(x.nota)L.push('      ✎ '+x.nota)});
+    if(x.mus||x.musica)L.push('      ♪ '+(x.mus||'Musical'));if(x.tra)L.push('      ↪ '+x.tra);if(x.nota)L.push('      ✎ '+x.nota)});
   L.push('','Fin · '+mins(acc)+' min');return L.join('\n')}
 function gBolosHTML(g){const B=(g.bolos||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')),me=gMe();
   return (B.length?B.map(b=>{const sh=gShares(g,b.rep,pnum(b.cache)),mine=D.bolos.find(x=>x.grupo&&x.grupo.bid===b.id);
@@ -2190,13 +2191,13 @@ const whoChips=(g,sel,a,multi)=>`<div class="wrapchips">${gMembers(g).map(m=>`<b
 
 /* ---- formularios ---- */
 function gItemForm(i){const g=gCur();if(!g)return;const x=i!=null?g.items[i]:null;
-  GI=x?{i,mus:x.mus||'',tra:x.tra||'',nota:x.nota||'',n:x.n,mm:Math.floor((+x.dur||0)/60),ss:(+x.dur||0)%60,who:(x.who||[]).slice(),kind:x.kind||'num',emo:x.emo||'asombro',pot:x.pot||3}:{i:null,mus:'',tra:'',nota:'',n:'',mm:5,ss:0,who:[gMe()],kind:'num',emo:'asombro',pot:3};
+  GI=x?{i,musica:!!x.musica,mus:x.mus||'',tra:x.tra||'',nota:x.nota||'',n:x.n,mm:Math.floor((+x.dur||0)/60),ss:(+x.dur||0)%60,who:(x.who||[]).slice(),kind:x.kind||'num',emo:x.emo||'asombro',pot:x.pot||3}:{i:null,musica:false,mus:'',tra:'',nota:'',n:'',mm:5,ss:0,who:[gMe()],kind:'num',emo:'asombro',pot:3};
   openSheet({title:x?(GI.kind==='desc'?'Descanso':'Número'):'Número nuevo',left:'Cancelar',right:'Guardar',rightA:'gItemSave',body:()=>{const g=gCur();if(!g)return '';
     return `<div><div class="fg"><div class="fr"><input type="text" class="tin" style="text-align:left;font-weight:600" placeholder="${GI.kind==='desc'?'Descanso':'Nombre del número'}" value="${esc(GI.n)}" data-in="GI" data-k="n"></div>
       <div class="fr"><span>Duración</span><span style="display:flex;gap:6px;align-items:center"><input type="number" inputmode="numeric" class="tin" style="width:56px;text-align:center" value="${esc(GI.mm)}" data-in="GI" data-k="mm">min<input type="number" inputmode="numeric" class="tin" style="width:56px;text-align:center" value="${esc(GI.ss)}" data-in="GI" data-k="ss">s</span></div></div></div>
       ${GI.kind==='desc'?'':`<div><div class="fl">Quién lo hace</div>${whoChips(g,GI.who,'gWho',true)}<div class="note" style="margin:6px 4px">Puedes marcar a varios si lo hacéis juntos.</div></div>
       <div><div class="fl">Emoción</div><div class="wrapchips">${D.emos.map(e=>`<button class="tc${GI.emo===e.id?' on':''}" data-a="gEmo" data-k="${e.id}"><i style="display:inline-block;width:9px;height:9px;border-radius:5px;background:${e.c};margin-right:6px"></i>${esc(e.n)}</button>`).join('')}</div></div>`}
-      <div><div class="fl">Escaleta</div><div class="fg"><div class="fr"><span>Pie musical</span><input type="text" class="tin" placeholder="Pista, entrada o salida" value="${esc(GI.mus)}" data-in="GI" data-k="mus"></div>
+      <div><div class="fl">Escaleta</div><div class="fg"><div class="fr"><span>Número musical</span>${tg(!!GI.musica,'gMusica')}</div><div class="fr"><span>Pie musical</span><input type="text" class="tin" placeholder="Pista, entrada o salida" value="${esc(GI.mus)}" data-in="GI" data-k="mus"></div>
       <div class="fr"><span>Transición</span><input type="text" class="tin" placeholder="Cómo se entra al siguiente" value="${esc(GI.tra)}" data-in="GI" data-k="tra"></div></div>
       <textarea class="ta" rows="2" placeholder="Notas: luces, micro, atrezo, voluntarios…" data-in="GI" data-k="nota" style="margin-top:8px">${esc(GI.nota)}</textarea></div>
       ${x?`<div class="act"><button data-a="gItemMove" data-d="-1"${i?'':' disabled'}>Subir</button><button data-a="gItemMove" data-d="1"${i<g.items.length-1?'':' disabled'}>Bajar</button><button class="d" data-a="gItemDel">Quitar del show</button></div>`:''}`}})}
@@ -2272,12 +2273,13 @@ Object.assign(A,{
   gDesc:()=>{GRP.tx(GV.gid,g=>{g.items=g.items||[];g.items.push({id:uid_(),n:'Descanso',dur:900,kind:'desc',who:[]});return g});render()},
   gWho:el=>{const u=el.dataset.u,i=GI.who.indexOf(u);if(i>=0)GI.who.splice(i,1);else GI.who.push(u);drawSheet()},
   gEmo:el=>{GI.emo=el.dataset.k;drawSheet()},
-  gItemSave:()=>{const dur=Math.max(0,(+GI.mm||0)*60+(+GI.ss||0)),it={mus:(GI.mus||'').trim(),tra:(GI.tra||'').trim(),nota:(GI.nota||'').trim(),n:(GI.n||'').trim()||(GI.kind==='desc'?'Descanso':'Número'),dur,who:GI.who,kind:GI.kind,emo:GI.emo,pot:GI.pot};const i=GI.i;
+  gMusica:()=>{GI.musica=!GI.musica;drawSheet()},
+  gItemSave:()=>{const dur=Math.max(0,(+GI.mm||0)*60+(+GI.ss||0)),it={musica:!!GI.musica,mus:(GI.mus||'').trim(),tra:(GI.tra||'').trim(),nota:(GI.nota||'').trim(),n:(GI.n||'').trim()||(GI.kind==='desc'?'Descanso':'Número'),dur,who:GI.who,kind:GI.kind,emo:GI.emo,pot:GI.pot};const i=GI.i;
     GRP.tx(GV.gid,g=>{g.items=g.items||[];if(i!=null&&g.items[i])Object.assign(g.items[i],it);else g.items.push(Object.assign({id:uid_()},it));return g});closeSheet()},
   gItemMove:el=>{const i=GI.i,d=+el.dataset.d;GRP.tx(GV.gid,g=>{const j=i+d;if(j<0||j>=g.items.length)return null;const x=g.items.splice(i,1)[0];g.items.splice(j,0,x);return g});GI.i=i+d;closeSheet()},
   gItemDel:()=>{const i=GI.i;GRP.tx(GV.gid,g=>{g.items.splice(i,1);return g});closeSheet()},
   gPick:()=>gPickSheet(),
-  gPickNum:el=>{const x=num(el.dataset.id);if(!x)return;GRP.tx(GV.gid,g=>{g.items=g.items||[];g.items.push({id:uid_(),src:x.id,n:x.name,dur:x.dur,emo:x.emo,pot:x.pot,who:[gMe()],kind:'num'});return g});toast('«'+x.name+'» añadido');drawSheet()},
+  gPickNum:el=>{const x=num(el.dataset.id);if(!x)return;GRP.tx(GV.gid,g=>{g.items=g.items||[];g.items.push({id:uid_(),src:x.id,n:x.name,dur:x.dur,emo:x.emo,pot:x.pot,musica:!!x.musica,who:[gMe()],kind:'num'});return g});toast('«'+x.name+'» añadido');drawSheet()},
   gBolo:el=>gBoloForm(el.dataset.id),
   gBoloNew:()=>gBoloForm(null),
   gCobro:el=>{GBO.cobro=el.dataset.k;drawSheet()},
