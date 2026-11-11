@@ -437,6 +437,42 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .dye-b{width:30px;height:30px;border-radius:15px;background:var(--field);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;color:var(--sec)}
 .dye-b[disabled]{opacity:.3}
 .seg.mini{display:inline-grid;grid-auto-flow:column;gap:2px;padding:2px;flex:0 1 auto}.seg.mini button{font-size:12.5px;padding:6px 8px;min-height:32px}
+/* Shows en conjunto */
+.gav{display:inline-flex;width:24px;height:24px;border-radius:12px;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:#151230;flex:none;vertical-align:middle;box-shadow:0 0 0 2px var(--bg)}
+.gavs{display:inline-flex;padding-left:5px}.gavs .gav{margin-left:-6px}
+.gcard{display:block;width:100%;text-align:left;padding:14px;margin-bottom:10px}
+.gcard .gh{display:flex;justify-content:space-between;align-items:center;gap:8px}.gcard .gh b{font-size:17px}
+.gcard small{display:block;font-size:13px;color:var(--sec);margin-top:3px}
+.gbal{margin-top:10px;font-size:13px;color:var(--sec);background:var(--field);border-radius:10px;padding:7px 10px;font-weight:600}
+.gbal.pos{color:var(--good);background:color-mix(in srgb,var(--good) 13%,transparent)}.gbal.neg{color:#E5484D;background:rgba(229,72,77,.12)}
+.ghead{display:flex;justify-content:space-between;align-items:center;margin:4px 0 6px}.ghead .link{min-height:44px;font-size:15px}.ghead>span{display:flex;align-items:center;gap:4px}
+.gcode{font-size:12.5px;font-weight:800;letter-spacing:1.5px;background:var(--field);padding:6px 10px;border-radius:9px;color:var(--accent)}
+.gsub{font-size:14px;color:var(--sec);margin:0 2px 14px}
+.gsplit{margin:0 2px 12px}.gsplit .bar{display:flex;gap:2px;height:9px;border-radius:5px;overflow:hidden}.gsplit small{display:block;font-size:12.5px;color:var(--sec);margin-top:5px}
+.grow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:7px 0;border-bottom:1px solid var(--sep)}.grow:last-child{border-bottom:0}
+.grow .t{width:38px;font-size:12px;color:var(--sec);font-variant-numeric:tabular-nums;flex:none}.grow .blk{width:9px;border-radius:5px;flex:none}
+.grow .n{flex:1;min-width:0;display:flex;flex-direction:column}.grow .n b{font-size:15px;overflow-wrap:anywhere}.grow .n small{font-size:12px;color:var(--sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gbolo{display:flex;flex-direction:column;padding:12px;margin-bottom:10px}
+.gb-main{display:flex;gap:12px;text-align:left;align-items:flex-start}
+.gb-d{display:flex;flex-direction:column;align-items:center;width:44px;padding:6px 0;border-radius:12px;background:var(--field);flex:none}.gb-d b{font-size:19px}.gb-d small{font-size:11px;color:var(--sec);text-transform:uppercase}
+.gb-t{display:flex;flex-direction:column;gap:2px;min-width:0}.gb-t b{font-size:16px}.gb-t small{font-size:12.5px;color:var(--sec)}.gb-t .gb-me{color:var(--accent);font-weight:600}
+.gb-ag{align-self:flex-end;margin-top:8px;font-size:13px;font-weight:600;color:var(--accent);padding:6px 10px;border-radius:10px;background:var(--field)}.gb-ag.on{color:var(--good)}
+.ghero{padding:16px}.ghero small{font-size:11px;letter-spacing:.9px;text-transform:uppercase;font-weight:700;color:var(--accent)}.ghero>b{display:block;font-size:24px;font-weight:800;margin:2px 0 10px}
+.gbars{display:flex;flex-direction:column;gap:7px}.gbars div{display:flex;align-items:center;gap:8px;font-size:13px}.gbars span:first-child{width:60px;color:var(--sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gbars .tr{flex:1;height:9px;position:relative;background:var(--track);border-radius:5px}.gbars .tr i{position:absolute;top:0;bottom:0;border-radius:5px}
+.gbars em{font-style:normal;font-weight:700;width:78px;text-align:right}.gbars em.pos{color:var(--good)}.gbars em.neg{color:#E5484D}
+.gtr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--sep);font-size:14px}.gtr:last-child{border-bottom:0}.gtr .pill{min-height:34px;padding:0 12px;font-size:13px;flex:none}
+.gmv{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 0;border-bottom:1px solid var(--sep)}.gmv:last-child{border-bottom:0}
+.gmv .ic{width:32px;height:32px;border-radius:10px;background:var(--field);display:flex;align-items:center;justify-content:center;flex:none}
+.gmv .tx{flex:1;min-width:0;display:flex;flex-direction:column}.gmv .tx b{font-size:14.5px}.gmv .tx small{font-size:12px;color:var(--sec)}.gmv em{font-style:normal;font-weight:700}.gmv em.in{color:var(--good)}
+.gamt{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:4px 0 14px}.gamt input{font-size:40px;font-weight:800;width:200px;text-align:center;border:0;background:transparent;outline:none;color:var(--text)}.gamt span{font-size:28px;font-weight:800;color:var(--sec)}
+.gpick .gav{margin-right:6px;width:20px;height:20px;font-size:10px}
+.esc{width:100%;border-collapse:collapse;font-size:13px}.esc th{text-align:left;font-size:11px;color:var(--sec);font-weight:700;text-transform:uppercase;padding:6px 4px;border-bottom:1px solid var(--sep)}
+.esc td{padding:7px 4px;border-bottom:1px solid var(--sep);vertical-align:top}.esc td:first-child{font-variant-numeric:tabular-nums;color:var(--sec);white-space:nowrap}
+.esc .d{color:var(--sec);font-size:12px}.esc .tr,.esc .nt{font-size:12px;color:var(--sec);margin-top:2px}.esc tr.desc td{background:var(--field)}.esc tr.fin td{border-bottom:0}
+#printArea{display:none}
+@media print{body.printesc>*:not(#printArea){display:none!important}body.printesc{background:#fff!important;color:#000}body.printesc #printArea{display:block;padding:20px;font-family:-apple-system,Helvetica,Arial,sans-serif;color:#000}
+  #printArea .esc th,#printArea .esc td{border-bottom:1px solid #ccc;color:#000}#printArea .esc .d,#printArea .esc .tr,#printArea .esc .nt{color:#444}#printArea h1{font-size:22px;margin:0 0 4px}}
 </style>
 </head>
 <body>
@@ -476,7 +512,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 const pl=(n,a,b)=>n+' '+(n===1?a:b);
 const clone=o=>JSON.parse(JSON.stringify(o));
 
-const APP_VERSION='2.2';
+const APP_VERSION='2.3';
 /* ============ catálogos ============ */
 const PALETTE=[['#8DBDEB','Azul cielo'],['#9FB4F2','Pervinca'],['#B39BE6','Violeta'],['#D1A6E8','Lila'],['#F2B1CB','Rosa suave'],['#F29B8D','Coral'],['#F5B48A','Melocotón'],['#F2D27A','Mantequilla'],['#D9DE85','Lima'],['#95D9BD','Menta'],['#8ED3D6','Turquesa'],['#A9C7A2','Salvia'],['#D8C3A5','Arena'],['#C9B0A0','Topo'],['#B8BEC9','Niebla'],['#9AA3B5','Pizarra']];
 const ACCENTS=[{id:'escena',n:'Escenario',l:'#6E44D4',d:'#C9A7FF'},{id:'indigo',n:'Índigo',l:'#4B5BDB',d:'#8A97FF'},{id:'teatro',n:'Rojo teatro',l:'#C2303B',d:'#FF7A82'},{id:'oro',n:'Dorado',l:'#A86F0C',d:'#E8B84A'},{id:'verde',n:'Verde',l:'#24805A',d:'#5FC98F'},{id:'lila',n:'Lila',l:'#7353C4',d:'#B39BE6'},{id:'grafito',n:'Grafito',l:'#3A3A44',d:'#D0D0DA'}];
@@ -817,8 +853,9 @@ function renderMat(){
 /* ---- Shows ---- */
 function renderSho(){
   const el=$('#v-sho'),on=CTA().on;if(shoSeg==='cuentas'&&!on)shoSeg='bolos';const isB=shoSeg==='bolos',isC=shoSeg==='cuentas';
-  const opts=[['shows','Shows'],['bolos','Bolos']].concat(on?[['cuentas','Cuentas']]:[]);
+  const opts=[['shows','Shows'],['conjunto','Conjunto'],['bolos','Bolos']].concat(on?[['cuentas','Cuentas']]:[]);
   const seg=`<div class="seg" style="grid-template-columns:repeat(${opts.length},minmax(0,1fr));margin:0 0 14px">${opts.map(([k,n])=>`<button class="${shoSeg===k?'on':''}" data-a="segSho" data-k="${k}">${n}</button>`).join('')}</div>`;
+  if(shoSeg==='conjunto'){keepScroll(el,`<div class="wrap">${GV.gid&&gCur()?'':hdr(Object.keys(GRP.map).length?pl(Object.keys(GRP.map).length,'show compartido','shows compartidos'):'Con compañeros')+'<h1>En conjunto</h1>'+seg}${conjuntoHTML()}</div>`);return}
   if(isC){keepScroll(el,`<div class="wrap">${hdr(CM.mode==='mes'?MESES[CM.m][0].toUpperCase()+MESES[CM.m].slice(1)+' '+CM.y:String(CM.y),`<button class="ibtn fill" data-a="ggNew" aria-label="Nuevo gasto general">${ICON.plus}</button>`)}<h1>Cuentas</h1>${seg}${cuentasHTML()}</div>`);return}
   if(isB){keepScroll(el,`<div class="wrap">${hdr(pl(D.bolos.length,'bolo','bolos'),`<button class="ibtn fill" data-a="newBolo" aria-label="Nuevo bolo">${ICON.plus}</button>`)}<h1>Bolos</h1>${seg}${bolosHTML()}</div>`);return}
   keepScroll(el,`<div class="wrap">${hdr(pl(D.shows.length,'show','shows'),`<button class="ibtn fill" data-a="newShow" aria-label="Nuevo show">${ICON.plus}</button>`)}<h1>Shows</h1>${seg}
@@ -1259,7 +1296,7 @@ function moneyCard(b){if(!CTA().on)return '';const r=calc(b);
 
 /* ---- caché y cobro ---- */
 let CB=null,CBB=null;
-function cobroForm(b){CBB=b;const st=CTA();CB=b.cobro?clone(b.cobro):{rep:!!b.con,parteModo:'pct',parte:50,modo:st.modo,base:'',iva:st.iva,irpf:st.irpf,nfac:'',bruto:'',com:st.coop,coopNom:'',imp:'',pago:'efectivo',cobrado:false,fcobro:''};
+function cobroForm(b){CBB=b;const st=CTA();CB=b.cobro?clone(b.cobro):Object.assign({rep:!!b.con,parteModo:'pct',parte:50,modo:st.modo,base:'',iva:st.iva,irpf:st.irpf,nfac:'',bruto:'',com:st.coop,coopNom:'',imp:'',pago:'efectivo',cobrado:false,fcobro:''},b.grupo?grpParte(b):{});
   openSheet({title:'Caché y cobro',left:'Cancelar',cancelA:'backBolo',right:'Guardar',rightA:'cbSave',body:()=>{const m=CB.modo;
     const nf=(k,l,ph,suf)=>`<div class="fr"><span>${l}</span><label class="nin"><input type="text" inputmode="decimal" value="${esc(numIn(CB[k]))}" placeholder="${ph||'0'}" data-in="CB" data-k="${k}">${suf||'€'}</label></div>`;
     const tf=(k,l,ph)=>`<div class="fr"><span>${l}</span><input type="text" value="${esc(CB[k]||'')}" placeholder="${ph}" data-in="CB" data-k="${k}" class="tin"></div>`;
@@ -1776,13 +1813,20 @@ const SYNC={fb:null,user:null,meta:null,status:'off',err:'',timer:0,unsub:null,q
       getParts:async u=>{const s=await F.getDocs(col(u));const r={};s.forEach(d=>r[d.id]=d.data());return r},
       putPart:(u,name,data)=>F.setDoc(F.doc(db,'users',u,'parts',name),data),
       delPart:(u,name)=>F.deleteDoc(F.doc(db,'users',u,'parts',name)),
-      listen:(u,cb)=>F.onSnapshot(col(u),s=>{const r={};s.docChanges().forEach(ch=>{if(ch.type!=='removed')r[ch.doc.id]=ch.doc.data()});cb(r)},()=>{})
+      listen:(u,cb)=>F.onSnapshot(col(u),s=>{const r={};s.docChanges().forEach(ch=>{if(ch.type!=='removed')r[ch.doc.id]=ch.doc.data()});cb(r)},()=>{}),
+      grpCreate:async(g)=>{await F.setDoc(F.doc(db,'codigos',g.code),{gid:g.id,owner:g.owner});await F.setDoc(F.doc(db,'grupos',g.id),g)},
+      grpCodeFree:async code=>!(await F.getDoc(F.doc(db,'codigos',code))).exists(),
+      grpFind:async code=>{const d=await F.getDoc(F.doc(db,'codigos',code));return d.exists()?d.data().gid:null},
+      grpJoin:(gid,u,m)=>F.updateDoc(F.doc(db,'grupos',gid),{['miembros.'+u]:m,uids:F.arrayUnion(u)}),
+      grpListen:(u,cb)=>F.onSnapshot(F.query(F.collection(db,'grupos'),F.where('uids','array-contains',u)),s=>{const r={};s.forEach(d=>{r[d.id]=d.data()});cb(r)},()=>{}),
+      grpTx:(gid,fn)=>F.runTransaction(db,async t=>{const r=F.doc(db,'grupos',gid),d=await t.get(r);if(!d.exists())throw new Error('no');const nd=fn(JSON.parse(JSON.stringify(d.data())));if(nd){nd.t=Date.now();t.set(r,nd)}}),
+      grpDel:async(gid,code)=>{await F.deleteDoc(F.doc(db,'grupos',gid));try{await F.deleteDoc(F.doc(db,'codigos',code))}catch(e){}}
     };return this.fb},
   async start(){if(!this.enabled())return;this.loadMeta();if(!this.meta.uid)return;
     try{const fb=await this.load();fb.onAuth(u=>{if(u&&u.uid===this.meta.uid){this.user=u;this.connect()}else if(!u){this.user=null;this.setStatus('off')}})}catch(e){this.setStatus('offline')}},
   setStatus(s,err){this.status=s;this.err=err||'';if(SH&&SH.title==='Ajustes')drawSheet();if(SH&&SH.title==='Tu cuenta')drawSheet()},
   connect(){if(this.unsub)return;this.setStatus('syncing');
-    this.unsub=this.fb.listen(this.user.uid,r=>this.incoming(r));this.push(true)},
+    this.unsub=this.fb.listen(this.user.uid,r=>this.incoming(r));this.push(true);try{GRP.start()}catch(e){}},
   incoming(r){let changed=false;
     Object.keys(r).forEach(name=>{if(!PARTS[name])return;const d=r[name];if(!d||typeof d.j!=='string')return;const h=fnv(d.j);
       if(h===this.meta.last[name])return;
@@ -1816,7 +1860,7 @@ const SYNC={fb:null,user:null,meta:null,status:'off',err:'',timer:0,unsub:null,q
     Object.keys(remote).forEach(n=>{if(PARTS[n]&&typeof remote[n].j==='string'){applyPart(n,remote[n].j);this.meta.last[n]=fnv(remote[n].j)}});
     if(mode==='juntar')mergeInto(mine);
     this.saveMeta();save(true);this.connect();if(mode==='juntar')this.push()},
-  async logout(wipe){try{if(this.unsub)this.unsub()}catch(e){}this.unsub=null;try{await this.fb.signOut()}catch(e){}
+  async logout(wipe){try{if(this.unsub)this.unsub()}catch(e){}this.unsub=null;try{GRP.stop();GV.gid=null}catch(e){}try{await this.fb.signOut()}catch(e){}
     this.user=null;this.meta.uid=null;this.meta.email='';this.meta.last={};this.saveMeta();this.setStatus('off');
     if(wipe){const keep={tab:D.set.tab,seenGuide:true};D=defaults();Object.assign(D.set,keep);save(true)}},
   async deleteAll(){const u=this.user.uid;for(const n of Object.keys(PARTS)){await this.fb.delPart(u,n)}await this.fb.delUser();await this.logout(false)}
@@ -2035,6 +2079,235 @@ function repDates(start,rp,until){const R=[],d0=new Date(start+'T00:00'),u=until
     if(u&&d>u)break;R.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))}return R}
 function repTxt(B){if(!B.date)return 'Pon la fecha del primer bolo.';const n=repDates(B.date,B._rep,B._hasta).length;const w=DOW[new Date(B.date+'T00:00').getDay()];
   return (B._rep==='m'?'El día '+(+B.date.split('-')[2])+' de cada mes':(B._rep==='2w'?'Un '+w+' sí y otro no':'Todos los '+(w.endsWith('s')?w:w+'s')))+' · se crearán '+pl(n,'bolo','bolos')+(n>=60?' (máximo)':'')+'. Cada uno lo podrás cambiar por separado.'}
+/* ============ Shows en conjunto ============ */
+const GKEY='espatontos-grupos',GCOL=['#C9A7FF','#7EE0C3','#FFB877','#FF8A92','#8FC7FF','#FFD27A'];
+const GRP={map:{},unsub:null,
+  load(){try{this.map=JSON.parse(localStorage.getItem(GKEY))||{}}catch(e){this.map={}}},
+  keep(){try{localStorage.setItem(GKEY,JSON.stringify(this.map))}catch(e){}},
+  start(){if(this.unsub||!SYNC.user||!SYNC.fb||!SYNC.fb.grpListen)return;
+    this.unsub=SYNC.fb.grpListen(SYNC.user.uid,m=>{this.map=m;this.keep();if(!SH&&tab==='sho'&&shoSeg==='conjunto')render()})},
+  stop(){if(this.unsub){this.unsub();this.unsub=null}this.map={};this.keep()},
+  async tx(gid,fn){const g=this.map[gid];if(g){const c=fn(JSON.parse(JSON.stringify(g)));if(c){c.t=Date.now();this.map[gid]=c;this.keep()}}
+    try{await SYNC.fb.grpTx(gid,fn)}catch(e){toast('No se ha podido guardar en la nube. Revisa la conexión.')}}
+};
+GRP.load();
+let GV={gid:null,seg:'hoja'},GI=null,GBO=null,GM=null,GJ=null;
+const gMe=()=>SYNC.user?SYNC.user.uid:null;
+const gCur=()=>GRP.map[GV.gid]||null;
+const gMembers=g=>(g.uids||[]).filter(u=>g.miembros&&g.miembros[u]).map(u=>({u,n:g.miembros[u].n||'?',c:g.miembros[u].c||GCOL[0]}));
+const gName=(g,u)=>u===gMe()?'Tú':((g.miembros[u]||{}).n||'Alguien');
+const gNameF=(g,u)=>(g.miembros[u]||{}).n||'Alguien';
+const gAv=(g,u)=>{const m=g.miembros[u]||{};return `<b class="gav" style="background:${m.c||'#999'}">${esc((m.n||'?').trim().charAt(0).toUpperCase()||'?')}</b>`};
+const r2=x=>Math.round(x*100)/100;
+const gEur=x=>(Math.round(x*100)/100).toLocaleString('es-ES',{minimumFractionDigits:x%1?2:0,maximumFractionDigits:2})+' €';
+function gShares(g,rep,amt){const M=gMembers(g).map(m=>m.u),R={},v=(rep&&rep.v)||{};const modo=rep&&rep.modo||'medias';
+  if(modo==='pct'){const tot=M.reduce((a,u)=>a+pnum(v[u]),0)||100;M.forEach(u=>R[u]=amt*pnum(v[u])/tot)}
+  else if(modo==='fijo')M.forEach(u=>R[u]=pnum(v[u]));
+  else M.forEach(u=>R[u]=M.length?amt/M.length:0);return R}
+function gBal(g){const B={};gMembers(g).forEach(m=>B[m.u]=0);
+  (g.movs||[]).forEach(m=>{const a=pnum(m.amt);if(!a)return;if(m.tipo==='pago'){B[m.quien]=(B[m.quien]||0)+a;B[m.para]=(B[m.para]||0)-a;return}
+    const S=gShares(g,m.rep,a),sg=m.tipo==='ingreso'?-1:1;B[m.quien]=(B[m.quien]||0)+sg*a;Object.keys(S).forEach(u=>B[u]=(B[u]||0)-sg*S[u])});
+  Object.keys(B).forEach(u=>B[u]=r2(B[u]));return B}
+function gSettle(B){const P=[],N=[];Object.keys(B).forEach(u=>{if(B[u]>0.004)P.push([u,B[u]]);else if(B[u]<-0.004)N.push([u,-B[u]])});
+  P.sort((a,b)=>b[1]-a[1]);N.sort((a,b)=>b[1]-a[1]);const T=[];let i=0,j=0;
+  while(i<N.length&&j<P.length){const x=Math.min(N[i][1],P[j][1]);T.push({from:N[i][0],to:P[j][0],amt:r2(x)});N[i][1]-=x;P[j][1]-=x;if(N[i][1]<0.005)i++;if(P[j][1]<0.005)j++}return T}
+function gMyLine(g){const T=gSettle(gBal(g)),me=gMe();const mine=T.filter(t=>t.from===me||t.to===me);
+  if(!mine.length)return {txt:'Cuentas al día',cls:''};
+  const owed=mine.filter(t=>t.to===me).reduce((a,t)=>a+t.amt,0),owe=mine.filter(t=>t.from===me).reduce((a,t)=>a+t.amt,0);
+  if(owed>owe){const f=mine.filter(t=>t.to===me);return {txt:(f.length===1?gNameF(g,f[0].from)+' te debe ':'Te deben ')+gEur(owed-owe),cls:'pos'}}
+  const f=mine.filter(t=>t.from===me);return {txt:'Debes '+gEur(owe-owed)+(f.length===1?' a '+gNameF(g,f[0].to):''),cls:'neg'}}
+const gDur=g=>(g.items||[]).reduce((a,x)=>a+(+x.dur||0),0);
+const gWith=g=>{const o=gMembers(g).filter(m=>m.u!==gMe()).map(m=>m.n);return o.length?'Con '+(o.length>1?o.slice(0,-1).join(', ')+' y '+o[o.length-1]:o[0]):'Todavía solo tú'};
+function gCode(){const C='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=C[Math.floor(Math.random()*C.length)];return s}
+const gFmtCode=c=>c?c.slice(0,3)+'-'+c.slice(3):'';
+const gColorFor=g=>{const used=Object.values(g&&g.miembros||{}).map(m=>m.c);return GCOL.find(c=>used.indexOf(c)<0)||GCOL[Math.floor(Math.random()*GCOL.length)]};
+
+/* ---- vista ---- */
+function conjuntoHTML(){
+  if(!gMe())return `<div class="empty"><b>Shows con compañeros</b>Monta un show con otros magos, decidid quién hace cada número y llevad las cuentas juntos. Para compartir necesitas una cuenta.<br><br><button class="pill" data-a="authOpen">Crear cuenta o entrar</button></div>`;
+  if(GV.gid&&gCur())return gViewHTML(gCur());
+  const L=Object.values(GRP.map).sort((a,b)=>(b.t||0)-(a.t||0));
+  return (L.length?L.map(g=>{const ml=gMyLine(g),it=(g.items||[]).filter(x=>x.kind!=='desc');
+    return `<button class="card gcard" data-a="gOpen" data-id="${g.id}"><div class="gh"><b>${esc(g.name)}</b><span class="gavs">${gMembers(g).map(m=>gAv(g,m.u)).join('')}</span></div>
+      <small>${esc(gWith(g))} · ${pl(it.length,'número','números')}${gDur(g)?' · '+mins(gDur(g))+' min':''}</small><div class="gbal ${ml.cls}">${esc(ml.txt)}</div></button>`}).join('')
+    :`<div class="empty"><b>Shows con compañeros</b>Crea un show y pásale el código a tu compañero, o únete al suyo con su código.</div>`)
+   +`<button class="addrow" data-a="gNew" style="border-style:solid">${ICON.plus} Crear show en conjunto</button><button class="addrow" data-a="gJoinOpen">Unirme con un código</button>
+     <div class="note" style="margin:10px 4px">Tu repertorio sigue siendo tuyo: al show en conjunto solo van copias de los números que metáis.</div>`}
+function gViewHTML(g){const seg=GV.seg;
+  const sg=`<div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0 0 14px">${[['hoja','Hoja'],['bolos','Bolos'],['cuentas','Cuentas']].map(([k,n])=>`<button class="${seg===k?'on':''}" data-a="gSeg" data-k="${k}">${n}</button>`).join('')}</div>`;
+  const head=`<div class="ghead"><button class="link" data-a="gBack">‹ En conjunto</button><span><button class="gcode" data-a="gShare">${gFmtCode(g.code)}</button><button class="ibtn" data-a="gMenu" aria-label="Opciones">${ICON.more}</button></span></div>
+    <h1 style="margin-bottom:2px">${esc(g.name)}</h1><div class="gsub">${esc(gWith(g))}</div>`;
+  return head+sg+(seg==='bolos'?gBolosHTML(g):seg==='cuentas'?gCuentasHTML(g):gHojaHTML(g))}
+function gHojaHTML(g){const M=gMembers(g),I=g.items||[];
+  const T={};M.forEach(m=>T[m.u]=0);I.forEach(x=>(x.who||[]).forEach(u=>{if(u in T)T[u]+=(+x.dur||0)}));const tt=Object.values(T).reduce((a,b)=>a+b,0);
+  let h='';
+  if(tt&&M.length>1)h+=`<div class="gsplit"><div class="bar">${M.map(m=>`<i style="width:${(T[m.u]/tt*100).toFixed(1)}%;background:${m.c}"></i>`).join('')}</div><small>En escena: ${M.map(m=>esc(m.u===gMe()?'tú':m.n)+' '+Math.round(T[m.u]/tt*100)+' %').join(' · ')}</small></div>`;
+  let acc=0;
+  h+=I.length?`<div class="card" style="padding:4px 12px">${I.map((x,i)=>{const st=acc;acc+=(+x.dur||0);const e=x.kind==='desc'?{c:'#8F89AE'}:emoOf(x.emo);
+    return `<button class="grow" data-a="gItem" data-i="${i}"><span class="t">${fmt(st)}</span><span class="blk" style="background:${e.c};height:${Math.round(Math.max(22,Math.min(70,(+x.dur||60)/60*6)))}px"></span><span class="n"><b>${esc(x.n||'Sin nombre')}</b><small>${fmt(+x.dur||0)}${x.kind==='desc'?' · descanso':''}${x.mus?' · ♪ '+esc(x.mus):''}${x.tra?' · ↪':''}${x.nota?' · ✎':''}</small></span><span class="gavs">${(x.who||[]).filter(u=>g.miembros[u]).map(u=>gAv(g,u)).join('')}</span></button>`}).join('')}</div>
+     <div class="note" style="margin:8px 4px">Duración total ${mins(acc)} min. Toca un número para decidir quién lo hace o cambiarlo de sitio.</div>`
+    :`<div class="empty"><b>Hoja vacía</b>Añade números de tu repertorio o crea números nuevos para este show.</div>`;
+  return h+`<div class="wrapchips" style="margin-top:12px"><button class="tc" data-a="gPick">＋ De mi repertorio</button><button class="tc" data-a="gItemNew">＋ Número nuevo</button><button class="tc" data-a="gDesc">＋ Descanso</button></div>${I.length?`<button class="pill" data-a="gEscaleta" style="margin-top:14px">📋 Ver escaleta</button>`:''}`}
+function escaletaHTML(g){let acc=0;const H=g.hora0||'';const h0=H?t2m(H):null;
+  return `<table class="esc"><thead><tr><th>Hora</th><th>Número</th><th>Quién</th><th>Música</th></tr></thead><tbody>${(g.items||[]).map(x=>{const st=acc;acc+=(+x.dur||0);const hh=h0!=null?m2t(h0+Math.floor(st/60)):fmt(st);
+    return `<tr class="${x.kind==='desc'?'desc':''}"><td>${hh}</td><td><b>${esc(x.n)}</b> <span class="d">${fmt(+x.dur||0)}</span>${x.tra?`<div class="tr">↪ ${esc(x.tra)}</div>`:''}${x.nota?`<div class="nt">✎ ${esc(x.nota)}</div>`:''}</td><td>${(x.who||[]).map(u=>esc(gNameF(g,u))).join(', ')}</td><td>${esc(x.mus||'')}</td></tr>`}).join('')}
+    <tr class="fin"><td>${h0!=null?m2t(h0+Math.round(acc/60)):fmt(acc)}</td><td colspan="3"><b>Fin</b> · ${mins(acc)} min en total</td></tr></tbody></table>`}
+function escaletaTxt(g){let acc=0;const h0=g.hora0?t2m(g.hora0):null;const L=['ESCALETA · '+g.name,''];
+  (g.items||[]).forEach(x=>{const st=acc;acc+=(+x.dur||0);L.push((h0!=null?m2t(h0+Math.floor(st/60)):fmt(st))+'  '+x.n+' ('+fmt(+x.dur||0)+')'+((x.who||[]).length?' · '+(x.who||[]).map(u=>gNameF(g,u)).join(', '):''));
+    if(x.mus)L.push('      ♪ '+x.mus);if(x.tra)L.push('      ↪ '+x.tra);if(x.nota)L.push('      ✎ '+x.nota)});
+  L.push('','Fin · '+mins(acc)+' min');return L.join('\n')}
+function gBolosHTML(g){const B=(g.bolos||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')),me=gMe();
+  return (B.length?B.map(b=>{const sh=gShares(g,b.rep,pnum(b.cache)),mine=D.bolos.find(x=>x.grupo&&x.grupo.bid===b.id);
+    return `<div class="card gbolo"><button data-a="gBolo" data-id="${b.id}" class="gb-main"><span class="gb-d"><b>${b.date?+b.date.split('-')[2]:'?'}</b><small>${b.date?MESES[+b.date.split('-')[1]-1].slice(0,3):''}</small></span>
+      <span class="gb-t"><b>${esc(b.lugar||'Bolo')}</b><small>${[b.hora,pnum(b.cache)?'Caché '+gEur(pnum(b.cache)):'',b.cobro==='cada'?'Cada uno factura su parte':(b.cobra?(b.cobra===gMe()?'Cobras tú y repartes':'Cobra '+esc(gNameF(g,b.cobra))+' y reparte'):'')].filter(Boolean).join(' · ')}</small>
+      ${pnum(b.cache)?`<small class="gb-me">Tu parte: ${gEur(sh[me]||0)} · ${repTxtG(g,b.rep)}</small>`:''}</span></button>
+      <button class="gb-ag${mine?' on':''}" data-a="gAgenda" data-id="${b.id}">${mine?'✓ En tu agenda':'＋ A mi agenda'}</button></div>`}).join('')
+    :`<div class="empty"><b>Sin bolos</b>Apunta las fechas que hacéis juntos. En cada bolo eliges cómo os repartís el caché y quién cobra.</div>`)
+   +`<button class="addrow" data-a="gBoloNew" style="border-style:solid">${ICON.plus} Nuevo bolo juntos</button>`}
+function repTxtG(g,rep){const m=rep&&rep.modo||'medias';if(m==='medias')return 'a partes iguales';if(m==='pct')return 'por porcentaje';return 'cantidades fijas'}
+function gCuentasHTML(g){const B=gBal(g),T=gSettle(B),me=gMe(),M=gMembers(g),mx=Math.max(1,...Object.values(B).map(Math.abs));const ml=gMyLine(g);
+  let h=`<div class="card ghero"><small>Balance</small><b>${esc(ml.txt)}</b><div class="gbars">${M.map(m=>{const v=B[m.u]||0;return `<div><span>${esc(m.u===me?'Tú':m.n)}</span><span class="tr"><i style="width:${Math.abs(v)/mx*50}%;${v>=0?'left:50%':'right:50%'};background:${v>=0?m.c:'#FC5C65'}"></i></span><em class="${v>0?'pos':v<0?'neg':''}">${v>0?'+':''}${gEur(v)}</em></div>`}).join('')}</div></div>`;
+  if(T.length)h+=`<div class="sec-t">Para quedar en paz</div><div class="card" style="padding:4px 12px">${T.map((t,i)=>`<div class="gtr"><span>${gAv(g,t.from)} <b>${esc(gName(g,t.from))}</b> ${t.from===me?'pagas':'paga'} <b>${gEur(t.amt)}</b> a ${gAv(g,t.to)} <b>${esc(gName(g,t.to))}</b></span><button class="pill ghost" data-a="gSaldar" data-i="${i}">Saldado</button></div>`).join('')}</div>`;
+  const L=(g.movs||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.ts||0)-(a.ts||0));
+  h+=`<div class="sec-t">Movimientos</div>`+(L.length?`<div class="card" style="padding:2px 12px">${L.map(m=>{const bo=(g.bolos||[]).find(x=>x.id===m.boloId);
+    const who=m.tipo==='pago'?esc(gName(g,m.quien))+' → '+esc(gName(g,m.para)):(m.quien===gMe()?(m.tipo==='ingreso'?'Cobraste tú':'Pagaste tú'):(m.tipo==='ingreso'?'Cobró ':'Pagó ')+esc(gNameF(g,m.quien)));
+    return `<button class="gmv" data-a="gMov" data-id="${m.id}"><span class="ic">${m.tipo==='ingreso'?'💶':m.tipo==='pago'?'🤝':'🧾'}</span><span class="tx"><b>${esc(m.t||(m.tipo==='pago'?'Pago':'Movimiento'))}</b><small>${who}${bo?' · '+esc(bo.lugar||''):''}${m.date?' · '+fdate(m.date):''}</small></span><em class="${m.tipo==='ingreso'?'in':''}">${gEur(pnum(m.amt))}</em></button>`}).join('')}</div>`
+    :`<div class="note" style="margin:4px">Apunta lo que cobra y lo que paga cada uno y la app calcula quién debe a quién.</div>`);
+  return h+`<div class="wrapchips" style="margin-top:12px"><button class="tc" data-a="gMovNew" data-k="gasto">＋ Gasto</button><button class="tc" data-a="gMovNew" data-k="ingreso">＋ Ingreso</button></div>`}
+
+/* ---- reparto (bolo y movimiento) ---- */
+function repEditor(g,obj,key){const r=obj.rep||(obj.rep={modo:'medias',v:{}}),M=gMembers(g);r.v=r.v||{};
+  let h=`<div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0 0 8px">${[['medias','A partes iguales'],['pct','Porcentaje'],['fijo','Cantidad']].map(([k,n])=>`<button class="${r.modo===k?'on':''}" data-a="gRepModo" data-o="${key}" data-k="${k}">${n}</button>`).join('')}</div>`;
+  const amt=pnum(obj[key==='GBO'?'cache':'amt']);const S=gShares(g,r,amt);
+  h+=`<div class="fg">${M.map(m=>`<div class="fr"><span>${gAv(g,m.u)} ${esc(m.u===gMe()?'Tú':m.n)}</span>${r.modo==='medias'?`<b>${amt?gEur(S[m.u]):Math.round(100/M.length)+' %'}</b>`:`<label class="nin"><input type="text" inputmode="decimal" value="${esc(numIn(r.v[m.u]))}" placeholder="0" data-in="gRepV" data-o="${key}" data-u="${m.u}">${r.modo==='pct'?'%':'€'}</label>`}</div>`).join('')}</div>`;
+  if(r.modo!=='medias'){const sum=M.reduce((a,m)=>a+pnum(r.v[m.u]),0);const want=r.modo==='pct'?100:amt;
+    h+=`<div class="note" id="repChk" style="margin:6px 4px;${Math.abs(sum-want)>0.01&&want?'color:#E5484D':''}">${r.modo==='pct'?'Suma: '+r2(sum)+' % de 100 %':'Suma: '+gEur(sum)+(amt?' de '+gEur(amt):'')}</div>`}
+  return h}
+IN.gRepV=el=>{const o=el.dataset.o==='GBO'?GBO:GM;if(!o)return;o.rep.v[el.dataset.u]=el.value;const g=gCur(),c=$('#repChk');if(c&&g){const M=gMembers(g),sum=M.reduce((a,m)=>a+pnum(o.rep.v[m.u]),0),amt=pnum(o[el.dataset.o==='GBO'?'cache':'amt']),want=o.rep.modo==='pct'?100:amt;c.textContent=o.rep.modo==='pct'?'Suma: '+r2(sum)+' % de 100 %':'Suma: '+gEur(sum)+(amt?' de '+gEur(amt):'');c.style.color=Math.abs(sum-want)>0.01&&want?'#E5484D':''}};
+const repLive=(o,key)=>{const b=$('#repBox'),g=gCur();if(b&&g)b.innerHTML=repEditor(g,o,key)};
+IN.GI=el=>{GI[el.dataset.k]=el.value};IN.GBO=el=>{GBO[el.dataset.k]=el.value;if(el.dataset.k==='cache')repLive(GBO,'GBO')};IN.GM=el=>{GM[el.dataset.k]=el.value;if(el.dataset.k==='amt')repLive(GM,'GM')};IN.GJ=el=>{GJ[el.dataset.k]=el.value};
+const whoChips=(g,sel,a,multi)=>`<div class="wrapchips">${gMembers(g).map(m=>`<button class="tc gpick${(multi?sel.indexOf(m.u)>=0:sel===m.u)?' on':''}" data-a="${a}" data-u="${m.u}">${gAv(g,m.u)} ${esc(m.u===gMe()?'Tú':m.n)}</button>`).join('')}</div>`;
+
+/* ---- formularios ---- */
+function gItemForm(i){const g=gCur();if(!g)return;const x=i!=null?g.items[i]:null;
+  GI=x?{i,mus:x.mus||'',tra:x.tra||'',nota:x.nota||'',n:x.n,mm:Math.floor((+x.dur||0)/60),ss:(+x.dur||0)%60,who:(x.who||[]).slice(),kind:x.kind||'num',emo:x.emo||'asombro',pot:x.pot||3}:{i:null,mus:'',tra:'',nota:'',n:'',mm:5,ss:0,who:[gMe()],kind:'num',emo:'asombro',pot:3};
+  openSheet({title:x?(GI.kind==='desc'?'Descanso':'Número'):'Número nuevo',left:'Cancelar',right:'Guardar',rightA:'gItemSave',body:()=>{const g=gCur();if(!g)return '';
+    return `<div><div class="fg"><div class="fr"><input type="text" class="tin" style="text-align:left;font-weight:600" placeholder="${GI.kind==='desc'?'Descanso':'Nombre del número'}" value="${esc(GI.n)}" data-in="GI" data-k="n"></div>
+      <div class="fr"><span>Duración</span><span style="display:flex;gap:6px;align-items:center"><input type="number" inputmode="numeric" class="tin" style="width:56px;text-align:center" value="${esc(GI.mm)}" data-in="GI" data-k="mm">min<input type="number" inputmode="numeric" class="tin" style="width:56px;text-align:center" value="${esc(GI.ss)}" data-in="GI" data-k="ss">s</span></div></div></div>
+      ${GI.kind==='desc'?'':`<div><div class="fl">Quién lo hace</div>${whoChips(g,GI.who,'gWho',true)}<div class="note" style="margin:6px 4px">Puedes marcar a varios si lo hacéis juntos.</div></div>
+      <div><div class="fl">Emoción</div><div class="wrapchips">${D.emos.map(e=>`<button class="tc${GI.emo===e.id?' on':''}" data-a="gEmo" data-k="${e.id}"><i style="display:inline-block;width:9px;height:9px;border-radius:5px;background:${e.c};margin-right:6px"></i>${esc(e.n)}</button>`).join('')}</div></div>`}
+      <div><div class="fl">Escaleta</div><div class="fg"><div class="fr"><span>Pie musical</span><input type="text" class="tin" placeholder="Pista, entrada o salida" value="${esc(GI.mus)}" data-in="GI" data-k="mus"></div>
+      <div class="fr"><span>Transición</span><input type="text" class="tin" placeholder="Cómo se entra al siguiente" value="${esc(GI.tra)}" data-in="GI" data-k="tra"></div></div>
+      <textarea class="ta" rows="2" placeholder="Notas: luces, micro, atrezo, voluntarios…" data-in="GI" data-k="nota" style="margin-top:8px">${esc(GI.nota)}</textarea></div>
+      ${x?`<div class="act"><button data-a="gItemMove" data-d="-1"${i?'':' disabled'}>Subir</button><button data-a="gItemMove" data-d="1"${i<g.items.length-1?'':' disabled'}>Bajar</button><button class="d" data-a="gItemDel">Quitar del show</button></div>`:''}`}})}
+function gBoloForm(id){const g=gCur();if(!g)return;const b=id?(g.bolos||[]).find(x=>x.id===id):null;
+  GBO=b?JSON.parse(JSON.stringify(b)):{id:null,date:todayStr(),hora:'',lugar:'',cache:'',cobro:'uno',cobra:gMe(),rep:{modo:'medias',v:{}}};
+  openSheet({title:b?'Bolo juntos':'Nuevo bolo juntos',left:'Cancelar',right:'Guardar',rightA:'gBoloSave',body:()=>{const g=gCur();if(!g)return '';
+    return `<div><div class="fg"><div class="fr"><span>Lugar</span><input type="text" class="tin" placeholder="Sala, cliente…" value="${esc(GBO.lugar)}" data-in="GBO" data-k="lugar"></div>
+      <div class="fr"><span>Fecha</span><input type="date" value="${esc(GBO.date)}" data-in="GBO" data-k="date" style="text-align:right;flex:0 1 auto"></div>
+      <div class="fr"><span>Hora</span><input type="time" value="${esc(GBO.hora)}" data-in="GBO" data-k="hora" style="text-align:right;flex:0 1 auto"></div>
+      <div class="fr"><span>Caché total</span><label class="nin"><input type="text" inputmode="decimal" value="${esc(numIn(GBO.cache))}" placeholder="0" data-in="GBO" data-k="cache">€</label></div></div></div>
+      <div><div class="fl">Quién cobra</div><div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:8px"><button class="${GBO.cobro!=='cada'?'on':''}" data-a="gCobro" data-k="uno">Cobra uno y reparte</button><button class="${GBO.cobro==='cada'?'on':''}" data-a="gCobro" data-k="cada">Cada uno factura lo suyo</button></div>
+      ${GBO.cobro!=='cada'?whoChips(g,GBO.cobra,'gCobra',false)+'<div class="note" style="margin:6px 4px">El caché entra en las cuentas del show y la app calcula cuánto tiene que pasar a cada uno.</div>':'<div class="note" style="margin:0 4px">Cada uno cobra su parte directamente. En las cuentas del show solo se apuntan los gastos.</div>'}</div>
+      <div><div class="fl">Reparto del caché</div><div id="repBox">${repEditor(g,GBO,'GBO')}</div></div>
+      ${b?`<div class="act"><button class="d" data-a="gBoloDel">Eliminar bolo</button></div>`:''}`}})}
+function gMovForm(id,tipo){const g=gCur();if(!g)return;const m=id?(g.movs||[]).find(x=>x.id===id):null;
+  GM=m?JSON.parse(JSON.stringify(m)):{id:null,tipo:tipo||'gasto',t:'',amt:'',quien:gMe(),boloId:'',date:todayStr(),rep:{modo:'medias',v:{}}};
+  if(GM.tipo==='pago'){openSheet({title:'Pago',left:'Cerrar',body:()=>`<div class="wi"><p>${esc(gName(g,GM.quien))} pagó <b>${gEur(pnum(GM.amt))}</b> a ${esc(gName(g,GM.para))}${GM.date?' el '+fdate(GM.date):''}.</p></div><div class="act"><button class="d" data-a="gMovDel">Eliminar pago</button></div>`});return}
+  openSheet({title:m?(GM.tipo==='ingreso'?'Ingreso':'Gasto'):(GM.tipo==='ingreso'?'Nuevo ingreso':'Nuevo gasto'),left:'Cancelar',right:'Guardar',rightA:'gMovSave',body:()=>{const g=gCur();if(!g)return '';
+    return `<div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:12px"><button class="${GM.tipo==='gasto'?'on':''}" data-a="gMovTipo" data-k="gasto">Gasto</button><button class="${GM.tipo==='ingreso'?'on':''}" data-a="gMovTipo" data-k="ingreso">Ingreso</button></div>
+      <div class="gamt"><input type="text" inputmode="decimal" placeholder="0" value="${esc(numIn(GM.amt))}" data-in="GM" data-k="amt"><span>€</span></div>
+      <div><div class="fg"><div class="fr"><span>Concepto</span><input type="text" class="tin" placeholder="${GM.tipo==='ingreso'?'Caché, propina…':'Gasolina, material, cena…'}" value="${esc(GM.t)}" data-in="GM" data-k="t"></div>
+      <div class="fr"><span>Fecha</span><input type="date" value="${esc(GM.date)}" data-in="GM" data-k="date" style="text-align:right;flex:0 1 auto"></div></div></div>
+      ${(g.bolos||[]).length?`<div><div class="fl">Bolo</div><div class="wrapchips"><button class="tc${!GM.boloId?' on':''}" data-a="gMovBolo" data-id="">Ninguno</button>${g.bolos.map(b=>`<button class="tc${GM.boloId===b.id?' on':''}" data-a="gMovBolo" data-id="${b.id}">${esc(b.lugar||'Bolo')}${b.date?' · '+fdate(b.date):''}</button>`).join('')}</div></div>`:''}
+      <div><div class="fl">${GM.tipo==='ingreso'?'Quién lo cobró':'Quién pagó'}</div>${whoChips(g,GM.quien,'gMovQuien',false)}</div>
+      <div><div class="fl">Cómo se reparte</div><div id="repBox">${repEditor(g,GM,'GM')}</div></div>
+      ${m?`<div class="act"><button class="d" data-a="gMovDel">Eliminar</button></div>`:''}`}})}
+document.addEventListener('change',e=>{const t=e.target;if(SH&&t.dataset&&t.dataset.redraw)drawSheet()});
+function gPickSheet(){PQ2='';openSheet({title:'De mi repertorio',left:'Cerrar',body:()=>{const g=gCur();if(!g)return '';const have={};(g.items||[]).forEach(x=>{if(x.src)have[x.src]=1});
+  return D.nums.length?`<div class="group">${D.nums.map(x=>`<button class="li" data-a="gPickNum" data-id="${x.id}"><i style="width:10px;height:10px;border-radius:5px;background:${emoOf(x.emo).c};flex:none"></i><span class="tx"><b>${esc(x.name)}</b><small>${fmt(x.dur)} · ${dots(x.pot)}</small></span><span style="color:var(--accent);font-weight:700">${have[x.id]?'✓':'+'}</span></button>`).join('')}</div><div class="note" style="margin:8px 4px">Se añade una copia: lo que cambiéis en el show no toca tu ficha.</div>`:'<div class="empty"><b>Repertorio vacío</b>Añade números en la pestaña Repertorio.</div>'}})}
+let PQ2='';
+function grpParte(b){const g=b.grupo&&GRP.map[b.grupo.gid];if(!g)return {};const gb=(g.bolos||[]).find(x=>x.id===b.grupo.bid);if(!gb)return {};
+  if(gb.cobro==='cada')return {rep:false};const me=gMe(),r=gb.rep||{modo:'medias'},n=gMembers(g).length||2;
+  if(r.modo==='fijo')return {rep:true,parteModo:'imp',parte:pnum((r.v||{})[me])};
+  if(r.modo==='pct'){const tot=gMembers(g).reduce((a,m)=>a+pnum((r.v||{})[m.u]),0)||100;return {rep:true,parteModo:'pct',parte:r2(pnum((r.v||{})[me])/tot*100)}}
+  return {rep:true,parteModo:'pct',parte:r2(100/n)}}
+function gSyncCache(g,b){g.movs=g.movs||[];const id='c_'+b.id,i=g.movs.findIndex(m=>m.id===id);
+  if(b.cobro!=='cada'&&pnum(b.cache)>0){const m={id,tipo:'ingreso',t:'Caché '+(b.lugar||''),amt:pnum(b.cache),quien:b.cobra,boloId:b.id,date:b.date||todayStr(),rep:JSON.parse(JSON.stringify(b.rep||{modo:'medias'})),ts:Date.now()};if(i>=0)g.movs[i]=m;else g.movs.push(m)}
+  else if(i>=0)g.movs.splice(i,1)}
+Object.assign(A,{
+  gEscaleta:()=>{const g=gCur();if(!g)return;GJ={hora0:g.hora0||''};openSheet({title:'Escaleta',left:'Cerrar',body:()=>{const g=gCur();if(!g)return '';
+    return `<div class="fg" style="margin-bottom:12px"><div class="fr"><span>Hora de empezar</span><input type="time" value="${esc(g.hora0||'')}" data-in="gHora0" data-redraw="1" style="text-align:right;flex:0 1 auto"></div></div>
+      <div class="card" style="padding:6px 10px;overflow-x:auto">${escaletaHTML(g)}</div>
+      <div class="act" style="margin-top:12px"><button data-a="gEscShare" style="color:var(--accent);font-weight:600">Compartir como texto</button><button data-a="gEscPrint">Imprimir o guardar en PDF</button></div>`}})},
+  gEscShare:async()=>{const g=gCur();if(!g)return;const t=escaletaTxt(g);try{if(navigator.share){await navigator.share({title:'Escaleta · '+g.name,text:t});return}}catch(e){return}try{await navigator.clipboard.writeText(t);toast('Escaleta copiada')}catch(e){}},
+  gEscPrint:()=>{const g=gCur();if(!g)return;let pa=$('#printArea');if(!pa){pa=document.createElement('div');pa.id='printArea';document.body.appendChild(pa)}
+    pa.innerHTML=`<h1>${esc(g.name)}</h1><p>${esc(gWith(g).replace('Con ','Con '))}</p>${escaletaHTML(g)}`;document.body.classList.add('printesc');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('printesc'),500)},50)},
+  gOpen:el=>{GV.gid=el.dataset.id;GV.seg='hoja';render();$('#v-sho').scrollTop=0},
+  gBack:()=>{GV.gid=null;render()},
+  gSeg:el=>{GV.seg=el.dataset.k;render()},
+  gNew:()=>{GJ={name:'',me:D.set.miNombre||''};openSheet({title:'Show en conjunto',left:'Cancelar',right:'Crear',rightA:'gCreate',body:()=>`<div><div class="fg"><div class="fr"><span>Nombre del show</span><input type="text" class="tin" placeholder="Magia a dos" value="${esc(GJ.name)}" data-in="GJ" data-k="name"></div><div class="fr"><span>Tu nombre</span><input type="text" class="tin" placeholder="Cómo te verán" value="${esc(GJ.me)}" data-in="GJ" data-k="me"></div></div></div><div class="note" style="margin:8px 4px">Al crearlo tendrás un código de 6 letras para pasárselo a tus compañeros.</div>`})},
+  gCreate:async()=>{const name=(GJ.name||'').trim(),me=(GJ.me||'').trim();if(!name){toast('Ponle un nombre al show');return}if(!me){toast('Pon tu nombre');return}
+    D.set.miNombre=me;save(true);const fb=SYNC.fb,uid=gMe();let code=gCode();
+    try{for(let k=0;k<5&&!(await fb.grpCodeFree(code));k++)code=gCode();
+      const g={id:uid_(),name,code,owner:uid,uids:[uid],miembros:{[uid]:{n:me,c:GCOL[0]}},items:[],bolos:[],movs:[],t:Date.now()};
+      await fb.grpCreate(g);GRP.map[g.id]=g;GRP.keep();GV.gid=g.id;GV.seg='hoja';closeSheet();toast('Show creado. Código: '+gFmtCode(code))}catch(e){toast('No se ha podido crear. Revisa la conexión.')}},
+  gJoinOpen:()=>{GJ={code:'',me:D.set.miNombre||''};openSheet({title:'Unirme a un show',left:'Cancelar',right:'Unirme',rightA:'gJoin',body:()=>`<div><div class="fg"><div class="fr"><span>Código</span><input type="text" class="tin" style="text-transform:uppercase;letter-spacing:2px" placeholder="MAG-4K7" autocapitalize="characters" value="${esc(GJ.code)}" data-in="GJ" data-k="code"></div><div class="fr"><span>Tu nombre</span><input type="text" class="tin" placeholder="Cómo te verán" value="${esc(GJ.me)}" data-in="GJ" data-k="me"></div></div></div><div class="note" style="margin:8px 4px">Pídele el código a quien creó el show. Lo ve arriba a la derecha en su hoja.</div>`})},
+  gJoin:async()=>{const code=(GJ.code||'').toUpperCase().replace(/[^A-Z0-9]/g,''),me=(GJ.me||'').trim();if(code.length!==6){toast('El código tiene 6 letras o números');return}if(!me){toast('Pon tu nombre');return}
+    D.set.miNombre=me;save(true);try{const gid=await SYNC.fb.grpFind(code);if(!gid){toast('No hay ningún show con ese código');return}
+      if(GRP.map[gid]){GV.gid=gid;closeSheet();return}
+      await SYNC.fb.grpJoin(gid,gMe(),{n:me,c:GCOL[1+Math.floor(Math.random()*(GCOL.length-1))]});GV.gid=gid;GV.seg='hoja';closeSheet();toast('Te has unido al show')}catch(e){toast('No se ha podido unir. Revisa la conexión.')}},
+  gShare:async()=>{const g=gCur();if(!g)return;const txt='Únete a «'+g.name+'» en Bambalinas con el código '+gFmtCode(g.code)+' → Shows › Conjunto › Unirme con un código. https://senamagia.github.io/espatontos/';
+    try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){return}
+    try{await navigator.clipboard.writeText(txt);toast('Código copiado: '+gFmtCode(g.code))}catch(e){toast('Código: '+gFmtCode(g.code))}},
+  gMenu:()=>{const g=gCur();if(!g)return;const own=g.owner===gMe();
+    openSheet({title:g.name,left:'Cerrar',body:()=>`<div class="act"><button data-a="gShare">Compartir código ${gFmtCode(g.code)}</button><button data-a="gRename">Cambiar nombre del show</button>${own?gMembers(g).filter(m=>m.u!==gMe()).map(m=>`<button class="d" data-a="gKick" data-u="${m.u}">Quitar a ${esc(m.n)}</button>`).join(''):''}${own?'<button class="d" data-a="gDelete">Eliminar show en conjunto</button>':'<button class="d" data-a="gLeave">Salir del show</button>'}</div>`})},
+  gRename:()=>{const g=gCur();if(!g)return;GJ={name:g.name};openSheet({title:'Nombre del show',left:'Cancelar',right:'Guardar',rightA:'gRenameSave',body:()=>`<div class="fg"><div class="fr"><input type="text" class="tin" style="text-align:left" value="${esc(GJ.name)}" data-in="GJ" data-k="name"></div></div>`})},
+  gRenameSave:()=>{const n=(GJ.name||'').trim();if(!n)return;GRP.tx(GV.gid,g=>{g.name=n;return g});closeSheet()},
+  gKick:el=>{const u=el.dataset.u,g=gCur();if(!g||!confirm('¿Quitar a '+gNameF(g,u)+' del show? Sus movimientos siguen en las cuentas.'))return;GRP.tx(GV.gid,g=>{g.uids=g.uids.filter(x=>x!==u);return g});closeSheet()},
+  gLeave:()=>{const g=gCur();if(!g||!confirm('¿Salir de «'+g.name+'»? Dejarás de verlo.'))return;const gid=g.id,me=gMe();GRP.tx(gid,x=>{x.uids=x.uids.filter(u=>u!==me);return x}).then(()=>{delete GRP.map[gid];GRP.keep();render()});GV.gid=null;closeSheet()},
+  gDelete:async()=>{const g=gCur();if(!g||!confirm('¿Eliminar «'+g.name+'» para todos? No se puede deshacer.'))return;try{await SYNC.fb.grpDel(g.id,g.code);delete GRP.map[g.id];GRP.keep();GV.gid=null;closeSheet();toast('Show eliminado')}catch(e){toast('No se ha podido eliminar')}},
+  gItem:el=>gItemForm(+el.dataset.i),
+  gItemNew:()=>gItemForm(null),
+  gDesc:()=>{GRP.tx(GV.gid,g=>{g.items=g.items||[];g.items.push({id:uid_(),n:'Descanso',dur:900,kind:'desc',who:[]});return g});render()},
+  gWho:el=>{const u=el.dataset.u,i=GI.who.indexOf(u);if(i>=0)GI.who.splice(i,1);else GI.who.push(u);drawSheet()},
+  gEmo:el=>{GI.emo=el.dataset.k;drawSheet()},
+  gItemSave:()=>{const dur=Math.max(0,(+GI.mm||0)*60+(+GI.ss||0)),it={mus:(GI.mus||'').trim(),tra:(GI.tra||'').trim(),nota:(GI.nota||'').trim(),n:(GI.n||'').trim()||(GI.kind==='desc'?'Descanso':'Número'),dur,who:GI.who,kind:GI.kind,emo:GI.emo,pot:GI.pot};const i=GI.i;
+    GRP.tx(GV.gid,g=>{g.items=g.items||[];if(i!=null&&g.items[i])Object.assign(g.items[i],it);else g.items.push(Object.assign({id:uid_()},it));return g});closeSheet()},
+  gItemMove:el=>{const i=GI.i,d=+el.dataset.d;GRP.tx(GV.gid,g=>{const j=i+d;if(j<0||j>=g.items.length)return null;const x=g.items.splice(i,1)[0];g.items.splice(j,0,x);return g});GI.i=i+d;closeSheet()},
+  gItemDel:()=>{const i=GI.i;GRP.tx(GV.gid,g=>{g.items.splice(i,1);return g});closeSheet()},
+  gPick:()=>gPickSheet(),
+  gPickNum:el=>{const x=num(el.dataset.id);if(!x)return;GRP.tx(GV.gid,g=>{g.items=g.items||[];g.items.push({id:uid_(),src:x.id,n:x.name,dur:x.dur,emo:x.emo,pot:x.pot,who:[gMe()],kind:'num'});return g});toast('«'+x.name+'» añadido');drawSheet()},
+  gBolo:el=>gBoloForm(el.dataset.id),
+  gBoloNew:()=>gBoloForm(null),
+  gCobro:el=>{GBO.cobro=el.dataset.k;drawSheet()},
+  gCobra:el=>{GBO.cobra=el.dataset.u;drawSheet()},
+  gRepModo:el=>{const o=el.dataset.o==='GBO'?GBO:GM;o.rep.modo=el.dataset.k;drawSheet()},
+  gBoloSave:()=>{const b=JSON.parse(JSON.stringify(GBO));b.cache=pnum(b.cache);if(!b.id)b.id=uid_();
+    GRP.tx(GV.gid,g=>{g.bolos=g.bolos||[];const i=g.bolos.findIndex(x=>x.id===b.id);if(i>=0)g.bolos[i]=b;else g.bolos.push(b);gSyncCache(g,b);return g});
+    const mine=D.bolos.find(x=>x.grupo&&x.grupo.bid===b.id);if(mine){Object.assign(mine,{date:b.date,hora:b.hora,lugar:b.lugar});save()}
+    closeSheet()},
+  gBoloDel:()=>{const id=GBO.id;if(!confirm('¿Eliminar este bolo del show en conjunto?'))return;GRP.tx(GV.gid,g=>{g.bolos=g.bolos.filter(x=>x.id!==id);g.movs=(g.movs||[]).filter(m=>m.id!=='c_'+id);(g.movs||[]).forEach(m=>{if(m.boloId===id)m.boloId=''});return g});closeSheet()},
+  gAgenda:el=>{const g=gCur();if(!g)return;const gb=(g.bolos||[]).find(x=>x.id===el.dataset.id);if(!gb)return;
+    const ex=D.bolos.find(x=>x.grupo&&x.grupo.bid===gb.id);if(ex){openBolo(ex.id);return}
+    const others=gMembers(g).filter(m=>m.u!==gMe()).map(m=>m.n).join(', ');
+    D.bolos.push({id:uid_(),otro:true,otroNom:g.name,showName:g.name,con:others,showId:'',date:gb.date,hora:gb.hora,lugar:gb.lugar,cliente:'',evento:'',personas:'',notas:'',eval:null,grupo:{gid:g.id,bid:gb.id}});
+    save();render();toast('Añadido a tus bolos. Al cerrarlo, tu parte del reparto ya viene puesta.')},
+  gMov:el=>gMovForm(el.dataset.id),
+  gMovNew:el=>gMovForm(null,el.dataset.k),
+  gMovTipo:el=>{GM.tipo=el.dataset.k;drawSheet()},
+  gMovQuien:el=>{GM.quien=el.dataset.u;drawSheet()},
+  gMovBolo:el=>{GM.boloId=el.dataset.id;const g=gCur(),b=g&&(g.bolos||[]).find(x=>x.id===GM.boloId);if(b&&b.rep&&!GM.id)GM.rep=JSON.parse(JSON.stringify(b.rep));if(b&&!GM.id)GM.date=b.date||GM.date;drawSheet()},
+  gMovSave:()=>{const m=JSON.parse(JSON.stringify(GM));m.amt=pnum(m.amt);if(!m.amt){toast('Pon el importe');return}m.t=(m.t||'').trim();if(!m.id){m.id=uid_();m.ts=Date.now();m.by=gMe()}
+    GRP.tx(GV.gid,g=>{g.movs=g.movs||[];const i=g.movs.findIndex(x=>x.id===m.id);if(i>=0)g.movs[i]=m;else g.movs.push(m);return g});closeSheet()},
+  gMovDel:()=>{const id=GM.id;GRP.tx(GV.gid,g=>{g.movs=g.movs.filter(x=>x.id!==id);return g});closeSheet()},
+  gSaldar:el=>{const g=gCur();if(!g)return;const t=gSettle(gBal(g))[+el.dataset.i];if(!t)return;
+    if(!confirm(gNameF(g,t.from)+' ha pagado '+gEur(t.amt)+' a '+gNameF(g,t.to)+'. ¿Marcar como saldado?'))return;
+    GRP.tx(GV.gid,x=>{x.movs=x.movs||[];x.movs.push({id:uid_(),tipo:'pago',t:'Pago',amt:t.amt,quien:t.from,para:t.to,date:todayStr(),ts:Date.now(),by:gMe()});return x});toast('Saldado')}
+});
+IN.gHora0=el=>{const v=el.value;GRP.tx(GV.gid,g=>{g.hora0=v;return g})};
+const uid_=()=>uid();
+
 /* ============ arranque ============ */
 addEventListener('resize',()=>{if(tab==='mon'||tab==='ini')render()});
 render();
