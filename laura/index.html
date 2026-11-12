@@ -118,7 +118,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '1.2';
+const APP_VER = '1.3';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -555,7 +555,7 @@ function repintar() {
   try {
     if (noche) h = pInicio();
     else {
-      const f = { hoy: pHoy, registro: pRegistro, medicinas: pMedicinas, patrones: pPatrones, consulta: pConsulta, ajustes: pAjustes, distinta: pDistinta, efecto: pEfecto, comida: pComida, pasada: pPasada, med: pMed, tanda: pTanda }[S.pant] || pHoy;
+      const f = { hoy: pHoy, registro: pRegistro, medicinas: pMedicinas, patrones: pPatrones, consulta: pConsulta, ajustes: pAjustes, distinta: pDistinta, efecto: pEfecto, comida: pComida, pasada: pPasada, med: pMed, tanda: pTanda, dias: pDias }[S.pant] || pHoy;
       h = `<div class="wrap">${f()}</div>` + navHTML();
     }
   } catch (e) { console.error(e); h = `<div class="wrap"><div class="card warn"><b>Algo ha fallado al pintar esta pantalla.</b><span class="small">${esc(e.message)}</span><button class="btn" data-a="ir" data-v="hoy">Ir a Hoy</button></div></div>`; }
@@ -566,7 +566,7 @@ function repintar() {
   S.mantenerScroll = false;
 }
 function navHTML() {
-  const t = { hoy: 'hoy', registro: 'registro', efecto: 'registro', comida: 'hoy', pasada: 'registro', distinta: 'registro', medicinas: 'medicinas', med: 'medicinas', tanda: 'medicinas', patrones: 'patrones', consulta: 'patrones', ajustes: 'hoy' }[S.pant] || 'hoy';
+  const t = { hoy: 'hoy', registro: 'registro', efecto: 'registro', comida: 'hoy', pasada: 'registro', distinta: 'registro', medicinas: 'medicinas', med: 'medicinas', tanda: 'medicinas', patrones: 'patrones', consulta: 'patrones', dias: 'patrones', ajustes: 'hoy' }[S.pant] || 'hoy';
   return `<nav class="tabs">${[['hoy', 'Hoy'], ['registro', 'Registro'], ['medicinas', 'Medicinas'], ['patrones', 'Patrones']].map(([k, n]) => `<button class="${t === k ? 'on' : ''}" data-a="ir" data-v="${k}">${n}</button>`).join('')}</nav>`;
 }
 function ir(p) { S.pant = p; S.sheet = null; window.scrollTo(0, 0); repintar(); }
@@ -981,8 +981,12 @@ function pPatrones() {
   else if (!ac.items.length) out += `<span style="font-size:14px">Con ${ac.dias} días y ${ac.crisis} crisis, ninguna comida aparece antes de las crisis más de lo normal.</span>`;
   else out += `<div class="list">${ac.items.map(x => `<div class="it" style="border-color:rgba(29,27,22,.12)"><b>${esc(x.txt)}</b><span>antes del ${x.pctCrisis} % de las crisis · ${x.pctDias} % de los días</span></div>`).join('')}</div><span class="small" style="color:#2d3a24">Son pistas para comentar con tu neurólogo, no conclusiones.</span>`;
   out += `</div>`;
-  const af = analisisFactores();
-  if (af && af.length) out += `<div class="card">${h3('Lo que pasó antes', 'el día o el anterior')}<div class="list">${af.slice(0, 6).map(x => `<div class="it"><b>${esc(x.ch)}</b><span>crisis ${x.pa} % · sin ello ${x.pb} %</span></div>`).join('')}</div><span class="small">Porcentaje de días con crisis ese día o el siguiente.</span></div>`;
+  const cx = cruces();
+  out += `<div class="card">${h3('Lo que pasó antes', 'últimos 6 meses')}`;
+  if (!cx.listo) out += `<div class="between" style="font-size:14px;font-weight:600"><span>Recogiendo datos</span><span>${Math.min(cx.dias, 14)} de 14 días · ${Math.min(cx.crisis, 3)} de 3 crisis</span></div><span style="font-size:14px;line-height:1.5">Aquí se cruzan tus crisis con el sueño, las siestas, las pastillas olvidadas, los viajes, el deporte, el alcohol, el agua y todo lo que marcas en Hoy.</span>`;
+  else if (!cx.items.length) out += `<span style="font-size:14px">Con ${cx.dias} días apuntados todavía no hay nada que se repita.</span>`;
+  else out += `<div class="list">${cx.items.slice(0, 8).map(x => `<div class="it"><span>${x.pista ? '<span class="dot"></span> ' : ''}<b>${esc(x.ch)}</b> <span class="small">${plural(x.con, 'día', 'días')}</span></span><span>crisis ${x.pa} % · sin ello ${x.pb} %</span></div>`).join('')}</div><span class="small">Porcentaje de días con crisis ese día o el siguiente. El punto rojo marca lo que se repite lo bastante como para comentarlo con tu neurólogo.</span>`;
+  out += `</div><button class="card ink" data-a="ir" data-v="dias" style="flex-direction:row;justify-content:space-between;align-items:center"><span class="G h3">Día a día</span><span style="font-size:13px;text-align:right">crisis, comida, sueño,<br>pastillas y viajes juntos</span></button>`;
   // Sueño
   const sie = siestas().filter(s => s.dormir > now() - 90 * DIA);
   const depD = vivos('dias').filter(d => d.id >= sumarDias(hoy, -90) && (d.chips || []).includes('Deporte') && d.deporteH);
@@ -998,6 +1002,109 @@ function pPatrones() {
   }
   const mal = vivos('dias').filter(d => d.animo === 'Mal' && d.id >= sumarDias(hoy, -7)).length;
   out += `<div class="card">${h3('Cómo lo llevas')}<span style="font-size:15px">Ánimo «mal» ${plural(mal, 'día', 'días')} esta semana</span><span class="small">Va también al informe de la consulta. Si en algún momento piensas en hacerte daño, llama al 024: es gratis y atiende las 24 h.</span></div>`;
+  return out;
+}
+
+/* =========================================================
+   CRUCES: qué rodea a cada día (para Patrones y el informe)
+   Un rasgo se cuenta en el día vivido en que ocurre; la crisis
+   cuenta si llega ese día o el siguiente.
+   ========================================================= */
+function minNoche(ms) { const p = partes(ms); let m = p.h * 60 + p.mi; if (m < 12 * 60) m += 1440; return m; }
+function mediana(v) { if (!v.length) return null; const s = v.slice().sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; }
+function tomasFallidasDia(day) {
+  // Tomas de preventivos de ese día que no se tomaron o se tomaron a otra hora
+  if (!preventivos().length) return 0;
+  let n = 0;
+  tomasDelDia(day).forEach(s => { if (s.t > now()) return; s.meds.forEach(m => { const x = tomaDe(day, s.hora, m.id); if (!x || x.estado === 'olvidada' || x.estado === 'otra') n++; }); });
+  return n;
+}
+function rasgosDias(desdeDia) {
+  const R = {}, add = (d, k) => { if (d < desdeDia) return; (R[d] = R[d] || new Set()).add(k); };
+  const marca = d => { if (d >= desdeDia) R[d] = R[d] || new Set(); };
+  // Lo apuntado en Hoy
+  vivos('dias').forEach(d => {
+    marca(d.id);
+    (d.chips || []).forEach(c => add(d.id, c));
+    if (d.deporte === 'Intenso') add(d.id, 'Deporte intenso');
+    if (d.agua === 'Poca') add(d.id, 'Bebí poca agua');
+    if (d.fondo && d.fondo !== 'No') add(d.id, 'Dolor de fondo');
+    if (d.animo === 'Mal') add(d.id, 'Ánimo bajo');
+  });
+  vivos('comidas').forEach(c => { const d = diaVivido(c.t); marca(d); if ((c.bebidas || []).some(b => /Cerveza|Vino|Copa/.test(b)) || (c.vig || []).includes('alcohol')) add(d, 'Alcohol'); if (c.momento === 'Cena' && partes(c.t).h >= 23 || partes(c.t).h < CORTE && c.momento === 'Cena') add(d, 'Cené muy tarde'); });
+  // Sueño: noches cortas o acostarse tarde, comparado con lo tuyo
+  const ns = noches().filter(s => s.dormir && s.despertar && s.despertar > s.dormir);
+  const durM = mediana(ns.map(s => s.despertar - s.dormir)), acM = mediana(ns.map(s => minNoche(s.dormir)));
+  if (ns.length >= 5) ns.forEach(s => { const d = diaVivido(s.dormir); marca(d);
+    if (s.despertar - s.dormir < durM - HORA) add(d, 'Dormí poco');
+    if (minNoche(s.dormir) > acM + 60) add(d, 'Me acosté tarde'); });
+  vivos('suenos').filter(s => s.siesta && s.dormir).forEach(s => add(diaVivido(s.dormir), 'Siesta'));
+  // Pastillas
+  if (preventivos().length) { let d = desdeDia; const hoy = hoyV(); while (d <= hoy) { if (tomasFallidasDia(d)) { add(d, 'Toma olvidada o a otra hora'); } d = sumarDias(d, 1); } }
+  // Zona horaria: fuera de la de casa, y el día que cambia
+  const fuera = {}; ['eventos', 'efectos', 'comidas', 'tomas', 'suenos'].forEach(c => vivos(c).forEach(r => { const t = r.t || r.dormir || (r.dolor || r.laura || r.creado); if (!t || !r.tz) return; const d = diaVivido(t); fuera[d] = fuera[d] || offsetMin(t, r.tz) !== offsetMin(t, homeTz()); }));
+  Object.keys(fuera).sort().forEach((d, i, a) => { if (fuera[d]) add(d, 'Fuera de mi horario'); if (i && fuera[d] !== fuera[a[i - 1]] && sumarDias(a[i - 1], 1) >= d) add(d, 'Cambio de huso horario'); });
+  return R;
+}
+function cruces() {
+  const cr = crisisL(); const desde = sumarDias(hoyV(), -180);
+  const R = rasgosDias(desde), dias = Object.keys(R);
+  if (dias.length < 14 || cr.length < 3) return { listo: false, dias: dias.length, crisis: cr.length, items: [] };
+  const dcr = new Set(cr.map(x => diaVivido(x.t)));
+  const crisisEn = d => dcr.has(d) || dcr.has(sumarDias(d, 1));
+  const claves = new Set(); dias.forEach(d => R[d].forEach(k => claves.add(k)));
+  const items = [];
+  claves.forEach(k => {
+    const con = dias.filter(d => R[d].has(k)), sin = dias.filter(d => !R[d].has(k));
+    if (con.length < 2 || !sin.length) return;
+    const a = con.filter(crisisEn).length, b = sin.filter(crisisEn).length;
+    const pa = Math.round(a / con.length * 100), pb = Math.round(b / sin.length * 100);
+    items.push({ ch: k, con: con.length, a, pa, pb, pista: con.length >= 3 && a >= 2 && pa - pb >= 20 });
+  });
+  items.sort((x, y) => (y.pa - y.pb) - (x.pa - x.pb));
+  return { listo: true, dias: dias.length, crisis: cr.length, items };
+}
+
+/* ---------------- Día a día ---------------- */
+function pDias() {
+  const hoy = hoyV(), n = S.verDias || 21, solo = S.soloCrisis;
+  const R = rasgosDias(sumarDias(hoy, -n - 1));
+  const ev = vivos('eventos'), com = vivos('comidas'), ns = vivos('suenos');
+  const dcr = new Set(crisisL().map(x => diaVivido(x.t)));
+  let out = `<button class="back" data-a="ir" data-v="patrones">‹ Patrones</button>${topBar('Día a día')}
+  <span class="small" style="padding:0 8px">Todo lo de cada día junto, para que veas qué rodeó cada crisis. El día va hasta que te duermes.</span>
+  <div class="seg" style="--n:2"><button class="${solo ? '' : 'on'}" data-a="dias-solo" data-v="">Todos</button><button class="${solo ? 'on' : ''}" data-a="dias-solo" data-v="1">Crisis y el día antes</button></div>`;
+  let pintados = 0;
+  for (let i = 0; i < n; i++) {
+    const d = sumarDias(hoy, -i);
+    if (solo && !dcr.has(d) && !dcr.has(sumarDias(d, 1))) continue;
+    const e = ev.filter(x => diaVivido(inicioEv(x)) === d).sort((a, b) => inicioEv(a) - inicioEv(b));
+    const c = com.filter(x => diaVivido(x.t) === d).sort((a, b) => a.t - b.t);
+    const noche = ns.filter(s => !s.siesta && s.dormir && diaVivido(s.dormir) === d)[0];
+    const sie = ns.filter(s => s.siesta && s.dormir && diaVivido(s.dormir) === d);
+    const dr = diaRec(d), rs = [...(R[d] || [])].filter(k => !['Siesta'].includes(k));
+    const fall = preventivos().length ? tomasFallidasDia(d) : 0, prog = preventivos().length ? tomasDelDia(d).filter(s => s.t <= now()).reduce((a, s) => a + s.meds.length, 0) : 0;
+    const vacio = !e.length && !c.length && !noche && !sie.length && !rs.length && !prog;
+    if (vacio && solo) continue;
+    pintados++;
+    const crisisDia = e.some(esCrisis);
+    let h = `<div class="card" style="gap:8px;${crisisDia ? 'border:2px solid var(--tomato)' : ''}"><div class="between"><span class="G" style="font-size:19px">${cuandoDia(d)}</span><span class="small">${crisisDia ? '<b style="color:#a33515">crisis</b>' : e.length ? 'Laura' : ''}</span></div>`;
+    e.forEach(x => { const p = x.pinchazos || []; h += `<span style="font-size:14px"><span class="dot"></span> ${esCrisis(x) ? 'Crisis' : 'Laura'} ${hhmm(inicioEv(x))}${p.length ? ' · pinchazo ' + p.map(t => hhmm(t)).join(', ') : ''}${x.fin ? ' · se fue ' + hhmm(x.fin) : ''}${x.intensidad ? ' · ' + x.intensidad + '/10' : ''}${x.como === 'distinta' ? ' · <b>distinta</b>' : ''}</span>`; });
+    if (c.length) h += `<span style="font-size:14px;line-height:1.45">${c.map(x => `<b>${hhmm(x.t)}</b> ${esc(lista((x.items || []).concat(x.bebidas || [])))}${(x.vig || []).length ? ' <span class="dot"></span>' : ''}`).join('<br>')}</span>`;
+    const sl = [];
+    if (sie.length) sl.push('siesta ' + sie.map(s => hhmm(s.dormir) + (s.despertar ? '–' + hhmm(s.despertar) : '')).join(', '));
+    if (noche) sl.push('a dormir ' + hhmm(noche.dormir) + (noche.despertar ? ' · ' + durTxt(noche.despertar - noche.dormir) : ''));
+    if (prog) sl.push(fall ? `<b style="color:#a33515">${plural(fall, 'toma', 'tomas')} sin tomar o tarde</b>` : 'pastillas bien');
+    if (dr.deporte) sl.push('deporte ' + dr.deporte.toLowerCase() + (dr.deporteH ? ' ' + dr.deporteH : ''));
+    if (dr.agua) sl.push('agua ' + dr.agua.toLowerCase());
+    if (sl.length) h += `<span class="small">${sl.join(' · ')}</span>`;
+    const chips = rs.filter(k => !['Deporte', 'Deporte intenso', 'Bebí poca agua'].includes(k));
+    if (chips.length) h += `<div class="chips">${chips.map(k => `<span class="chip" style="min-height:30px;font-size:13px;padding:4px 10px">${esc(k)}</span>`).join('')}</div>`;
+    if (vacio) h += `<span class="small">Nada apuntado</span>`;
+    out += h + '</div>';
+  }
+  if (!pintados) out += `<div class="card"><span class="small">${solo ? 'No hay crisis en estos días.' : 'Todavía no hay nada apuntado.'}</span></div>`;
+  out += `<button class="btn chipc" data-a="dias-mas">Ver ${n} días más</button>`;
   return out;
 }
 
@@ -1039,8 +1146,11 @@ function informe() {
   L.push(`Corticoterapia: ${plural(tandas.length, 'ciclo', 'ciclos')} en 12 meses${tandas[0] ? ' (último desde ' + fechaCorta(tandas.sort((a, b) => b.inicio.localeCompare(a.inicio))[0].inicio) + ')' : ''}.`);
   L.push(`Efectos adversos: ${efTxt || 'ninguno registrado'}. Dolor interictal: ${fondo} días.`);
   L.push(`Sueño y otros factores: sueño medio ${suM || '—'}; ${fuera} noches fuera de domicilio; tabaquismo ${c.tabaco === 'diario' ? 'diario' + (c.cig ? ' (' + c.cig + ' cig/día)' : '') : c.tabaco === 'aveces' ? 'ocasional' : 'no'}${c.ronca === 'si' ? '; ronquidos o pausas respiratorias referidos' : c.ronca === 'nose' ? '; desconoce si ronca' : ''}; siestas ${sie.length}${sie.length ? ' (crisis durante o en las 3 h siguientes: ' + sieCr + ')' : ''}; actividad física ${plural(dep.length, "día", "días")}${depI ? ', ' + depI + ' intensa' : ''}${depT.length ? ' (crisis en las 6 h siguientes: ' + depCr + ')' : ''}; ánimo bajo ${mal} días.`);
+  const cx = cruces(), pis = cx.listo ? cx.items.filter(x => x.pista) : [];
+  if (pis.length) L.push(`Posibles desencadenantes (registro del paciente, ${cx.dias} días): ${pis.slice(0, 5).map(x => (TERM[x.ch] || x.ch.toLowerCase()) + ' (crisis en ' + x.pa + ' % de esos días frente a ' + x.pb + ' %)').join('; ')}.`);
   return L;
 }
+const TERM = { 'Dormí poco': 'noches cortas respecto a su sueño habitual', 'Me acosté tarde': 'retraso en la hora de acostarse', 'Toma olvidada o a otra hora': 'omisión o retraso de dosis del preventivo', 'Alcohol': 'ingesta de alcohol', 'Siesta': 'siesta', 'Deporte': 'actividad física', 'Deporte intenso': 'ejercicio intenso', 'Bebí poca agua': 'ingesta hídrica escasa', 'Fuera de mi horario': 'estancia en otra zona horaria', 'Cambio de huso horario': 'cambio de huso horario', 'Cené muy tarde': 'cena tardía', 'Estrés': 'estrés', 'Bolo': 'actuación nocturna', 'Vuelo': 'vuelo', 'Dormí fuera': 'pernocta fuera del domicilio', 'Fumé más de lo normal': 'consumo de tabaco superior al habitual', 'Dolor de fondo': 'dolor interictal', 'Ánimo bajo': 'ánimo bajo' };
 function pConsulta() {
   const c = proximaCita();
   let out = topBar('Consulta') + `<div class="seg" style="--n:2"><button style="background:#fff" data-a="ir" data-v="patrones">Patrones</button><button class="on">Consulta</button></div>`;
@@ -1160,6 +1270,8 @@ const ACC = {
   'cierre-app': () => { S.cierre = null; S.undo = null; ir('hoy'); },
   dormir: () => { const s = { id: uid(), dormir: now() + CFG().margen * MIN, tz: tzHere(), auto: true }; guardarUndo('suenos', null); S.undo.id = s.id; poner('suenos', s); repintar(); toast('Buenas noches', true); },
   siesta: () => { const s = { id: uid(), siesta: true, dormir: now() + Math.min(CFG().margen, 10) * MIN, tz: tzHere(), auto: true }; guardarUndo('suenos', null); S.undo.id = s.id; poner('suenos', s); const d = hoyV(); if (!(diaRec(d).chips || []).includes('Siesta')) setDia(d, { chips: (diaRec(d).chips || []).concat('Siesta') }); repintar(); toast('Buena siesta', true); },
+  'dias-solo': v => { S.soloCrisis = !!v; repintar(); },
+  'dias-mas': () => { S.verDias = (S.verDias || 21) + 21; S.mantenerScroll = true; repintar(); },
   'dia-deporte': (v, el) => { const d = diaRec(el.dataset.d); setDia(el.dataset.d, { deporte: d.deporte === v ? '' : v, deporteH: d.deporteH || hhmm(now()) }); S.mantenerScroll = true; repintar(); },
   despertar: () => { const s = durmiendoAhora(); if (!s) return; guardarUndo('suenos', s.id); s.despertar = now(); poner('suenos', s); repintar(); toast((s.siesta ? 'Siesta de ' : 'Buenos días · ') + durTxt(s.despertar - s.dormir) + (s.siesta ? '' : ' de sueño'), true); },
   'dist-que': v => { const e = porId('eventos', S.f.evId); const d = e.distinta = e.distinta || {}; d.que = tog(d.que, v); poner('eventos', e); S.mantenerScroll = true; repintar(); },
