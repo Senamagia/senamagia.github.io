@@ -118,7 +118,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '1.1';
+const APP_VER = '1.2';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -153,7 +153,7 @@ const CORTE = 5;
 function diaVivido(ms, tz) {
   const p = partes(ms, tz), cal = p.y + '-' + pad(p.m) + '-' + pad(p.d);
   if (p.h < CORTE) return sumarDias(cal, -1);
-  if (p.h < 12 && typeof DB !== 'undefined' && DB.suenos && DB.suenos.some(s => !s.borrado && s.dormir > ms && s.dormir - ms < 8 * 3600000 && dayKey(s.dormir, tz) === cal && partes(s.dormir, tz).h < 12)) return sumarDias(cal, -1);
+  if (p.h < 12 && typeof DB !== 'undefined' && DB.suenos && DB.suenos.some(s => !s.borrado && !s.siesta && s.dormir > ms && s.dormir - ms < 8 * 3600000 && dayKey(s.dormir, tz) === cal && partes(s.dormir, tz).h < 12)) return sumarDias(cal, -1);
   return cal;
 }
 const hoyV = () => diaVivido(Date.now());
@@ -216,7 +216,11 @@ function puedePinchar() {
   if (u && now() - u < HORA) return { ok: false, desde: u + HORA, n };
   return { ok: true, n };
 }
-function durmiendoAhora() { const s = vivos('suenos').filter(x => x.dormir && !x.despertar).sort((a, b) => b.dormir - a.dormir)[0]; return s && now() - s.dormir < 16 * HORA ? s : null; }
+function durmiendoAhora() { const s = vivos('suenos').filter(x => x.dormir && !x.despertar).sort((a, b) => b.dormir - a.dormir)[0]; return s && now() - s.dormir < (s.siesta ? 4 : 16) * HORA ? s : null; }
+const noches = () => vivos('suenos').filter(s => !s.siesta);
+const siestas = () => vivos('suenos').filter(s => s.siesta && s.dormir);
+/* Crisis que empiezan durante algo o en las h horas siguientes a que acabe */
+function crisisTras(tramos, h) { const cr = vivos('eventos').filter(esCrisis).map(e => e.dolor || e.pinchazos[0]); return tramos.filter(([a, b]) => cr.some(t => t >= a && t <= (b || a) + h * HORA)).length; }
 function ultimaCrisis() { let m = 0; vivos('eventos').forEach(e => { if (esCrisis(e)) { const t = e.dolor || (e.pinchazos || [])[0]; if (t > m) m = t; } }); return m; }
 function diasSinDolor() { const u = ultimaCrisis(); if (!u) return null; return Math.floor((now() - u) / DIA); }
 function rachaMaxima() {
@@ -578,7 +582,8 @@ function pInicio() {
   if (!e) {
     const p = puedePinchar(), s = durmiendoAhora(), h = partes(now()).h;
     let sueno = '';
-    if (s && h >= 5 && h < 15) sueno = `<button class="n-btn" data-a="despertar">${ICON_SUN}Me he despertado</button>`;
+    if (s && (s.siesta || (h >= 5 && h < 15))) sueno = `<button class="n-btn" data-a="despertar">${ICON_SUN}Me he despertado${s.siesta ? ' de la siesta' : ''}</button>`;
+    else if (!s && h >= 12 && h < 19) sueno = `<button class="n-btn" data-a="siesta">${ICON_MOON}Me echo la siesta</button>`;
     else if (!s && (h >= 19 || h < 5)) sueno = `<button class="n-btn" data-a="dormir">${ICON_MOON}Me voy a dormir</button>`;
     else if (s) sueno = `<div class="n-small" style="text-align:center;padding:4px">Durmiendo desde las ${hhmm(s.dormir)}</div>`;
     return `<div class="n-wrap">${top('Lado ' + (c.lado === 'izq' ? 'izquierdo' : 'derecho'))}
@@ -670,12 +675,21 @@ function pDistinta() {
 }
 
 /* ---------------- Hoy ---------------- */
-const CHIPS_DIA = ['Bolo', 'Vuelo', 'Dormí fuera', 'Siesta', 'Alcohol', 'Fumé más de lo normal', 'Estrés'];
+const CHIPS_DIA = ['Bolo', 'Vuelo', 'Dormí fuera', 'Siesta', 'Deporte', 'Alcohol', 'Fumé más de lo normal', 'Estrés'];
+function siestaDe(day) { return siestas().filter(s => diaVivido(s.dormir) === day).sort((a, b) => b.dormir - a.dormir)[0] || null; }
+function extrasDia(day, dh) {
+  let h = '';
+  if ((dh.chips || []).includes('Siesta')) { const s = siestaDe(day);
+    h += `<div class="tiles"><label class="tm">Siesta desde<input type="time" value="${s ? hhmm(s.dormir) : ''}" data-in="siesta-ini" data-d="${day}"></label><label class="tm">Hasta<input type="time" value="${s && s.despertar ? hhmm(s.despertar) : ''}" data-in="siesta-fin" data-d="${day}"></label></div>`; }
+  if ((dh.chips || []).includes('Deporte')) {
+    h += `${seg(['Suave', 'Intenso'], dh.deporte, 'dia-deporte', ` data-d="${day}"`)}<div class="tiles"><label class="tm">Hora<input type="time" value="${dh.deporteH || ''}" data-in="deporte-hora" data-d="${day}"></label><label class="tm">Cuánto<input inputmode="numeric" placeholder="min" value="${esc(dh.deporteMin || '')}" data-in="deporte-min" data-d="${day}"></label></div>`; }
+  return h;
+}
 function diaRec(day) { return vivos('dias').find(d => d.id === day) || { id: day }; }
 function setDia(day, cambios) { const d = Object.assign({}, diaRec(day), cambios); delete d.borrado; poner('dias', d); }
-function ultimoSueno() { return vivos('suenos').filter(s => s.dormir && now() - s.dormir < 20 * HORA).sort((a, b) => b.dormir - a.dormir)[0] || null; }
+function ultimoSueno() { return noches().filter(s => s.dormir && now() - s.dormir < 20 * HORA).sort((a, b) => b.dormir - a.dormir)[0] || null; }
 function suenoHabitual() {
-  const l = vivos('suenos').filter(s => s.dormir && s.despertar).slice(-14);
+  const l = noches().filter(s => s.dormir && s.despertar).slice(-14);
   if (!l.length) return { dormir: '00:30', despertar: '08:30' };
   const med = arr => { const v = arr.map(x => { const p = partes(x); let m = p.h * 60 + p.mi; if (m < 12 * 60) m += 1440; return m; }).sort((a, b) => a - b); const m = v[Math.floor(v.length / 2)] % 1440; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
   const med2 = arr => { const v = arr.map(x => { const p = partes(x); return p.h * 60 + p.mi; }).sort((a, b) => a - b); const m = v[Math.floor(v.length / 2)]; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
@@ -723,7 +737,7 @@ function pHoy() {
     ${frec.length ? `<div class="chips">${frec.map(f => `<button class="chip" data-a="comida-rapida" data-v="${esc(f.txt)}" data-m="${mom}">${esc(f.txt)}</button>`).join('')}</div><span class="small" style="color:#2d3a24">Lo que más tomas a esta hora: un toque y queda apuntado.</span>` : `<span class="small" style="color:#2d3a24">Apunta lo que comes y bebes: con el tiempo, aquí saldrá lo de siempre para apuntarlo con un toque.</span>`}</div>`;
   // Qué ha pasado
   const dh = diaRec(hoy);
-  out += `<div class="card"><span style="font-size:15px;font-weight:600">¿Qué ha pasado hoy?</span>${chipsM(CHIPS_DIA, dh.chips, 'dia-chip')}</div>`;
+  out += `<div class="card"><span style="font-size:15px;font-weight:600">¿Qué ha pasado hoy?</span>${chipsM(CHIPS_DIA, dh.chips, 'dia-chip')}${extrasDia(hoy, dh)}</div>`;
   if (c.plumas > 0 && c.plumas <= c.avisoPlumas) out += `<div class="card butter"><span class="G h3">Quedan ${plural(c.plumas, 'pluma', 'plumas')}</span><span style="font-size:14px">Acuérdate de pedir la receta de sumatriptán.</span></div>`;
   const cita = proximaCita();
   if (cita && cita.t - now() < 14 * DIA) out += `<button class="card" data-a="ir" data-v="consulta" style="text-align:left"><span class="small">Próxima cita</span><span class="G h3">${esc(cita.tipo || 'Neurología')} · ${fechaCorta(dayKey(cita.t))} ${hhmm(cita.t)}</span></button>`;
@@ -767,7 +781,7 @@ function itemHTML(x) {
   }
   if (x.tipo === 'efecto') return `<button class="card" data-a="detalle" data-c="efectos" data-v="${r.id}" style="text-align:left"><div class="between"><span class="G" style="font-size:20px">${esc(lista(r.tipos || []) || 'Efecto')}</span><span class="small">${hhmm(r.t)}</span></div><span class="small">${esc([r.lado ? { izq: 'Lado izquierdo', der: 'Lado derecho', ambos: 'Ambos lados' }[r.lado] : '', r.cuanto, r.dura, r.pulso ? r.pulso + ' lpm' : '', r.tension].filter(Boolean).join(' · ') + lugar)}</span></button>`;
   if (x.tipo === 'comida') return `<button class="card" data-a="detalle" data-c="comidas" data-v="${r.id}" style="text-align:left;padding:14px 18px"><div class="between"><span style="font-size:15px"><b>${hhmm(r.t)} · ${esc(r.momento)}</b></span>${(r.vig || []).length ? `<span class="small"><span class="dot"></span> ${esc(lista(r.vig))}</span>` : ''}</div><span style="font-size:15px">${esc(lista((r.items || []).concat(r.bebidas || [])))}${r.fuera ? ' · fuera de casa' : ''}</span></button>`;
-  if (x.tipo === 'sueno') return `<button class="card" data-a="detalle" data-c="suenos" data-v="${r.id}" style="text-align:left;padding:14px 18px"><div class="between"><span style="font-size:15px"><b>Sueño</b></span><span class="small">${r.calidad || ''}</span></div><span style="font-size:15px">${hhmm(r.dormir)} – ${r.despertar ? hhmm(r.despertar) + ' · ' + durTxt(r.despertar - r.dormir) : 'sin hora de despertar'}</span></button>`;
+  if (x.tipo === 'sueno') return `<button class="card" data-a="detalle" data-c="suenos" data-v="${r.id}" style="text-align:left;padding:14px 18px"><div class="between"><span style="font-size:15px"><b>${r.siesta ? 'Siesta' : 'Sueño'}</b></span><span class="small">${r.calidad || ''}</span></div><span style="font-size:15px">${hhmm(r.dormir)} – ${r.despertar ? hhmm(r.despertar) + ' · ' + durTxt(r.despertar - r.dormir) : 'sin hora de despertar'}</span></button>`;
   return '';
 }
 function sheetDetalle(col, id) {
@@ -932,6 +946,8 @@ function analisisFactores() {
     const a = con.filter(d => crisisEn(d.id)).length, b = sin.filter(d => crisisEn(d.id)).length;
     out.push({ ch, con: con.length, a, pa: Math.round(a / con.length * 100), pb: sin.length ? Math.round(b / sin.length * 100) : 0 });
   });
+  const di = dias.filter(d => d.deporte === 'Intenso'), nd = dias.filter(d => d.deporte !== 'Intenso');
+  if (di.length >= 2) { const a = di.filter(d => crisisEn(d.id)).length, b = nd.filter(d => crisisEn(d.id)).length; out.push({ ch: 'Deporte intenso', con: di.length, a, pa: Math.round(a / di.length * 100), pb: nd.length ? Math.round(b / nd.length * 100) : 0 }); }
   return out.sort((x, y) => (y.pa - y.pb) - (x.pa - x.pb));
 }
 function pPatrones() {
@@ -968,7 +984,13 @@ function pPatrones() {
   const af = analisisFactores();
   if (af && af.length) out += `<div class="card">${h3('Lo que pasó antes', 'el día o el anterior')}<div class="list">${af.slice(0, 6).map(x => `<div class="it"><b>${esc(x.ch)}</b><span>crisis ${x.pa} % · sin ello ${x.pb} %</span></div>`).join('')}</div><span class="small">Porcentaje de días con crisis ese día o el siguiente.</span></div>`;
   // Sueño
-  const su = vivos('suenos').filter(s => s.despertar && s.dormir > now() - 30 * DIA);
+  const sie = siestas().filter(s => s.dormir > now() - 90 * DIA);
+  const depD = vivos('dias').filter(d => d.id >= sumarDias(hoy, -90) && (d.chips || []).includes('Deporte') && d.deporteH);
+  if (sie.length || depD.length) {
+    const sc = crisisTras(sie.map(s => [s.dormir, s.despertar]), 3), dc = crisisTras(depD.map(d => { const a = epochVivido(d.id, d.deporteH, tzHere()); return [a, a + (+d.deporteMin || 60) * MIN]; }), 6);
+    out += `<div class="card">${h3('Siesta y deporte', 'últimos 90 días')}<div class="list">${sie.length ? `<div class="it"><span>Siestas</span><b>${sie.length}</b></div><div class="it"><span>Con crisis durante o en las 3 h siguientes</span><b>${sc}</b></div>` : ''}${depD.length ? `<div class="it"><span>Días de deporte con hora</span><b>${depD.length}</b></div><div class="it"><span>Con crisis en las 6 h siguientes</span><b>${dc}</b></div>` : ''}</div><span class="small">Dormir de día y el esfuerzo fuerte pueden desencadenar crisis en algunas personas. Aquí verás si es tu caso.</span></div>`;
+  }
+  const su = noches().filter(s => s.despertar && s.dormir > now() - 30 * DIA);
   if (su.length >= 3) {
     const media = su.reduce((a, s) => a + (s.despertar - s.dormir), 0) / su.length;
     const fuera = vivos('dias').filter(d => d.id >= sumarDias(hoy, -30) && (d.chips || []).includes('Dormí fuera')).length;
@@ -1003,8 +1025,11 @@ function informe() {
   const efTxt = Object.keys(efs).sort((a, b) => efs[b].size - efs[a].size).map(k => ({ 'Hormigueo en la cara': 'parestesias faciales', 'Manos dormidas': 'parestesias en manos', 'Hormigueo en los pies': 'parestesias en pies', 'Visión borrosa': 'visión borrosa', 'Mareo': 'mareo', 'Mareo al levantarme': 'mareo ortostático', 'Pulso lento': 'bradicardia referida', 'Estreñimiento': 'estreñimiento', 'Tobillos hinchados': 'edema maleolar', 'Encías': 'alteraciones gingivales', 'Me cuesta hablar o recordar': 'dificultad de lenguaje o memoria', 'Ánimo bajo': 'ánimo bajo', 'Presión en el pecho': 'opresión torácica' }[k] || k.toLowerCase()) + ' ' + efs[k].size + ' d').join(', ');
   const dias = vivos('dias').filter(d => epochDe(d.id, '12:00', homeTz()) >= desde);
   const fondo = dias.filter(d => d.fondo && d.fondo !== 'No').length, mal = dias.filter(d => d.animo === 'Mal').length;
-  const su = vivos('suenos').filter(s => s.despertar && s.dormir >= desde), suM = su.length ? durTxt(su.reduce((a, s) => a + s.despertar - s.dormir, 0) / su.length) : null;
+  const su = noches().filter(s => s.despertar && s.dormir >= desde), suM = su.length ? durTxt(su.reduce((a, s) => a + s.despertar - s.dormir, 0) / su.length) : null;
   const fuera = dias.filter(d => (d.chips || []).includes('Dormí fuera')).length, c = CFG();
+  const sie = siestas().filter(s => s.dormir >= desde), sieCr = crisisTras(sie.map(s => [s.dormir, s.despertar]), 3);
+  const dep = dias.filter(d => (d.chips || []).includes('Deporte')), depI = dep.filter(d => d.deporte === 'Intenso').length;
+  const depT = dep.filter(d => d.deporteH).map(d => { const a = epochVivido(d.id, d.deporteH, homeTz()); return [a, a + (+d.deporteMin || 60) * MIN]; }), depCr = crisisTras(depT, 6);
   const L = [];
   L.push(`Periodo: ${fechaCorta(dayKey(desde))} – ${fechaCorta(dayKey(now()))}${prev ? ' (desde la última cita)' : ' (últimos 90 días)'}.`);
   L.push(`Crisis de cefalea en racimos: ${cr.length} (${(Math.round(cr.length / sem * 10) / 10).toString().replace('.', ',')}/semana)${intM ? ', intensidad media ' + intM + '/10' : ''}; ${cr.length ? (lados ? lados + ' en lado izquierdo, resto derecho' : 'todas en lado derecho') : ''}${hTop != null ? '; franja más frecuente ' + hTop + '–' + ((hTop + 1) % 24) + ' h' : ''}${desp ? '; ' + desp + ' con despertar nocturno' : ''}. Intervalo libre de dolor actual: ${diasSinDolor() == null ? '—' : diasSinDolor() + ' días'} (máximo ${rachaMaxima()}). Crisis atípicas: ${atip}.`);
@@ -1013,7 +1038,7 @@ function informe() {
   L.push(`Tratamiento preventivo: ${prevs.length ? prevs.join('; ') : '—'}.`);
   L.push(`Corticoterapia: ${plural(tandas.length, 'ciclo', 'ciclos')} en 12 meses${tandas[0] ? ' (último desde ' + fechaCorta(tandas.sort((a, b) => b.inicio.localeCompare(a.inicio))[0].inicio) + ')' : ''}.`);
   L.push(`Efectos adversos: ${efTxt || 'ninguno registrado'}. Dolor interictal: ${fondo} días.`);
-  L.push(`Sueño y otros factores: sueño medio ${suM || '—'}; ${fuera} noches fuera de domicilio; tabaquismo ${c.tabaco === 'diario' ? 'diario' + (c.cig ? ' (' + c.cig + ' cig/día)' : '') : c.tabaco === 'aveces' ? 'ocasional' : 'no'}${c.ronca === 'si' ? '; ronquidos o pausas respiratorias referidos' : c.ronca === 'nose' ? '; desconoce si ronca' : ''}; ánimo bajo ${mal} días.`);
+  L.push(`Sueño y otros factores: sueño medio ${suM || '—'}; ${fuera} noches fuera de domicilio; tabaquismo ${c.tabaco === 'diario' ? 'diario' + (c.cig ? ' (' + c.cig + ' cig/día)' : '') : c.tabaco === 'aveces' ? 'ocasional' : 'no'}${c.ronca === 'si' ? '; ronquidos o pausas respiratorias referidos' : c.ronca === 'nose' ? '; desconoce si ronca' : ''}; siestas ${sie.length}${sie.length ? ' (crisis durante o en las 3 h siguientes: ' + sieCr + ')' : ''}; actividad física ${plural(dep.length, "día", "días")}${depI ? ', ' + depI + ' intensa' : ''}${depT.length ? ' (crisis en las 6 h siguientes: ' + depCr + ')' : ''}; ánimo bajo ${mal} días.`);
   return L;
 }
 function pConsulta() {
@@ -1134,7 +1159,9 @@ const ACC = {
   'cierre-ok': () => { S.cierre = null; S.undo = null; repintar(); },
   'cierre-app': () => { S.cierre = null; S.undo = null; ir('hoy'); },
   dormir: () => { const s = { id: uid(), dormir: now() + CFG().margen * MIN, tz: tzHere(), auto: true }; guardarUndo('suenos', null); S.undo.id = s.id; poner('suenos', s); repintar(); toast('Buenas noches', true); },
-  despertar: () => { const s = durmiendoAhora(); if (!s) return; guardarUndo('suenos', s.id); s.despertar = now(); poner('suenos', s); repintar(); toast('Buenos días · ' + durTxt(s.despertar - s.dormir) + ' de sueño', true); },
+  siesta: () => { const s = { id: uid(), siesta: true, dormir: now() + Math.min(CFG().margen, 10) * MIN, tz: tzHere(), auto: true }; guardarUndo('suenos', null); S.undo.id = s.id; poner('suenos', s); const d = hoyV(); if (!(diaRec(d).chips || []).includes('Siesta')) setDia(d, { chips: (diaRec(d).chips || []).concat('Siesta') }); repintar(); toast('Buena siesta', true); },
+  'dia-deporte': (v, el) => { const d = diaRec(el.dataset.d); setDia(el.dataset.d, { deporte: d.deporte === v ? '' : v, deporteH: d.deporteH || hhmm(now()) }); S.mantenerScroll = true; repintar(); },
+  despertar: () => { const s = durmiendoAhora(); if (!s) return; guardarUndo('suenos', s.id); s.despertar = now(); poner('suenos', s); repintar(); toast((s.siesta ? 'Siesta de ' : 'Buenos días · ') + durTxt(s.despertar - s.dormir) + (s.siesta ? '' : ' de sueño'), true); },
   'dist-que': v => { const e = porId('eventos', S.f.evId); const d = e.distinta = e.distinta || {}; d.que = tog(d.que, v); poner('eventos', e); S.mantenerScroll = true; repintar(); },
   'dist-sint': v => { const e = porId('eventos', S.f.evId); const d = e.distinta = e.distinta || {}; d.sint = tog(d.sint, v); poner('eventos', e); S.mantenerScroll = true; repintar(); },
   'dist-guardar': () => { toast('Crisis distinta guardada'); ir('registro'); },
@@ -1298,13 +1325,24 @@ document.addEventListener('input', ev => {
   const el = ev.target, k = el.dataset && el.dataset.in; if (!k) return;
   if (k === 'co-q') { S.f.comida.q = el.value; const box = document.getElementById('co-sug'); if (box) { const h = sugComidaHTML(); if (box.innerHTML !== h) box.innerHTML = h; } return; }
   if (k === 'med-hora') { S.f.med.horas[+el.dataset.i] = el.value; return; }
-  if (['sueno-dormir', 'sueno-despertar', 'cfg-home'].includes(k)) return;
+  if (['sueno-dormir', 'sueno-despertar', 'cfg-home', 'siesta-ini', 'siesta-fin', 'deporte-hora', 'deporte-min'].includes(k)) return;
   if (INP[k]) INP[k](el.value);
 });
 document.addEventListener('change', ev => {
   const el = ev.target, k = el.dataset && el.dataset.in; if (!k) return;
   if (['sueno-dormir', 'sueno-despertar', 'cfg-home'].includes(k)) INP[k](el.value);
+  if (k === 'siesta-ini' || k === 'siesta-fin') guardarSiesta(el.dataset.d);
+  if (k === 'deporte-hora') setDia(el.dataset.d, { deporteH: el.value });
+  if (k === 'deporte-min') setDia(el.dataset.d, { deporteMin: el.value.replace(/\D/g, '') });
 });
+function guardarSiesta(day) {
+  const ini = document.querySelector('[data-in="siesta-ini"]'), fin = document.querySelector('[data-in="siesta-fin"]');
+  if (!ini || !ini.value) return;
+  const s = siestaDe(day) || { id: uid(), siesta: true, tz: tzHere(), manual: true };
+  s.dormir = epochVivido(day, ini.value, tzHere());
+  if (fin && fin.value) { let t = epochVivido(day, fin.value, tzHere()); if (t < s.dormir) t += DIA; s.despertar = t; }
+  poner('suenos', s);
+}
 document.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.dataset && ev.target.dataset.in === 'co-q') { ev.preventDefault(); ACC['co-add'](); } if (ev.key === 'Enter' && ev.target.dataset && ev.target.dataset.in === 'preg-txt') { ev.preventDefault(); ACC['preg-add'](); } });
 
 /* =========================================================
