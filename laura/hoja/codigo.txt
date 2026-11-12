@@ -4,13 +4,13 @@
  *
  * Cómo se usa (solo la primera vez):
  *   1. Recarga la hoja: arriba aparece el menú «Laura».
- *   2. Menú Laura › Conectar con mi cuenta de Laura. Dale permiso a tu cuenta de Google.
- *   3. Escribe el correo y la contraseña con los que entras en la app.
+ *   2. Menú Laura › Conectar con mi cuenta de Laura y dale permiso a tu cuenta de Google.
+ * No hace falta la contraseña de Laura: la hoja entra en la nube con tu cuenta de Google,
+ * que es la dueña del proyecto de Firebase.
  * A partir de ahí, cada minuto mira si toca algún aviso (pastillas, la pregunta de los
  * 15 minutos tras el pinchazo, la cita del día siguiente) y cada madrugada copia tus datos.
  */
 
-const API_KEY = 'AIzaSyDXdrRm69cympP9-zd1MOl5lGfVWJVcCqo';
 const PROYECTO = 'laura-8a65c';
 const BASE = 'https://firestore.googleapis.com/v1/projects/' + PROYECTO + '/databases/(default)/documents/';
 const HORA_DIARIA = 5;
@@ -27,16 +27,10 @@ function onOpen() {
 
 function configurar() {
   const ui = SpreadsheetApp.getUi();
-  const r1 = ui.prompt('Laura', 'Correo con el que entras en Laura:', ui.ButtonSet.OK_CANCEL);
-  if (r1.getSelectedButton() !== ui.Button.OK) return;
-  const r2 = ui.prompt('Laura', 'Contraseña de Laura (solo la ves tú, se guarda en tu cuenta de Google):', ui.ButtonSet.OK_CANCEL);
-  if (r2.getSelectedButton() !== ui.Button.OK) return;
-  const props = PropertiesService.getUserProperties();
-  props.setProperty('EMAIL', r1.getResponseText().trim());
-  props.setProperty('PASS', r2.getResponseText());
   ScriptApp.getProjectTriggers().forEach(t => { if (['actualizar', 'avisos'].includes(t.getHandlerFunction())) ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('avisos').timeBased().everyMinutes(1).create();
   ScriptApp.newTrigger('actualizar').timeBased().everyDays(1).atHour(HORA_DIARIA).create();
+  const p = PropertiesService.getUserProperties(); p.deleteProperty('EMAIL'); p.deleteProperty('PASS'); p.deleteProperty('UID');
   try {
     entrar_();
     let n = 0; try { n = actualizar(); } catch (e) {}
@@ -46,28 +40,29 @@ function configurar() {
   }
 }
 
-/* ---------------- Entrar y leer la nube ---------------- */
+/* ---------------- Entrar y leer la nube ----------------
+   Con el permiso de tu cuenta de Google (dueña del proyecto). Tu identificador de Laura
+   se busca solo la primera vez, en el plan de avisos que sube la app. */
 function entrar_() {
-  const cache = CacheService.getUserCache();
-  const c = cache.get('SESION');
-  if (c) return JSON.parse(c);
-  const props = PropertiesService.getUserProperties();
-  const email = props.getProperty('EMAIL'), pass = props.getProperty('PASS');
-  if (!email || !pass) throw new Error('Falta conectar la cuenta: menú Laura › Conectar con mi cuenta de Laura.');
-  const r = UrlFetchApp.fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + API_KEY, {
-    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
-    payload: JSON.stringify({ email: email, password: pass, returnSecureToken: true })
-  });
-  const j = JSON.parse(r.getContentText());
-  if (!j.idToken) throw new Error('No se ha podido entrar en Laura: revisa el correo y la contraseña (' + ((j.error && j.error.message) || r.getResponseCode()) + ').');
-  const s = { token: j.idToken, uid: j.localId };
-  cache.put('SESION', JSON.stringify(s), 3000); // el permiso dura 1 hora: se renueva cada 50 min
-  return s;
+  const token = ScriptApp.getOAuthToken(), props = PropertiesService.getUserProperties();
+  let uid = props.getProperty('UID');
+  if (!uid) {
+    const r = UrlFetchApp.fetch(BASE.replace(/\/$/, '') + ':runQuery', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { Authorization: 'Bearer ' + token, 'x-goog-user-project': PROYECTO },
+      payload: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'estado', allDescendants: true }], limit: 5 } })
+    });
+    if (r.getResponseCode() !== 200) throw new Error('La nube ha respondido ' + r.getResponseCode() + ': ' + r.getContentText().slice(0, 200));
+    const docs = JSON.parse(r.getContentText()).filter(x => x.document).map(x => x.document.name);
+    const m = docs.map(n => (n.match(/\/documents\/laura\/([^/]+)\/estado\//) || [])[1]).filter(Boolean);
+    if (!m.length) throw new Error('Todavía no encuentro tu cuenta en la nube. Abre Laura en el iPhone con la sesión iniciada, espera unos segundos y vuelve a probar.');
+    uid = m[0]; props.setProperty('UID', uid);
+  }
+  return { token: token, uid: uid };
 }
 function get_(url, token) {
-  const r = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true });
+  const r = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + token, 'x-goog-user-project': PROYECTO }, muteHttpExceptions: true });
   if (r.getResponseCode() === 404) return null;
-  if (r.getResponseCode() === 401) { CacheService.getUserCache().remove('SESION'); throw new Error('Sesión caducada, se renueva en el siguiente intento.'); }
   if (r.getResponseCode() !== 200) throw new Error('La nube ha respondido ' + r.getResponseCode() + ': ' + r.getContentText().slice(0, 200));
   return JSON.parse(r.getContentText());
 }
@@ -111,7 +106,7 @@ function enviar_(s, tokens, titulo, texto, abrir, tag) {
     console.log('Aviso «' + titulo + '» → ' + c + (c === 200 ? '' : ' ' + r.getContentText().slice(0, 300)));
     if (c === 200) n++;
     else if (c === 404 || /UNREGISTERED/.test(r.getContentText())) {
-      UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + d.name, { method: 'delete', headers: { Authorization: 'Bearer ' + s.token }, muteHttpExceptions: true });
+      UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + d.name, { method: 'delete', headers: { Authorization: 'Bearer ' + s.token, 'x-goog-user-project': PROYECTO }, muteHttpExceptions: true });
     }
   });
   return n;
@@ -158,8 +153,8 @@ function actualizar() {
   escribir_(ss, 'Comidas', ['Fecha', 'Momento', 'Comida', 'Bebida', 'Vigilado', 'Fuera de casa'], (D.comidas || []).sort((a, b) => b.t - a.t).map(r => [f_(r.t), r.momento, (r.items || []).join(', '), (r.bebidas || []).join(', '), (r.vig || []).join(', '), r.fuera ? 'Sí' : '']));
   const meds = {}; (D.meds || []).forEach(m => meds[m.id] = m.nombre);
   escribir_(ss, 'Tomas', ['Toca', 'Medicina', 'Tomada a las', 'Estado'], (D.tomas || []).sort((a, b) => b.t - a.t).map(t => { const p = (t.slot || '').split('|'); return [p[0] === 'sup' ? '' : p[0] + ' ' + p[1], meds[t.medId] || (String(t.medId).indexOf('tanda:') === 0 ? 'Corticoide' : t.medId), f_(t.t), { tomada: 'Tomada', otra: 'A otra hora', olvidada: 'No tomada' }[t.estado] || t.estado]; }));
-  escribir_(ss, 'Sueño', ['Se durmió', 'Se despertó', 'Horas', 'Calidad'], (D.suenos || []).sort((a, b) => b.dormir - a.dormir).map(s => [f_(s.dormir), f_(s.despertar), s.despertar ? Math.round((s.despertar - s.dormir) / 360000) / 10 : '', s.calidad || '']));
-  escribir_(ss, 'Días', ['Día', 'Dolor de fondo', 'Agua', 'Ánimo', 'Qué pasó'], (D.dias || []).sort((a, b) => b.id.localeCompare(a.id)).map(d => [d.id, d.fondo, d.agua, d.animo, (d.chips || []).join(', ')]));
+  escribir_(ss, 'Sueño', ['Tipo', 'Se durmió', 'Se despertó', 'Horas', 'Calidad'], (D.suenos || []).sort((a, b) => b.dormir - a.dormir).map(s => [s.siesta ? 'Siesta' : 'Noche', f_(s.dormir), f_(s.despertar), s.despertar ? Math.round((s.despertar - s.dormir) / 360000) / 10 : '', s.calidad || '']));
+  escribir_(ss, 'Días', ['Día', 'Dolor de fondo', 'Agua', 'Ánimo', 'Qué pasó', 'Deporte', 'Hora deporte', 'Minutos'], (D.dias || []).sort((a, b) => b.id.localeCompare(a.id)).map(d => [d.id, d.fondo, d.agua, d.animo, (d.chips || []).join(', '), d.deporte || '', d.deporteH || '', d.deporteMin || '']));
   return D.total;
 }
 function ini_(e) { return Math.min.apply(null, [e.laura, e.dolor, (e.pinchazos || [])[0], e.creado].filter(Boolean)); }
