@@ -118,7 +118,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '1.3';
+const APP_VER = '1.4';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -724,7 +724,8 @@ function pHoy() {
   else if (pend.length) {
     const s = pend[0], ya = s.t <= now() + 15 * MIN, casa = tzTomas() === homeTz() && lejos();
     out += `<div class="card tomato"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:600">${s.t < now() - 20 * MIN ? 'Te tocaba ' + haceTxt(s.t) : ya ? 'Te toca ahora' : 'Próxima toma'}</span><span class="G" style="font-size:28px">${esc(lista(s.meds.map(m => m.nombre)))}</span><span style="font-size:14px">${esc(s.meds.map(m => m.dosis).filter(Boolean).join(' · '))}${casa ? ' · hora de casa' : ''}${s.day !== dayKey(now(), tzTomas()) ? ' · ' + cuandoDia(s.day).toLowerCase() : ''}</span></span><span class="G" style="font-size:34px">${casa ? hhmm(s.t) : s.hora}</span></div>
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px"><button class="btn" style="background:#1a0f0a;color:#fbe3d8" data-a="tomar" data-v="${s.day}|${s.hora}">${s.meds.length > 1 ? 'Tomadas' : 'Tomada'}</button><button class="btn" style="background:rgba(26,15,10,.15);color:#1a0f0a;font-size:14px" data-a="tomar-otra" data-v="${s.day}|${s.hora}">A otra hora</button></div></div>`;
+      <button class="btn" style="background:#1a0f0a;color:#fbe3d8" data-a="tomar" data-v="${s.day}|${s.hora}">${s.t < now() - 20 * MIN ? 'Me la tomo ahora' : s.meds.length > 1 ? 'Tomadas' : 'Tomada'}</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn" style="background:rgba(26,15,10,.15);color:#1a0f0a;font-size:14px" data-a="tomar-otra" data-v="${s.day}|${s.hora}">Me la tomé a otra hora</button><button class="btn" style="background:rgba(26,15,10,.15);color:#1a0f0a;font-size:14px" data-a="olvide" data-v="${s.day}|${s.hora}">Se me olvidó</button></div></div>`;
   }
   // Ayer / hoy: dolor de fondo, agua, ánimo
   const tarde = h >= 18 || h < CORTE, dk = tarde ? hoy : sumarDias(hoy, -1), dd = diaRec(dk), et = tarde ? 'hoy' : 'ayer';
@@ -854,6 +855,13 @@ function pPasada() {
 }
 
 /* ---------------- Medicinas ---------------- */
+function tomasRecientesHTML() {
+  const tz = tzTomas(), hoy = dayKey(now(), tz), filas = [];
+  [sumarDias(hoy, -1), hoy].forEach(d => tomasDelDia(d).forEach(s => { if (s.t > now() + 18 * HORA) return; s.meds.forEach(m => { const x = tomaDe(d, s.hora, m.id); if (d !== hoy && x) return; filas.push({ d, s, m, x }); }); }));
+  if (!filas.length) return '';
+  const est = x => !x ? '' : x.estado === 'olvidada' ? '<b style="color:#a33515">No tomada</b>' : x.estado === 'otra' ? 'A las ' + hhmm(x.t) : 'Tomada ' + hhmm(x.t);
+  return `<div class="card">${h3('Tomas de hoy', 'toca una para cambiarla')}<div class="list">${filas.map(({ d, s, m, x }) => `<div class="it"><span><b>${d !== hoy ? 'Ayer ' : ''}${s.hora}</b> ${esc(m.nombre)}</span>${x ? `<button class="btn small chipc" data-a="toma-quitar" data-v="${x.id}">${est(x)} ✕</button>` : s.t > now() ? '<span class="small">pendiente</span>' : `<span style="display:flex;gap:6px"><button class="btn small" data-a="tomar" data-v="${d}|${s.hora}">Tomada</button><button class="btn small chipc" data-a="olvide" data-v="${d}|${s.hora}">Olvidada</button></span>`}</div>`).join('')}</div></div>`;
+}
 function pMedicinas() {
   const c = CFG(), pp = puedePinchar(), dm = diasConSumaMes();
   let out = topBar('Medicinas', `<button class="btn small" data-a="med-nueva">+ Añadir</button>`);
@@ -864,6 +872,7 @@ function pMedicinas() {
     <div class="row"><span class="grow" style="font-size:14px">Plumas en casa</span><button class="btn small light" data-a="plumas" data-v="-1">−</button><button class="btn small light" data-a="plumas" data-v="1">+</button><button class="btn small light" data-a="plumas" data-v="6">+6</button></div>
     <span style="font-size:13px">Cada pinchazo descuenta una pluma solo. Te aviso cuando queden ${c.avisoPlumas}.</span></div>`;
   const prev = preventivos();
+  out += tomasRecientesHTML();
   prev.forEach(m => {
     const a = adherencia(m.id, 30), col = { ok: '#1d1b16', tarde: '#9b958a', media: '#c9c2b4', no: '#f0a487', nada: '#efe9dc' };
     out += `<div class="card"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span class="small">Preventiva</span><span class="G" style="font-size:26px">${esc(m.nombre)}</span><span class="small">${esc(m.dosis || '')}${(m.horas || []).length ? ' · ' + m.horas.join(' y ') : ''}</span></span><button class="btn small chipc" data-a="med-editar" data-v="${m.id}">Editar</button></div>
@@ -1281,6 +1290,9 @@ const ACC = {
   tomar: v => { const [d, h] = v.split('|'); marcarToma(d, h, now(), 'tomada'); },
   'tomar-otra': v => { const [d, h] = v.split('|'); S.f.otra = { d, h, hora: hhmm(now()) }; S.sheet = () => `<span class="G h3">¿A qué hora te la tomaste?</span><input class="f" type="time" value="${S.f.otra.hora}" data-in="otra-hora"><div class="tiles"><button class="btn" data-a="otra-ok">Guardar</button><button class="btn chipc" data-a="otra-no">No me la tomé</button></div><button class="btn chipc" data-a="cerrar-sheet">Cancelar</button>`; repintar(); },
   'otra-ok': () => { const o = S.f.otra; let t = epochDe(dayKey(now()), o.hora, tzHere()); if (t > now() + 5 * MIN) t -= DIA; S.sheet = null; marcarToma(o.d, o.h, t, 'otra'); },
+  olvide: v => { const [d, h] = v.split('|'); marcarToma(d, h, now(), 'olvidada');
+    S.sheet = () => `<span class="G h3">Apuntado como no tomada</span><span style="font-size:15px;line-height:1.5">No tomes el doble en la siguiente para compensar. Si dudas entre tomarla ahora o esperar a la siguiente, mira el prospecto o pregunta a tu farmacéutico.</span><button class="btn" data-a="cerrar-sheet">Entendido</button>`; repintar(); },
+  'toma-quitar': v => { const x = porId('tomas', v); if (!x) return; guardarUndo('tomas', v); borrar('tomas', v); S.mantenerScroll = true; repintar(); toast('Quitada: márcala otra vez', true); },
   'otra-no': () => { const o = S.f.otra; S.sheet = null; marcarToma(o.d, o.h, now(), 'olvidada'); },
   'dia-fondo': (v, el) => { setDia(el.dataset.d, { fondo: v }); S.mantenerScroll = true; repintar(); },
   'dia-agua': (v, el) => { setDia(el.dataset.d, { agua: v }); S.mantenerScroll = true; repintar(); },
