@@ -118,7 +118,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '1.0';
+const APP_VER = '1.1';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -146,6 +146,19 @@ function partes(ms, tz) {
   return { y: +o.year, m: +o.month, d: +o.day, h: +o.hour % 24, mi: +o.minute, wd: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(o.weekday) };
 }
 const dayKey = (ms, tz) => { const p = partes(ms, tz); return p.y + '-' + pad(p.m) + '-' + pad(p.d); };
+/* Día vivido: el día no se cierra a medianoche sino al irte a dormir.
+   Lo que pasa antes de las 5:00 cuenta para el día anterior, y si te vas a
+   dormir pasadas las 5 (tras un bolo), lo de esas horas también. */
+const CORTE = 5;
+function diaVivido(ms, tz) {
+  const p = partes(ms, tz), cal = p.y + '-' + pad(p.m) + '-' + pad(p.d);
+  if (p.h < CORTE) return sumarDias(cal, -1);
+  if (p.h < 12 && typeof DB !== 'undefined' && DB.suenos && DB.suenos.some(s => !s.borrado && s.dormir > ms && s.dormir - ms < 8 * 3600000 && dayKey(s.dormir, tz) === cal && partes(s.dormir, tz).h < 12)) return sumarDias(cal, -1);
+  return cal;
+}
+const hoyV = () => diaVivido(Date.now());
+/* Instante de una hora dentro de un día vivido: la 01:00 del día 11 es la madrugada del 12 */
+function epochVivido(day, hm, tz) { const h = +(hm || '0').split(':')[0]; return epochDe(h < CORTE ? sumarDias(day, 1) : day, hm, tz); }
 const hhmm = (ms, tz) => { const p = partes(ms, tz); return pad(p.h) + ':' + pad(p.mi); };
 function offsetMin(ms, tz) { const p = partes(ms, tz); return Math.round((Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi) - Math.floor(ms / MIN) * MIN) / MIN); }
 function epochDe(day, hm, tz) {
@@ -160,7 +173,7 @@ const DIAS_L = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado',
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 function fechaLarga(day) { const [y, m, d] = day.split('-').map(Number); const wd = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7; return cap(DIAS_L[wd]) + ' ' + d + ' de ' + MESES[m - 1]; }
 function fechaCorta(day) { const [y, m, d] = day.split('-').map(Number); return d + ' ' + MESES[m - 1].slice(0, 3); }
-function cuandoDia(day) { const hoy = dayKey(now()); if (day === hoy) return 'Hoy'; if (day === sumarDias(hoy, -1)) return 'Ayer'; return fechaLarga(day); }
+function cuandoDia(day) { const hoy = hoyV(); if (day === hoy) return 'Hoy'; if (day === sumarDias(hoy, -1)) return 'Ayer'; return fechaLarga(day); }
 const homeTz = () => (CFG().homeTz || 'Europe/Madrid');
 const lejos = () => offsetMin(now(), tzHere()) !== offsetMin(now(), homeTz());
 const ciudad = tz => (tz || '').split('/').pop().replace(/_/g, ' ');
@@ -179,6 +192,7 @@ function poner(col, rec) {
   if (!rec.id) rec.id = uid();
   const i = DB[col].findIndex(r => r.id === rec.id);
   if (i < 0) DB[col].push(rec); else DB[col][i] = rec;
+  if (col === 'comidas') FREC = {};
   guardar(); SYNC.marcar(col, rec.id); planCambiado();
   return rec;
 }
@@ -275,12 +289,14 @@ const CAT = {
 };
 function categorias(item) { const n = norm(item), out = []; Object.keys(CAT).forEach(c => { if (CAT[c].some(w => n.includes(w))) out.push(c); }); return out; }
 function vigiladosDe(items) { const v = CFG().vigilados || []; const out = new Set(); items.forEach(i => { categorias(i).forEach(c => { if (v.includes(c)) out.add(c); }); v.forEach(x => { if (!CAT[x] && norm(i).includes(norm(x))) out.add(x); }); }); return [...out]; }
+let FREC = {};
 function frecuentes(momento) {
+  const k = momento || '*'; if (FREC[k]) return FREC[k];
   const c = {};
   vivos('comidas').forEach(r => { if (momento && r.momento !== momento) return; (r.items || []).forEach(i => { const k = norm(i); if (!c[k]) c[k] = { txt: i, n: 0 }; c[k].n++; }); });
-  return Object.values(c).sort((a, b) => b.n - a.n);
+  return (FREC[k] = Object.values(c).sort((a, b) => b.n - a.n));
 }
-function momentoPorHora(h) { return h < 5 ? 'Picoteo' : h < 11 ? 'Desayuno' : h < 13 ? 'Picoteo' : h < 17 ? 'Comida' : h < 20 ? 'Merienda' : 'Cena'; }
+function momentoPorHora(h) { if (h < 5) return (typeof DB !== 'undefined' && DB.comidas.some(r => !r.borrado && r.momento === 'Cena' && diaVivido(r.t) === hoyV())) ? 'Picoteo' : 'Cena'; return h < 11 ? 'Desayuno' : h < 11 ? 'Desayuno' : h < 13 ? 'Picoteo' : h < 17 ? 'Comida' : h < 20 ? 'Merienda' : 'Cena'; }
 
 /* =========================================================
    NUBE (Firebase): solo para Sena. Cada registro es un documento
@@ -666,7 +682,7 @@ function suenoHabitual() {
   return { dormir: med(l.map(s => s.dormir)), despertar: med2(l.map(s => s.despertar)) };
 }
 function pHoy() {
-  const c = CFG(), h = partes(now()).h, hoy = dayKey(now());
+  const c = CFG(), h = partes(now()).h, hoy = hoyV();
   let out = topBar('Hoy', `<div class="row">${lejos() ? `<span class="chip" style="background:#fff;font-size:13px;min-height:34px">${esc(ciudad(tzHere()))} · ${difHoras()}</span>` : ''}<button aria-label="Ajustes" data-a="ir" data-v="ajustes" style="width:44px;height:44px;border-radius:22px;background:#fff;display:flex;align-items:center;justify-content:center">${ICON_GEAR}</button></div>`);
   out += `<span class="small" style="padding:0 8px">${fechaLarga(hoy)} · ${hhmm(now())}</span>`;
   if (S.nuevaVersion) out += `<div class="card ink"><b>Hay una versión nueva de Laura</b><button class="btn light" data-a="actualizar">Actualizar</button></div>`;
@@ -697,10 +713,10 @@ function pHoy() {
       <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px"><button class="btn" style="background:#1a0f0a;color:#fbe3d8" data-a="tomar" data-v="${s.day}|${s.hora}">${s.meds.length > 1 ? 'Tomadas' : 'Tomada'}</button><button class="btn" style="background:rgba(26,15,10,.15);color:#1a0f0a;font-size:14px" data-a="tomar-otra" data-v="${s.day}|${s.hora}">A otra hora</button></div></div>`;
   }
   // Ayer / hoy: dolor de fondo, agua, ánimo
-  const tarde = h >= 18, dk = tarde ? hoy : sumarDias(hoy, -1), dd = diaRec(dk), et = tarde ? 'hoy' : 'ayer';
+  const tarde = h >= 18 || h < CORTE, dk = tarde ? hoy : sumarDias(hoy, -1), dd = diaRec(dk), et = tarde ? 'hoy' : 'ayer';
   out += `<div class="card">${h3('Dolor de fondo ' + et, 'entre crisis')}${seg(['No', 'Leve', 'Molesto'], dd.fondo, 'dia-fondo', ` data-d="${dk}"`)}${h3('Agua ' + et)}${seg(['Poca', 'Normal', 'Mucha'], dd.agua, 'dia-agua', ` data-d="${dk}"`)}${h3('Ánimo ' + et)}${seg(['Bien', 'Regular', 'Mal'], dd.animo, 'dia-animo', ` data-d="${dk}"`)}</div>`;
   // Comida
-  const mom = momentoPorHora(h), hechos = vivos('comidas').filter(r => dayKey(r.t) === hoy).map(r => r.momento);
+  const mom = momentoPorHora(h), hechos = vivos('comidas').filter(r => diaVivido(r.t) === hoy).map(r => r.momento);
   const frec = frecuentes(mom).slice(0, 6);
   out += `<div class="card sage"><div class="between" style="align-items:center"><span class="G h3">${mom}</span><button class="btn small" data-a="comida-nueva" data-v="${mom}">Apuntar</button></div>
     <div class="seg" style="--n:4;font-size:12px">${['Desayuno', 'Comida', 'Merienda', 'Cena'].map(m => `<button style="font-size:12px;padding:8px 0;min-height:36px;${hechos.includes(m) ? 'background:#1d1b16;color:#f3efe6;font-weight:600' : 'background:transparent;border:2px dashed #1d1b16'}" data-a="comida-nueva" data-v="${m}">${m}</button>`).join('')}</div>
@@ -733,7 +749,7 @@ function pRegistro() {
   if (!items.length) return out + `<div class="card"><span class="small">Todavía no hay nada apuntado${f !== 'todo' ? ' de este tipo' : ''}.</span></div>`;
   let dia = '';
   items.slice(0, S.ver).forEach(x => {
-    const d = dayKey(x.t);
+    const d = diaVivido(x.t);
     if (d !== dia) { dia = d; out += `<span style="font-size:14px;font-weight:600;padding:8px 8px 0">${cuandoDia(d)}</span>`; }
     out += itemHTML(x);
   });
@@ -763,7 +779,7 @@ function sheetDetalle(col, id) {
       ${esCrisis(r) ? `<span class="small">¿Como siempre?</span>${seg([['siempre', 'Como siempre'], ['distinta', 'Distinta']], r.como, 'det-como', ` data-id="${r.id}"`)}<span class="small">Intensidad</span><div class="seg" style="--n:10">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="${r.intensidad === n ? 'on' : ''}" style="padding:10px 0;font-size:14px" data-a="det-int" data-id="${r.id}" data-v="${n}">${n}</button>`).join('')}</div>` : ''}
       ${(d.que || []).length || d.txt ? `<span class="small"><b>Distinta:</b> ${esc(lista(d.que || []))}${d.txt ? ' · ' + esc(d.txt) : ''}</span>` : ''}`;
   }
-  return `<div class="between"><span class="G h3">${{ eventos: 'Crisis', efectos: 'Efecto secundario', comidas: 'Comida', suenos: 'Sueño' }[col]}</span><span class="small">${cuandoDia(dayKey(r.t || r.dormir || inicioEv(r)))}</span></div>${extra}
+  return `<div class="between"><span class="G h3">${{ eventos: 'Crisis', efectos: 'Efecto secundario', comidas: 'Comida', suenos: 'Sueño' }[col]}</span><span class="small">${cuandoDia(diaVivido(r.t || r.dormir || inicioEv(r)))}</span></div>${extra}
     <button class="btn danger" data-a="borrar" data-c="${col}" data-v="${id}">Borrar</button><button class="btn chipc" data-a="cerrar-sheet">Cerrar</button>`;
 }
 
@@ -784,17 +800,25 @@ function pEfecto() {
 }
 
 /* ---------------- Comida ---------------- */
+function nuevaComida(mom) { return { momento: mom || momentoPorHora(partes(now()).h), dia: hoyV(), hora: hhmm(now()), items: [], bebidas: [], q: '' }; }
+function sugComidaHTML() {
+  const f = S.f.comida || {}, q = norm(f.q);
+  if (q.length < 2) return '';
+  return frecuentes().filter(x => norm(x.txt).includes(q) && !f.items.some(i => norm(i) === norm(x.txt))).slice(0, 4)
+    .map(s => `<button class="card" style="padding:12px 16px;text-align:left;border-radius:18px" data-a="co-item" data-v="${esc(s.txt)}">${esc(s.txt)} <span class="small">· ya la tienes, ${plural(s.n, 'vez', 'veces')}</span></button>`).join('');
+}
 function pComida() {
-  const f = S.f.comida = S.f.comida || { momento: momentoPorHora(partes(now()).h), hora: hhmm(now()), items: [], bebidas: [], q: '' };
-  const q = norm(f.q), sug = q.length >= 2 ? frecuentes().filter(x => norm(x.txt).includes(q) && !f.items.some(i => norm(i) === norm(x.txt))).slice(0, 4) : [];
+  const f = S.f.comida = S.f.comida || nuevaComida();
+  if (!f.dia) f.dia = hoyV();
   const frec = frecuentes(f.momento).filter(x => !f.items.some(i => norm(i) === norm(x.txt))).slice(0, 8);
   const vig = vigiladosDe(f.items.concat(f.bebidas));
-  return `<button class="back" data-a="ir" data-v="hoy">‹ Hoy</button>${topBar('Comida', `<span class="small">${cuandoDia(dayKey(now()))}</span>`)}
+  return `<button class="back" data-a="ir" data-v="hoy">‹ Hoy</button>${topBar('Comida')}
+  ${seg([[hoyV(), 'Hoy · ' + fechaCorta(hoyV())], [sumarDias(hoyV(), -1), 'Ayer · ' + fechaCorta(sumarDias(hoyV(), -1))]], f.dia, 'co-dia')}
   ${seg(['Desayuno', 'Comida', 'Merienda', 'Cena', 'Picoteo'], f.momento, 'co-mom')}
-  <div class="card" style="padding:10px 18px"><div class="between" style="align-items:center"><span>Hora</span><input type="time" value="${f.hora}" data-in="co-hora" style="border:none;background:var(--chip);border-radius:12px;padding:8px 10px;font-size:17px;font-weight:600"></div></div>
+  <div class="card" style="padding:10px 18px"><div class="between" style="align-items:center"><span>Hora${partes(now()).h < CORTE ? '<br><span class="small">Hasta las 5:00 sigue contando como ' + (f.dia === hoyV() ? 'hoy' : 'ese día') + '</span>' : ''}</span><input type="time" value="${f.hora}" data-in="co-hora" style="border:none;background:var(--chip);border-radius:12px;padding:8px 10px;font-size:17px;font-weight:600"></div></div>
   <div class="card sage"><span class="G h3">¿Qué has ${({ Desayuno: 'desayunado', Comida: 'comido', Merienda: 'merendado', Cena: 'cenado', Picoteo: 'picado' })[f.momento]}?</span>
     <div class="row"><input class="f grow" placeholder="Escribe y pulsa Añadir" value="${esc(f.q)}" data-in="co-q" enterkeyhint="done"><button class="btn small" data-a="co-add">Añadir</button></div>
-    ${sug.map(s => `<button class="card" style="padding:12px 16px;text-align:left;border-radius:18px" data-a="co-item" data-v="${esc(s.txt)}">${esc(s.txt)} <span class="small">· ya la tienes, ${plural(s.n, 'vez', 'veces')}</span></button>`).join('')}
+    <div id="co-sug" style="display:contents">${sugComidaHTML()}</div>
     ${f.items.length ? `<div class="chips">${f.items.map(i => `<button class="chip on" data-a="co-quitar" data-v="${esc(i)}">${esc(i)} ✕</button>`).join('')}</div>` : ''}
     ${frec.length ? `<span class="small" style="color:#2d3a24">Lo de siempre a esta hora</span><div class="chips">${frec.map(x => `<button class="chip" data-a="co-item" data-v="${esc(x.txt)}">${esc(x.txt)}</button>`).join('')}</div>` : ''}</div>
   <div class="card">${h3('Para beber')}${segM(['Agua', 'Café', 'Refresco', 'Cerveza', 'Vino', 'Copa'], f.bebidas, 'co-beb')}</div>
@@ -805,7 +829,7 @@ function pComida() {
 
 /* ---------------- Crisis pasada ---------------- */
 function pPasada() {
-  const f = S.f.pasada = S.f.pasada || { dia: dayKey(now()), laura: '', dolor: hhmm(now() - HORA), pinchazo: '', fin: hhmm(now()), como: 'siempre', plumas: true };
+  const f = S.f.pasada = S.f.pasada || { dia: hoyV(), laura: '', dolor: hhmm(now() - HORA), pinchazo: '', fin: hhmm(now()), como: 'siempre', plumas: true };
   return `<button class="back" data-a="ir" data-v="registro">‹ Registro</button>${topBar('Crisis pasada')}
   <span class="small" style="padding:0 8px">Para apuntar una crisis que no registraste en el momento. Deja en blanco lo que no hubo.</span>
   <div class="card"><label class="lab">Día<input class="f" type="date" value="${f.dia}" data-in="pa-dia"></label>
@@ -887,12 +911,12 @@ function crisisL() { return vivos('eventos').filter(esCrisis).map(e => ({ e, t: 
 function analisisComida() {
   const com = vivos('comidas'); if (!com.length) return { dias: 0, crisis: 0, listo: false, items: [] };
   const desde = Math.min(...com.map(c => c.t));
-  const diasCom = new Set(com.map(c => dayKey(c.t)));
+  const diasCom = new Set(com.map(c => diaVivido(c.t)));
   const cr = crisisL().filter(x => x.t >= desde);
   const listo = diasCom.size >= 14 && cr.length >= 3;
   const items = {};
   const add = (k, txt) => { if (!items[k]) items[k] = { txt, antes: 0, dias: new Set() }; return items[k]; };
-  com.forEach(c => { const its = (c.items || []).concat(c.bebidas || []); its.forEach(i => add(norm(i), i).dias.add(dayKey(c.t))); (c.vig || vigiladosDe(its)).forEach(v => add('#' + v, cap(v)).dias.add(dayKey(c.t))); });
+  com.forEach(c => { const its = (c.items || []).concat(c.bebidas || []); its.forEach(i => add(norm(i), i).dias.add(diaVivido(c.t))); (c.vig || vigiladosDe(its)).forEach(v => add('#' + v, cap(v)).dias.add(diaVivido(c.t))); });
   cr.forEach(x => { const vis = new Set(); com.filter(c => c.t < x.t && c.t > x.t - DIA).forEach(c => { const its = (c.items || []).concat(c.bebidas || []); its.forEach(i => vis.add(norm(i))); vigiladosDe(its).forEach(v => vis.add('#' + v)); }); vis.forEach(k => { if (items[k]) items[k].antes++; }); });
   const res = Object.values(items).map(x => ({ txt: x.txt, antes: x.antes, pctDias: Math.round(x.dias.size / diasCom.size * 100), pctCrisis: cr.length ? Math.round(x.antes / cr.length * 100) : 0 })).filter(x => x.antes >= 2 && x.pctCrisis > x.pctDias + 15).sort((a, b) => (b.pctCrisis - b.pctDias) - (a.pctCrisis - a.pctDias)).slice(0, 6);
   return { dias: diasCom.size, crisis: cr.length, listo, items: res };
@@ -901,7 +925,7 @@ function analisisFactores() {
   const dias = vivos('dias').filter(d => (d.chips || []).length || d.fondo || d.agua);
   const cr = crisisL(); const out = [];
   if (dias.length < 14 || cr.length < 3) return null;
-  const crisisEn = day => cr.some(x => { const d = dayKey(x.t); return d === day || d === sumarDias(day, 1); });
+  const crisisEn = day => cr.some(x => { const d = diaVivido(x.t); return d === day || d === sumarDias(day, 1); });
   CHIPS_DIA.forEach(ch => {
     const con = dias.filter(d => (d.chips || []).includes(ch)), sin = dias.filter(d => !(d.chips || []).includes(ch));
     if (con.length < 2) return;
@@ -911,7 +935,7 @@ function analisisFactores() {
   return out.sort((x, y) => (y.pa - y.pb) - (x.pa - x.pb));
 }
 function pPatrones() {
-  const cr = crisisL(), hoy = dayKey(now());
+  const cr = crisisL(), hoy = hoyV();
   let out = topBar('Patrones') + `<div class="seg" style="--n:2"><button class="on">Patrones</button><button style="background:#fff" data-a="ir" data-v="consulta">Consulta</button></div>`;
   const sem = cr.filter(x => x.t > now() - 7 * DIA).length, ant = cr.filter(x => x.t > now() - 35 * DIA && x.t <= now() - 7 * DIA).length / 4;
   const fondo = vivos('dias').filter(d => d.id.startsWith(hoy.slice(0, 7)) && d.fondo && d.fondo !== 'No').length;
@@ -919,7 +943,7 @@ function pPatrones() {
   out += `<div class="tiles">${tile('Crisis esta semana', sem, 'antes ' + (Math.round(ant * 10) / 10).toString().replace('.', ',') + '/sem', '#fff')}${tile('Días con suma', diasConSumaMes(), 'este mes', '#fff')}${tile('Sin dolor ahora', ds == null ? '—' : plural(ds, 'día', 'días'), 'récord ' + rachaMaxima(), '#fff')}${tile('Dolor de fondo', plural(fondo, 'día', 'días'), 'este mes', '#fff')}</div>`;
   // Temporadas: 26 semanas
   const lunes = sumarDias(hoy, -partes(now()).wd), semanas = [];
-  for (let i = 25; i >= 0; i--) { const ini = sumarDias(lunes, -7 * i), fin = sumarDias(ini, 7); semanas.push({ ini, n: cr.filter(x => { const d = dayKey(x.t); return d >= ini && d < fin; }).length, tanda: vivos('tandas').some(t => t.inicio >= ini && t.inicio < fin) }); }
+  for (let i = 25; i >= 0; i--) { const ini = sumarDias(lunes, -7 * i), fin = sumarDias(ini, 7); semanas.push({ ini, n: cr.filter(x => { const d = diaVivido(x.t); return d >= ini && d < fin; }).length, tanda: vivos('tandas').some(t => t.inicio >= ini && t.inicio < fin) }); }
   const colr = n => ['#efe9dc', '#f5c9b9', '#f0a487', '#ea7f59', '#e4572e', '#c4431f', '#a33515', '#82290f'][Math.min(7, n)];
   out += `<div class="card">${h3('Temporadas con dolor')}<div class="heat">${semanas.map(s => `<span title="${s.n}" style="background:${colr(s.n)};${s.tanda ? 'box-shadow:inset 0 -5px 0 #8cc0ea' : ''}"></span>`).join('')}</div><div class="between small"><span>hace 6 meses</span><span>esta semana</span></div><span class="small">Cada cuadro es una semana: más oscuro, más crisis. La raya azul marca cuando empezó una tanda de corticoides.</span></div>`;
   // Horas
@@ -975,7 +999,7 @@ function informe() {
   const desp = cr.filter(x => x.e.desperto).length;
   const prevs = preventivos().map(m => { const a = adherencia(m.id, Math.min(90, Math.ceil((now() - desde) / DIA))); return `${m.nombre} ${m.dosis || ''} (adherencia ${a.prog ? Math.round(a.ok / a.prog * 100) : '—'} %)` + ((m.historial || []).slice(1).filter(h => epochDe(h.fecha, '12:00', homeTz()) >= desde).length ? '; cambio de dosis: ' + m.historial.slice(1).filter(h => epochDe(h.fecha, '12:00', homeTz()) >= desde).map(h => fechaCorta(h.fecha) + ' → ' + h.dosis).join(', ') : ''); });
   const tandas = vivos('tandas').filter(t => t.inicio >= dayKey(now() - 365 * DIA));
-  const efs = {}; vivos('efectos').filter(r => r.t >= desde).forEach(r => (r.tipos || []).forEach(t => { efs[t] = efs[t] || new Set(); efs[t].add(dayKey(r.t)); }));
+  const efs = {}; vivos('efectos').filter(r => r.t >= desde).forEach(r => (r.tipos || []).forEach(t => { efs[t] = efs[t] || new Set(); efs[t].add(diaVivido(r.t)); }));
   const efTxt = Object.keys(efs).sort((a, b) => efs[b].size - efs[a].size).map(k => ({ 'Hormigueo en la cara': 'parestesias faciales', 'Manos dormidas': 'parestesias en manos', 'Hormigueo en los pies': 'parestesias en pies', 'Visión borrosa': 'visión borrosa', 'Mareo': 'mareo', 'Mareo al levantarme': 'mareo ortostático', 'Pulso lento': 'bradicardia referida', 'Estreñimiento': 'estreñimiento', 'Tobillos hinchados': 'edema maleolar', 'Encías': 'alteraciones gingivales', 'Me cuesta hablar o recordar': 'dificultad de lenguaje o memoria', 'Ánimo bajo': 'ánimo bajo', 'Presión en el pecho': 'opresión torácica' }[k] || k.toLowerCase()) + ' ' + efs[k].size + ' d').join(', ');
   const dias = vivos('dias').filter(d => epochDe(d.id, '12:00', homeTz()) >= desde);
   const fondo = dias.filter(d => d.fondo && d.fondo !== 'No').length, mal = dias.filter(d => d.animo === 'Mal').length;
@@ -1122,8 +1146,9 @@ const ACC = {
   'dia-fondo': (v, el) => { setDia(el.dataset.d, { fondo: v }); S.mantenerScroll = true; repintar(); },
   'dia-agua': (v, el) => { setDia(el.dataset.d, { agua: v }); S.mantenerScroll = true; repintar(); },
   'dia-animo': (v, el) => { setDia(el.dataset.d, { animo: v }); S.mantenerScroll = true; repintar(); },
-  'dia-chip': v => { const d = dayKey(now()); setDia(d, { chips: tog(diaRec(d).chips, v) }); S.mantenerScroll = true; repintar(); },
-  'comida-nueva': v => { S.f.comida = { momento: v || momentoPorHora(partes(now()).h), hora: hhmm(now()), items: [], bebidas: [], q: '' }; ir('comida'); },
+  'dia-chip': v => { const d = hoyV(); setDia(d, { chips: tog(diaRec(d).chips, v) }); S.mantenerScroll = true; repintar(); },
+  'comida-nueva': v => { S.f.comida = nuevaComida(v); ir('comida'); },
+  'co-dia': v => { S.f.comida.dia = v; S.mantenerScroll = true; repintar(); },
   'comida-rapida': (v, el) => { const r = { id: uid(), t: now(), tz: tzHere(), momento: el.dataset.m, items: [v], bebidas: [], vig: vigiladosDe([v]) }; guardarUndo('comidas', null); S.undo.id = r.id; poner('comidas', r); S.mantenerScroll = true; repintar(); toast(v + ' apuntado', true); },
   filtro: v => { S.filtro = v; S.ver = 40; repintar(); },
   'ver-mas': () => { S.ver += 40; S.mantenerScroll = true; repintar(); },
@@ -1144,7 +1169,7 @@ const ACC = {
     S.f.efecto = null; toast('Efecto guardado'); ir('registro');
   },
   'co-mom': v => { S.f.comida.momento = v; S.mantenerScroll = true; repintar(); },
-  'co-add': () => { const q = (S.f.comida.q || '').trim(); if (!q) return; const ya = frecuentes().find(x => norm(x.txt) === norm(q)); S.f.comida.items.push(ya ? ya.txt : q); S.f.comida.q = ''; repintar(); },
+  'co-add': () => { const q = (S.f.comida.q || '').trim(); if (!q) return; const ya = frecuentes().find(x => norm(x.txt) === norm(q)); S.f.comida.items.push(ya ? ya.txt : q); S.f.comida.q = ''; S.mantenerScroll = true; repintar(); const n = document.querySelector('[data-in="co-q"]'); if (n) n.focus(); },
   'co-item': v => { S.f.comida.items.push(v); S.f.comida.q = ''; S.mantenerScroll = true; repintar(); },
   'co-quitar': v => { S.f.comida.items = S.f.comida.items.filter(i => i !== v); S.mantenerScroll = true; repintar(); },
   'co-beb': v => { S.f.comida.bebidas = tog(S.f.comida.bebidas, v); S.mantenerScroll = true; repintar(); },
@@ -1152,7 +1177,7 @@ const ACC = {
   'co-guardar': () => {
     const f = S.f.comida; if ((f.q || '').trim()) f.items.push(f.q.trim());
     if (!f.items.length && !f.bebidas.length) { toast('Apunta qué has tomado'); return; }
-    let t = epochDe(dayKey(now()), f.hora, tzHere()); if (t > now() + 5 * MIN) t -= DIA;
+    let t = epochVivido(f.dia || hoyV(), f.hora, tzHere()); if (t > now() + 5 * MIN && f.dia === hoyV()) t -= DIA;
     poner('comidas', { id: uid(), t, tz: tzHere(), momento: f.momento, items: f.items, bebidas: f.bebidas, fuera: !!f.fuera, vig: vigiladosDe(f.items.concat(f.bebidas)) });
     S.f.comida = null; toast(f.momento + ' guardado'); ir('hoy');
   },
@@ -1160,7 +1185,7 @@ const ACC = {
   'pa-int': v => { S.f.pasada.int = +v; S.mantenerScroll = true; repintar(); },
   'pa-plumas': () => { S.f.pasada.plumas = !S.f.pasada.plumas; repintar(); },
   'pa-guardar': () => {
-    const f = S.f.pasada, tz = tzHere(), T = h => h ? epochDe(f.dia, h, tz) : null;
+    const f = S.f.pasada, tz = tzHere(), T = h => h ? epochVivido(f.dia, h, tz) : null;
     const lau = T(f.laura), dol = T(f.dolor), pin = T(f.pinchazo); let fin = T(f.fin);
     const ini = Math.min(...[lau, dol, pin].filter(Boolean));
     if (!isFinite(ini)) { toast('Pon al menos una hora'); return; }
@@ -1249,7 +1274,7 @@ function guardarSuenoManual(cambios) {
 
 /* ---------------- Entradas de texto ---------------- */
 const INP = {
-  'dist-txt': v => { const e = porId('eventos', S.f.evId); e.distinta = Object.assign(e.distinta || {}, { txt: v }); poner('eventos', e); },
+  'dist-txt': v => { clearTimeout(S.tDist); S.tDist = setTimeout(() => { const e = porId('eventos', S.f.evId); if (!e) return; e.distinta = Object.assign(e.distinta || {}, { txt: v }); poner('eventos', e); }, 500); },
   'sueno-dormir': () => guardarSuenoManual({}), 'sueno-despertar': () => guardarSuenoManual({}),
   'ef-otro': v => S.f.efecto.otro = v, 'ef-pulso': v => S.f.efecto.pulso = v, 'ef-tension': v => S.f.efecto.tension = v, 'ef-hora': v => S.f.efecto.hora = v,
   'co-hora': v => S.f.comida.hora = v,
@@ -1271,7 +1296,7 @@ document.addEventListener('click', ev => {
 });
 document.addEventListener('input', ev => {
   const el = ev.target, k = el.dataset && el.dataset.in; if (!k) return;
-  if (k === 'co-q') { S.f.comida.q = el.value; const pos = el.selectionStart; repintar(); const n = document.querySelector('[data-in="co-q"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } return; }
+  if (k === 'co-q') { S.f.comida.q = el.value; const box = document.getElementById('co-sug'); if (box) { const h = sugComidaHTML(); if (box.innerHTML !== h) box.innerHTML = h; } return; }
   if (k === 'med-hora') { S.f.med.horas[+el.dataset.i] = el.value; return; }
   if (['sueno-dormir', 'sueno-despertar', 'cfg-home'].includes(k)) return;
   if (INP[k]) INP[k](el.value);
