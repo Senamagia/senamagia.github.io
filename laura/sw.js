@@ -1,6 +1,6 @@
 // Guarda Laura en el móvil para que funcione sin internet.
 // Cada versión nueva cambia VERSION; la app avisa y se actualiza al pulsar «Actualizar».
-const VERSION = 'laura-v6';
+const VERSION = 'laura-v7';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
