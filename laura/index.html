@@ -118,7 +118,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '1.4';
+const APP_VER = '1.5';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -734,7 +734,7 @@ function pHoy() {
   const mom = momentoPorHora(h), hechos = vivos('comidas').filter(r => diaVivido(r.t) === hoy).map(r => r.momento);
   const frec = frecuentes(mom).slice(0, 6);
   out += `<div class="card sage"><div class="between" style="align-items:center"><span class="G h3">${mom}</span><button class="btn small" data-a="comida-nueva" data-v="${mom}">Apuntar</button></div>
-    <div class="seg" style="--n:4;font-size:12px">${['Desayuno', 'Comida', 'Merienda', 'Cena'].map(m => `<button style="font-size:12px;padding:8px 0;min-height:36px;${hechos.includes(m) ? 'background:#1d1b16;color:#f3efe6;font-weight:600' : 'background:transparent;border:2px dashed #1d1b16'}" data-a="comida-nueva" data-v="${m}">${m}</button>`).join('')}</div>
+    <div class="seg" style="--n:4;font-size:12px">${['Desayuno', 'Comida', 'Merienda', 'Cena'].map(m => `<button style="font-size:12px;padding:8px 0;min-height:36px;${hechos.includes(m) ? 'background:#1d1b16;color:#f3efe6;font-weight:600' : 'background:transparent;border:2px dashed #1d1b16'}" data-a="${hechos.includes(m) ? 'co-editar-mom' : 'comida-nueva'}" data-v="${m}">${m}${hechos.includes(m) ? ' ✓' : ''}</button>`).join('')}</div>
     ${frec.length ? `<div class="chips">${frec.map(f => `<button class="chip" data-a="comida-rapida" data-v="${esc(f.txt)}" data-m="${mom}">${esc(f.txt)}</button>`).join('')}</div><span class="small" style="color:#2d3a24">Lo que más tomas a esta hora: un toque y queda apuntado.</span>` : `<span class="small" style="color:#2d3a24">Apunta lo que comes y bebes: con el tiempo, aquí saldrá lo de siempre para apuntarlo con un toque.</span>`}</div>`;
   // Qué ha pasado
   const dh = diaRec(hoy);
@@ -794,6 +794,7 @@ function sheetDetalle(col, id) {
       ${esCrisis(r) ? `<span class="small">¿Como siempre?</span>${seg([['siempre', 'Como siempre'], ['distinta', 'Distinta']], r.como, 'det-como', ` data-id="${r.id}"`)}<span class="small">Intensidad</span><div class="seg" style="--n:10">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="${r.intensidad === n ? 'on' : ''}" style="padding:10px 0;font-size:14px" data-a="det-int" data-id="${r.id}" data-v="${n}">${n}</button>`).join('')}</div>` : ''}
       ${(d.que || []).length || d.txt ? `<span class="small"><b>Distinta:</b> ${esc(lista(d.que || []))}${d.txt ? ' · ' + esc(d.txt) : ''}</span>` : ''}`;
   }
+  if (col === 'comidas') extra = `<span style="font-size:15px;line-height:1.5"><b>${esc(r.momento || '')} · ${hhmm(r.t)}</b><br>${esc(lista((r.items || []).concat(r.bebidas || [])))}</span><button class="btn" data-a="co-editar" data-v="${r.id}">Editar</button>`;
   return `<div class="between"><span class="G h3">${{ eventos: 'Crisis', efectos: 'Efecto secundario', comidas: 'Comida', suenos: 'Sueño' }[col]}</span><span class="small">${cuandoDia(diaVivido(r.t || r.dormir || inicioEv(r)))}</span></div>${extra}
     <button class="btn danger" data-a="borrar" data-c="${col}" data-v="${id}">Borrar</button><button class="btn chipc" data-a="cerrar-sheet">Cerrar</button>`;
 }
@@ -827,8 +828,8 @@ function pComida() {
   if (!f.dia) f.dia = hoyV();
   const frec = frecuentes(f.momento).filter(x => !f.items.some(i => norm(i) === norm(x.txt))).slice(0, 8);
   const vig = vigiladosDe(f.items.concat(f.bebidas));
-  return `<button class="back" data-a="ir" data-v="hoy">‹ Hoy</button>${topBar('Comida')}
-  ${seg([[hoyV(), 'Hoy · ' + fechaCorta(hoyV())], [sumarDias(hoyV(), -1), 'Ayer · ' + fechaCorta(sumarDias(hoyV(), -1))]], f.dia, 'co-dia')}
+  return `<button class="back" data-a="co-salir">‹ ${f.editId ? 'Volver' : 'Hoy'}</button>${topBar(f.editId ? 'Editar ' + f.momento.toLowerCase() : 'Comida')}
+  ${seg([[hoyV(), 'Hoy · ' + fechaCorta(hoyV())], [sumarDias(hoyV(), -1), 'Ayer · ' + fechaCorta(sumarDias(hoyV(), -1))]].concat(f.dia < sumarDias(hoyV(), -1) ? [[f.dia, fechaCorta(f.dia)]] : []), f.dia, 'co-dia')}
   ${seg(['Desayuno', 'Comida', 'Merienda', 'Cena', 'Picoteo'], f.momento, 'co-mom')}
   <div class="card" style="padding:10px 18px"><div class="between" style="align-items:center"><span>Hora${partes(now()).h < CORTE ? '<br><span class="small">Hasta las 5:00 sigue contando como ' + (f.dia === hoyV() ? 'hoy' : 'ese día') + '</span>' : ''}</span><input type="time" value="${f.hora}" data-in="co-hora" style="border:none;background:var(--chip);border-radius:12px;padding:8px 10px;font-size:17px;font-weight:600"></div></div>
   <div class="card sage"><span class="G h3">¿Qué has ${({ Desayuno: 'desayunado', Comida: 'comido', Merienda: 'merendado', Cena: 'cenado', Picoteo: 'picado' })[f.momento]}?</span>
@@ -839,7 +840,7 @@ function pComida() {
   <div class="card">${h3('Para beber')}${segM(['Agua', 'Café', 'Refresco', 'Cerveza', 'Vino', 'Copa'], f.bebidas, 'co-beb')}</div>
   ${vig.length ? `<div class="card"><span style="font-size:15px"><span class="dot"></span> Vigilado: <b>${esc(lista(vig))}</b></span><span class="small">Se marca solo. Puedes cambiar la lista en Ajustes.</span></div>` : ''}
   <button class="chip ${f.fuera ? 'on' : ''}" data-a="co-fuera" style="align-self:flex-start">Comí fuera de casa</button>
-  <button class="btn" data-a="co-guardar">Guardar ${f.momento.toLowerCase()}</button>`;
+  <button class="btn" data-a="co-guardar">${f.editId ? 'Guardar cambios' : 'Guardar ' + f.momento.toLowerCase()}</button>`;
 }
 
 /* ---------------- Crisis pasada ---------------- */
@@ -1299,6 +1300,10 @@ const ACC = {
   'dia-animo': (v, el) => { setDia(el.dataset.d, { animo: v }); S.mantenerScroll = true; repintar(); },
   'dia-chip': v => { const d = hoyV(); setDia(d, { chips: tog(diaRec(d).chips, v) }); S.mantenerScroll = true; repintar(); },
   'comida-nueva': v => { S.f.comida = nuevaComida(v); ir('comida'); },
+  'co-editar': v => { const r = porId('comidas', v); if (!r) return; S.sheet = null;
+    S.f.comida = { editId: r.id, vuelta: S.pant === 'comida' ? 'hoy' : S.pant, momento: r.momento || momentoPorHora(partes(r.t).h), dia: diaVivido(r.t), hora: hhmm(r.t), items: (r.items || []).slice(), bebidas: (r.bebidas || []).slice(), fuera: !!r.fuera, q: '' }; ir('comida'); },
+  'co-editar-mom': v => { const r = vivos('comidas').filter(x => diaVivido(x.t) === hoyV() && x.momento === v).sort((a, b) => b.t - a.t)[0]; if (r) ACC['co-editar'](r.id); else ACC['comida-nueva'](v); },
+  'co-salir': () => { const f = S.f.comida || {}, v = f.editId ? (f.vuelta || 'hoy') : 'hoy'; if (f.editId) S.f.comida = null; ir(v); },
   'co-dia': v => { S.f.comida.dia = v; S.mantenerScroll = true; repintar(); },
   'comida-rapida': (v, el) => { const r = { id: uid(), t: now(), tz: tzHere(), momento: el.dataset.m, items: [v], bebidas: [], vig: vigiladosDe([v]) }; guardarUndo('comidas', null); S.undo.id = r.id; poner('comidas', r); S.mantenerScroll = true; repintar(); toast(v + ' apuntado', true); },
   filtro: v => { S.filtro = v; S.ver = 40; repintar(); },
@@ -1329,8 +1334,10 @@ const ACC = {
     const f = S.f.comida; if ((f.q || '').trim()) f.items.push(f.q.trim());
     if (!f.items.length && !f.bebidas.length) { toast('Apunta qué has tomado'); return; }
     let t = epochVivido(f.dia || hoyV(), f.hora, tzHere()); if (t > now() + 5 * MIN && f.dia === hoyV()) t -= DIA;
-    poner('comidas', { id: uid(), t, tz: tzHere(), momento: f.momento, items: f.items, bebidas: f.bebidas, fuera: !!f.fuera, vig: vigiladosDe(f.items.concat(f.bebidas)) });
-    S.f.comida = null; toast(f.momento + ' guardado'); ir('hoy');
+    const viejo = f.editId && porId('comidas', f.editId);
+    if (viejo) { const t2 = epochVivido(f.dia, f.hora, viejo.tz || tzHere()); poner('comidas', Object.assign({}, viejo, { t: t2, momento: f.momento, items: f.items, bebidas: f.bebidas, fuera: !!f.fuera, vig: vigiladosDe(f.items.concat(f.bebidas)) })); }
+    else poner('comidas', { id: uid(), t, tz: tzHere(), momento: f.momento, items: f.items, bebidas: f.bebidas, fuera: !!f.fuera, vig: vigiladosDe(f.items.concat(f.bebidas)) });
+    const vuelta = f.vuelta || 'hoy'; S.f.comida = null; toast(f.momento + (viejo ? ' cambiado' : ' guardado')); ir(vuelta);
   },
   'pa-como': v => { S.f.pasada.como = v; repintar(); },
   'pa-int': v => { S.f.pasada.int = +v; S.mantenerScroll = true; repintar(); },
