@@ -145,7 +145,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '2.1';
+const APP_VER = '2.2';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -1185,7 +1185,9 @@ function heroHTML(x) {
   if (x.k === 'toma') { const s = x.s, casa = tzTomas() === homeTz() && lejos(), tarde = s.t < now() - 20 * MIN;
     return `<div class="hero"><span class="k">${tarde ? 'Te tocaba ' + haceTxt(s.t) : s.t <= now() + 15 * MIN ? 'Ahora toca' : 'Próxima toma'}</span>
       <div class="between" style="align-items:flex-end"><span style="display:flex;flex-direction:column;gap:4px;min-width:0"><span class="G" style="font-size:32px;line-height:1">${esc(lista(s.meds.map(m => m.nombre)))}</span><span style="font-size:15px;color:#c9c2b4">${esc(s.meds.map(m => m.dosis).filter(Boolean).join(' · '))}${casa ? ' · hora de casa' : ''}${s.day !== dayKey(now(), tzTomas()) ? ' · ' + cuandoDia(s.day).toLowerCase() : ''}</span></span><span class="G" style="font-size:34px;line-height:1;color:var(--sky)">${casa ? hhmm(s.t) : s.hora}</span></div>
-      <button class="btn sky" data-a="tomar" data-v="${s.day}|${s.hora}">${tarde ? 'Me la tomo ahora' : s.meds.length > 1 ? 'Tomadas' : 'Tomada'}</button>
+      ${tarde ? `<button class="btn sky" data-a="tomar-hora" data-v="${s.day}|${s.hora}">${s.meds.length > 1 ? 'Me las tomé' : 'Me la tomé'} a las ${s.hora}</button>
+      <button class="btn" style="background:rgba(243,239,230,.12)" data-a="tomar" data-v="${s.day}|${s.hora}">${s.meds.length > 1 ? 'Me las tomo' : 'Me la tomo'} ahora</button>`
+      : `<button class="btn sky" data-a="tomar" data-v="${s.day}|${s.hora}">${s.meds.length > 1 ? 'Tomadas' : 'Tomada'}</button>`}
       <div class="links"><button data-a="tomar-otra" data-v="${s.day}|${s.hora}">A otra hora</button><button data-a="olvide" data-v="${s.day}|${s.hora}">Se me olvidó</button></div></div>`; }
   if (x.k === 'siesta') return `<div class="hero"><span class="k">Siesta</span><span class="G" style="font-size:30px;line-height:1">Desde las ${hhmm(x.s.dormir)}</span><button class="btn sky" data-a="despertar">Me he despertado</button></div>`;
   if (x.k === 'sueno') return `<div class="hero"><span class="k">Buenos días</span><span class="G" style="font-size:30px;line-height:1.05">¿Cómo has dormido?</span><span style="font-size:15px;color:#c9c2b4">Si no pulsaste los botones de dormir, apúntalo aquí.</span><button class="btn sky" data-a="sh" data-v="sueno">Apuntar la noche</button></div>`;
