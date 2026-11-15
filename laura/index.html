@@ -40,7 +40,7 @@ button{cursor:pointer;border:none;background:none;padding:0}
 .small{font-size:13px;line-height:1.45;color:var(--sub)}
 .muted{color:var(--sub)}
 .card{background:var(--white);border-radius:28px;padding:18px;display:flex;flex-direction:column;gap:12px}
-.card.sky{background:var(--sky)} .card.tomato{background:var(--tomato);color:#1a0f0a} .card.butter{background:var(--butter)} .card.sage{background:var(--sage)} .card.warn{background:var(--warn)} .card.ink{background:var(--ink);color:var(--cream)}
+.card.sky,.card.butter,.card.sage{background:var(--white)} .card.tomato{background:var(--ink);color:var(--cream)} .card.warn{background:#f7ecd0} .card.ink{background:var(--ink);color:var(--cream)}
 .row{display:flex;align-items:center;gap:10px}
 .between{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .grow{flex:1 1 auto;min-width:0}
@@ -79,7 +79,7 @@ nav.tabs button.on{color:var(--ink);font-weight:700}
 .heat span{height:30px;border-radius:6px}
 .hours{height:110px;display:grid;grid-template-columns:repeat(24,minmax(0,1fr));column-gap:2px;align-items:end;border-bottom:1px solid #c9c2b4}
 .hours span{background:var(--ink);border-radius:4px 4px 0 0;min-height:2px}
-.back{font-size:15px;font-weight:600;padding:8px 0}
+.back{font-size:15px;font-weight:600;padding:8px 6px;align-self:flex-start}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--safe-b) + 84px);background:rgba(29,27,22,.62);color:var(--cream);padding:8px 14px;border-radius:14px;font-size:14px;display:flex;gap:12px;align-items:center;z-index:50;width:max-content;max-width:92vw;pointer-events:none;transition:opacity .3s}.toast.fuera{opacity:0}.toast button{pointer-events:auto}
 body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b) + 20px)}
 .toast button{font-weight:700;text-decoration:underline}
@@ -145,7 +145,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '2.0';
+const APP_VER = '2.1';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -804,24 +804,24 @@ function tomasRecientesHTML() {
 }
 function pMedicinas() {
   const c = CFG(), pp = puedePinchar(), dm = diasConSumaMes();
-  let out = topBar('Medicinas', `<button class="btn small" data-a="med-nueva">+ Añadir</button>`);
-  out += `<div class="card butter"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600">Para cortar la crisis</span><span class="G" style="font-size:28px">Sumatriptán 6 mg</span></span>
-    <div class="tiles" style="--n:3">${tile('Plumas', c.plumas, '', 'rgba(29,27,22,.08)')}${tile('Días este mes', dm, 'de 10', 'rgba(29,27,22,.08)')}${tile('En 24 h', pp.n + '/2', '', 'rgba(29,27,22,.08)')}</div>
-    <div class="bar"><i style="width:${Math.min(100, dm * 10)}%;${dm >= 10 ? 'background:#a33515' : ''}"></i></div>
-    <span style="font-size:13px">${dm >= 10 ? '<b>Llevas 10 días o más este mes.</b> Usarlo tanto puede empeorar los dolores: coméntalo con tu neurólogo.' : 'A partir de 10 días al mes te aviso, porque usarlo tanto puede empeorar los dolores.'}</span>
-    <div class="row"><span class="grow" style="font-size:14px">Plumas en casa</span><button class="btn small light" data-a="plumas" data-v="-1">−</button><button class="btn small light" data-a="plumas" data-v="1">+</button><button class="btn small light" data-a="plumas" data-v="6">+6</button></div>
-    <span style="font-size:13px">Cada pinchazo descuenta una pluma solo. Te aviso cuando queden ${c.avisoPlumas}.</span></div>`;
+  let out = `<div class="top"><span class="G h1">Medicinas</span><button class="btn small" data-a="med-nueva">+ Añadir</button></div>`;
+  const dt = (l, v, s) => `<div class="tile" style="background:rgba(243,239,230,.08)"><span class="l" style="color:#c9c2b4">${l}</span><span class="G v">${v}</span>${s ? `<span class="l" style="color:#c9c2b4">${s}</span>` : ''}</div>`;
+  out += `<div class="hero"><span class="k">Para cortar la crisis</span><span class="G" style="font-size:30px;line-height:1">Sumatriptán 6 mg</span>
+    <div class="tiles" style="--n:3">${dt('Plumas', c.plumas)}${dt('Días este mes', dm, 'de 10 como máximo')}${dt('En 24 h', pp.n + '/2')}</div>
+    <div class="bar" style="background:rgba(243,239,230,.15)"><i style="width:${Math.min(100, dm * 10)}%;background:${dm >= 10 ? 'var(--tomato)' : 'var(--sky)'}"></i></div>
+    ${dm >= 10 ? '<span style="font-size:14px"><b>Llevas 10 días o más este mes.</b> Usarlo tanto puede empeorar los dolores: coméntalo con tu neurólogo.</span>' : ''}
+    <div class="row"><span class="grow" style="font-size:14px;color:#c9c2b4">Plumas en casa</span><button class="btn small" style="background:rgba(243,239,230,.12)" data-a="plumas" data-v="-1">−</button><button class="btn small" style="background:rgba(243,239,230,.12)" data-a="plumas" data-v="1">+</button><button class="btn small sky" style="font-size:15px" data-a="plumas" data-v="6">+6</button></div></div>`;
   const prev = preventivos();
   out += tomasRecientesHTML();
   prev.forEach(m => {
     const a = adherencia(m.id, 30), col = { ok: '#1d1b16', tarde: '#9b958a', media: '#c9c2b4', no: '#f0a487', nada: '#efe9dc' };
-    out += `<div class="card"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span class="small">Preventiva</span><span class="G" style="font-size:26px">${esc(m.nombre)}</span><span class="small">${esc(m.dosis || '')}${(m.horas || []).length ? ' · ' + m.horas.join(' y ') : ''}</span></span><button class="btn small chipc" data-a="med-editar" data-v="${m.id}">Editar</button></div>
+    out += `<div class="card"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span class="small">Preventiva</span><span class="G" style="font-size:24px">${esc(m.nombre)}</span><span class="small">${esc(m.dosis || '')}${(m.horas || []).length ? ' · ' + m.horas.join(' y ') : ''}</span></span><button class="btn small chipc" data-a="med-editar" data-v="${m.id}">Editar</button></div>
       <div class="strip">${a.tira.map(t => `<span style="background:${col[t]}"></span>`).join('')}</div>
       <div class="between small"><span>${a.ok} de ${a.prog} tomas en 30 días</span><span>${a.tarde} a otra hora</span></div>
       ${/verapamil/i.test(m.nombre) ? `<div class="tile" style="font-size:13px;line-height:1.45">Para hablar de bajar la dosis tu neurólogo pide 3 meses sin dolor. Llevas ${plural(diasSinDolor() || 0, 'día', 'días')}.${ultimaPrueba('Electro') ? ' · Último electro: ' + fechaCorta(ultimaPrueba('Electro').fecha) : ''}</div>` : ''}
       ${(m.historial || []).length > 1 ? `<span class="small">Cambios de dosis: ${m.historial.map(x => fechaCorta(x.fecha) + ' → ' + esc(x.dosis)).join(' · ')}</span>` : ''}</div>`;
   });
-  if (prev.length) out += `<span class="small" style="padding:0 8px">Avisos: a la hora de la toma y, si no la marcas, otra vez a los 15 y a los 30 min. Gris = tomada a otra hora.</span>`;
+  if (prev.length) out += `<span class="small" style="padding:0 8px">Negro: a su hora · gris: a otra hora · rojo: no tomada</span>`;
   // Corticoides
   const tandas = vivos('tandas').sort((a, b) => (b.inicio || '').localeCompare(a.inicio || ''));
   const t = tandas[0];
@@ -830,9 +830,9 @@ function pMedicinas() {
     const enCurso = hoy >= t.inicio && hoy <= fin;
     const tras = !enCurso && hoy > fin ? diasSinDolorDesde(epochDe(sumarDias(fin, 1), '00:00', homeTz())) : null;
     const anyo = tandas.filter(x => x.inicio >= sumarDias(hoy, -365)).length;
-    out += `<div class="card sky"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600">Tanda de corticoides${enCurso ? ' · en curso' : ''}</span><span class="G" style="font-size:26px">${esc(t.nombre || 'Corticoide')}</span><span style="font-size:14px">${fechaCorta(t.inicio)} – ${fechaCorta(fin)} · ${t.dosisIni} mg bajando ${t.bajada || 0} mg cada ${t.cada || 1} días</span></span><button class="btn small light" data-a="tanda-editar" data-v="${t.id}">Editar</button></div>
+    out += `<div class="card sky"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600">Tanda de corticoides${enCurso ? ' · en curso' : ''}</span><span class="G" style="font-size:26px">${esc(t.nombre || 'Corticoide')}</span><span style="font-size:14px">${fechaCorta(t.inicio)} – ${fechaCorta(fin)} · ${t.dosisIni} mg bajando ${t.bajada || 0} mg cada ${t.cada || 1} días</span></span><button class="btn small chipc" data-a="tanda-editar" data-v="${t.id}">Editar</button></div>
       <div style="height:76px;display:grid;grid-template-columns:repeat(${p.length},minmax(0,1fr));column-gap:2px;align-items:end;border-bottom:1px solid rgba(29,27,22,.3)">${p.map(x => `<span style="height:${Math.round(x.dosis / maxD * 70) + 2}px;border-radius:3px 3px 0 0;background:${x.dia === hoy ? '#e4572e' : '#1d1b16'}"></span>`).join('')}</div>
-      <div class="tiles">${enCurso ? tile('Hoy', (p.find(x => x.dia === hoy) || {}).dosis + ' mg', 'a las ' + (t.hora || '09:00'), 'rgba(29,27,22,.08)') : tile('Desde que acabó', tras == null ? '—' : plural(tras.dias, 'día', 'días'), tras && tras.sigue ? 'sin dolor, de momento' : 'hasta la siguiente crisis', 'rgba(29,27,22,.08)')}${tile('En 12 meses', plural(anyo, 'tanda', 'tandas'), '', 'rgba(29,27,22,.08)')}</div>
+      <div class="tiles">${enCurso ? tile('Hoy', (p.find(x => x.dia === hoy) || {}).dosis + ' mg', 'a las ' + (t.hora || '09:00'), 'var(--chip)') : tile('Desde que acabó', tras == null ? '—' : plural(tras.dias, 'día', 'días'), tras && tras.sigue ? 'sin dolor, de momento' : 'hasta la siguiente crisis', 'var(--chip)')}${tile('En 12 meses', plural(anyo, 'tanda', 'tandas'), '', 'var(--chip)')}</div>
       <button class="btn" data-a="tanda-nueva">Nueva tanda</button></div>`;
   } else out += `<div class="card sky">${h3('Tandas de corticoides')}<span style="font-size:14px">Cuando hagas una tanda, pones la dosis inicial y cómo baja, y Laura te avisa cada día de cuánto toca.</span><button class="btn" data-a="tanda-nueva">Nueva tanda</button></div>`;
   // Suplementos
@@ -1402,7 +1402,7 @@ function informe() {
 const TERM = { 'Dormí poco': 'noches cortas respecto a su sueño habitual', 'Me acosté tarde': 'retraso en la hora de acostarse', 'Toma olvidada o a otra hora': 'omisión o retraso de dosis del preventivo', 'Alcohol': 'ingesta de alcohol', 'Siesta': 'siesta', 'Deporte': 'actividad física', 'Deporte intenso': 'ejercicio intenso', 'Bebí poca agua': 'ingesta hídrica escasa', 'Fuera de mi horario': 'estancia en otra zona horaria', 'Cambio de huso horario': 'cambio de huso horario', 'Cené muy tarde': 'cena tardía', 'Estrés': 'estrés', 'Bolo': 'actuación nocturna', 'Vuelo': 'vuelo', 'Dormí fuera': 'pernocta fuera del domicilio', 'Fumé más de lo normal': 'consumo de tabaco superior al habitual', 'Dolor de fondo': 'dolor interictal', 'Ánimo bajo': 'ánimo bajo' };
 function pConsulta() {
   const c = proximaCita();
-  let out = topBar('Consulta') + `<div class="seg" style="--n:2"><button style="background:#fff" data-a="ir" data-v="patrones">Patrones</button><button class="on">Consulta</button></div>`;
+  let out = `<button class="back" data-a="ir" data-v="patrones">‹ Patrones</button>` + topBar('Consulta');
   if (c) {
     out += `<div class="card sky"><span style="font-size:13px;font-weight:600">Próxima cita</span><span class="G" style="font-size:26px">${esc(c.tipo || 'Neurología')} · ${fechaCorta(dayKey(c.t))} ${hhmm(c.t)}</span><span style="font-size:14px">${esc(c.lugar || '')}${c.lugar ? ' · ' : ''}te aviso la tarde de antes</span><button class="btn small light" style="align-self:flex-start" data-a="cita-editar" data-v="${c.id}">Editar</button></div>`;
     out += `<div class="card">${h3('Preguntas para llevar')}${(c.preguntas || []).map((q, i) => `<button class="row" style="text-align:left;font-size:15px;line-height:1.4;align-items:flex-start" data-a="preg" data-v="${i}"><span style="width:20px;height:20px;flex-shrink:0;border-radius:6px;border:2px solid #1d1b16;${q.hecho ? 'background:#1d1b16' : ''}"></span><span style="${q.hecho ? 'text-decoration:line-through;color:#4f4a40' : ''}">${esc(q.txt)}</span></button>`).join('')}
@@ -1438,7 +1438,6 @@ function pAjustes() {
   out += `<div class="card">${h3('Tabaco')}${seg([['no', 'No fumo'], ['aveces', 'A veces'], ['diario', 'A diario']], c.tabaco, 'cfg', ' data-k="tabaco"')}<label class="lab">Más o menos al día<input class="f" inputmode="numeric" value="${esc(c.cig || '')}" data-in="cfg-cig" placeholder="cigarrillos"></label></div>`;
   const zonas = [...new Set(['Europe/Madrid', 'Atlantic/Canary', 'Europe/Lisbon', 'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Mexico_City', 'America/Bogota', 'America/Argentina/Buenos_Aires', tzHere(), c.homeTz])];
   out += `<div class="card">${h3('Tu hora de casa')}<select class="f" data-in="cfg-home">${zonas.map(z => `<option value="${z}" ${z === c.homeTz ? 'selected' : ''}>${esc(z.replace(/_/g, ' '))}</option>`).join('')}</select>${h3('Las pastillas, por la hora…')}${seg([['casa', 'De casa'], ['local', 'De donde esté']], c.tomasHora, 'cfg', ' data-k="tomasHora"')}<span class="small">Para viajes con mucha diferencia horaria, pregunta a tu neurólogo cómo ir cambiando las horas.</span></div>`;
-  out += `<div class="card">${h3('Comidas vigiladas')}<div class="chips">${(c.vigilados || []).map(v => `<button class="chip on" data-a="vig-quitar" data-v="${esc(v)}"><span class="dot"></span>${esc(v)} ✕</button>`).join('')}</div><div class="row"><input class="f grow" placeholder="Vigilar otra (p. ej. chocolate)" data-in="vig-txt" value="${esc(S.f.vig || '')}"><button class="btn small" data-a="vig-add">Añadir</button></div><span class="small">El alcohol, el embutido y el queso curado se reconocen solos aunque los escribas de otra forma.</span></div>`;
   // Nube
   if (!m.uid) {
     const f = S.f.login = S.f.login || {};
@@ -1456,7 +1455,7 @@ function pAjustes() {
       ${avisos ? `<div class="tile">Avisos activados en este iPhone</div><button class="btn chipc" data-a="avisos-on">Volver a activar los avisos</button>` : `<button class="btn" data-a="avisos-on">Activar los avisos en este iPhone</button><span class="small">Abre Laura desde el icono de la pantalla de inicio para poder activarlos.</span>`}
       <button class="btn chipc" data-a="logout">Salir de la cuenta</button></div>`;
   }
-  out += `<div class="card">${h3('Avisos')}<div class="list"><div class="it"><span>Pastillas</span><span class="small">a su hora + 2 repeticiones</span></div><div class="it"><span>Tras el pinchazo</span><span class="small">a los 15 min</span></div><div class="it"><span>Cita</span><span class="small">la tarde de antes</span></div><div class="it"><span>Avisar con pocas plumas</span><span class="row"><button class="btn small chipc" data-a="cfg-plumas-av" data-v="-1">−</button><b>${c.avisoPlumas}</b><button class="btn small chipc" data-a="cfg-plumas-av" data-v="1">+</button></span></div></div></div>`;
+  out += `<div class="card">${h3('Avisos')}<div class="list"><div class="it"><span>Pastillas</span><span class="small">a su hora + 2 repeticiones</span></div><div class="it"><span>Comida y cena sin apuntar</span><button class="chip ${c.avisoComidas === false ? '' : 'on'}" style="min-height:34px;font-size:13px" data-a="cfg-comidas">${c.avisoComidas === false ? 'No' : 'Sí, 1 h después'}</button></div><div class="it"><span>Tras el pinchazo</span><span class="small">a los 15 min</span></div><div class="it"><span>Cita</span><span class="small">la tarde de antes</span></div><div class="it"><span>Avisar con pocas plumas</span><span class="row"><button class="btn small chipc" data-a="cfg-plumas-av" data-v="-1">−</button><b>${c.avisoPlumas}</b><button class="btn small chipc" data-a="cfg-plumas-av" data-v="1">+</button></span></div></div></div>`;
   out += `<div class="card">${h3('Tus datos')}<span class="small">Se guardan en este iPhone y, si la conectas, en tu nube. Funciona sin conexión.</span><button class="btn chipc" data-a="exportar">Copia de seguridad</button><button class="btn chipc" data-a="importar">Recuperar una copia</button></div>`;
   out += `<span class="small" style="text-align:center;padding:8px">Laura ${APP_VER}</span>`;
   return out;
@@ -1620,6 +1619,7 @@ const ACC = {
   'med-borrar': () => { const f = S.f.med; const m = porId('meds', f.id); m.activo = false; m.hasta = dayKey(now()); poner('meds', m); S.f.med = null; ir('medicinas'); },
   'sup-tomar': v => { const m = porId('meds', v); const r = { id: uid(), medId: v, slot: 'sup|' + now() + '|' + v, t: now(), estado: 'tomada' }; guardarUndo('tomas', null); S.undo.id = r.id; poner('tomas', r); S.mantenerScroll = true; repintar(); toast(m.nombre + ' tomada', true); },
   'tanda-nueva': () => { S.f.tanda = { nombre: 'Prednisona', inicio: dayKey(now()), dosisIni: '', bajada: '', cada: '', hora: '09:00' }; ir('tanda'); },
+  'cfg-comidas': () => { const c = CFG(); setCfg({ avisoComidas: c.avisoComidas === false }); S.mantenerScroll = true; repintar(); },
   'tanda-editar': v => { S.f.tanda = JSON.parse(JSON.stringify(porId('tandas', v))); ir('tanda'); },
   'ta-calc': () => repintar(),
   'ta-guardar': () => { const f = S.f.tanda; if (!f.inicio || !Number(f.dosisIni)) { toast('Pon el día de inicio y la dosis'); return; } poner('tandas', f); S.f.tanda = null; toast('Tanda guardada'); ir('medicinas'); },
