@@ -171,7 +171,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.7.2';
+const VERSION = '2.7.3';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -1819,7 +1819,8 @@ async function activarAvisos() {
     SYNC.meta.aviso = { id }; delete SYNC.meta.avisoError; SYNC.guardarMeta(); avisoRevisado = Date.now();
     repintar(); toast('Avisos activados');
   } catch (e) {
-    const t = 'No se han podido activar los avisos: ' + ((e && (e.code || e.message)) || e);
+    const det = e ? [e.name, e.message, typeof e.code === 'string' ? e.code : ''].filter(Boolean).join(' · ') : '';
+    const t = 'No se han podido activar los avisos: ' + (det || String(e)) + (e && e.name === 'InvalidStateError' ? '. Cierra Susitio del todo (desliza hacia arriba), ábrela otra vez y vuelve a probar.' : '');
     SYNC.meta.avisoError = t; SYNC.guardarMeta(); repintar();
     toast(t, 8000);
   }
