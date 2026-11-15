@@ -171,7 +171,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.7.1';
+const VERSION = '2.7.2';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -1371,7 +1371,7 @@ function pintar() {
 }
 function repintar() { S.keepScroll = true; pintar(); }
 let toastT;
-function toast(t) { const el = document.getElementById('toast'); el.innerHTML = `<div class="toast" role="status">${esc(t)}</div>`; clearTimeout(toastT); toastT = setTimeout(() => el.innerHTML = '', 2400); }
+function toast(t, ms) { const el = document.getElementById('toast'); el.innerHTML = `<div class="toast" role="status">${esc(t)}</div>`; clearTimeout(toastT); toastT = setTimeout(() => el.innerHTML = '', 2400); }
 
 /* =========================================================
    Acciones
@@ -1789,7 +1789,7 @@ const fnvHash = t => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { 
 function avisosHTML() {
   const ok = SYNC.meta.aviso && typeof Notification !== 'undefined' && Notification.permission === 'granted';
   return ok ? `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b grow" style="color:var(--teal-d)">🔔 Avisos activados en este móvil: a las 11 h 30 min y 11 h 55 min de cada toma</span><button class="chip" data-a="avisos-off">Quitar</button></div>`
-    : `<button class="btn btn-line" data-a="avisos-on">🔔 Activar avisos en este móvil</button><span class="tiny muted">Te avisa a las 11 h 30 min («quedan 30 min») y a las 11 h 55 min («hora de preparar la medicina») de la toma anterior.</span>`;
+    : `<button class="btn btn-line" data-a="avisos-on">🔔 Activar avisos en este móvil</button>${SYNC.meta.avisoError ? `<span class="tiny b" style="color:var(--warn);overflow-wrap:anywhere">${esc(SYNC.meta.avisoError)}</span>` : ''}<span class="tiny muted">Te avisa a las 11 h 30 min («quedan 30 min») y a las 11 h 55 min («hora de preparar la medicina») de la toma anterior.</span>`;
 }
 async function activarAvisos() {
   const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
@@ -1801,20 +1801,28 @@ async function activarAvisos() {
     const M = await import('https://www.gstatic.com/firebasejs/' + FB_VER + '/firebase-messaging.js');
     const reg = await navigator.serviceWorker.ready;
     const msg = M.getMessaging(SYNC.app);
-    // Se empieza de cero: se borra la suscripción vieja del móvil (puede estar muerta) y se pide una nueva.
-    try { await M.deleteToken(msg); } catch (e) {}
-    try { const sub = await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+    const pedir = () => M.getToken(msg, { vapidKey: VAPID, serviceWorkerRegistration: reg });
     let token = null, ultimo = null;
-    for (let i = 0; i < 3 && !token; i++) {
-      try { token = await M.getToken(msg, { vapidKey: VAPID, serviceWorkerRegistration: reg }); }
-      catch (e) { ultimo = e; await new Promise(r => setTimeout(r, 1500)); }
+    // primero se intenta lo normal; solo si falla se borra la suscripción vieja y se pide una nueva
+    try { token = await pedir(); } catch (e) { ultimo = e; }
+    if (!token) {
+      try { await M.deleteToken(msg); } catch (e) {}
+      try { const sub = await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+      for (let i = 0; i < 3 && !token; i++) {
+        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+        try { token = await pedir(); } catch (e) { ultimo = e; }
+      }
     }
     if (!token) throw ultimo || new Error('sin token');
     const id = fnvHash(token);
     await SYNC.fb.guardarAviso(SYNC.meta.casa, id, { token, uid: SYNC.user.uid, nombre: yo() });
-    SYNC.meta.aviso = { id }; SYNC.guardarMeta(); avisoRevisado = Date.now();
+    SYNC.meta.aviso = { id }; delete SYNC.meta.avisoError; SYNC.guardarMeta(); avisoRevisado = Date.now();
     repintar(); toast('Avisos activados');
-  } catch (e) { toast('No se han podido activar los avisos: ' + ((e && (e.code || e.message)) || e)); }
+  } catch (e) {
+    const t = 'No se han podido activar los avisos: ' + ((e && (e.code || e.message)) || e);
+    SYNC.meta.avisoError = t; SYNC.guardarMeta(); repintar();
+    toast(t, 8000);
+  }
 }
 // Cada vez que se abre la app se comprueba que el aviso de este móvil sigue vivo; si el móvil ha cambiado su dirección de avisos, se guarda la nueva.
 let avisoRevisado = 0;
