@@ -171,7 +171,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.7';
+const VERSION = '2.7.1';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -1615,7 +1615,7 @@ const SYNC = {
     this.F = F; this.app = app; this.db = db;
     this.fb = {
       onAuth: cb => Au.onAuthStateChanged(auth, u => cb(u ? { uid: u.uid, email: u.email } : null)),
-      entrar: (e, p) => Au.signInWithEmailAndPassword(auth, e, p).then(c => ({ uid: c.user.uid, email: c.user.email })),
+      entrar: (e, p) => Au.signInWithEmailAndPassword(auth, e, p).then(async c => { try { await c.user.getIdToken(true); } catch (x) {} return { uid: c.user.uid, email: c.user.email }; }),
       crear: (e, p) => Au.createUserWithEmailAndPassword(auth, e, p).then(c => ({ uid: c.user.uid, email: c.user.email })),
       olvido: e => Au.sendPasswordResetEmail(auth, e),
       salir: () => Au.signOut(auth),
@@ -1743,7 +1743,12 @@ const SYNC = {
     const u = nueva ? await fb.crear(email, pass) : await fb.entrar(email, pass);
     if (this.meta.uid && this.meta.uid !== u.uid) { this.meta = {}; }
     this.user = u; this.meta.uid = u.uid; this.meta.email = u.email || email;
-    const casa = await fb.miCasa(u.uid);
+    // justo después de entrar, la base de datos a veces aún no sabe quién eres: se reintenta unas veces
+    let casa = null;
+    for (let i = 0; ; i++) {
+      try { casa = await fb.miCasa(u.uid); break; }
+      catch (e) { if (i >= 4 || (e && e.code) !== 'permission-denied') throw e; await new Promise(r => setTimeout(r, 1200 * (i + 1))); }
+    }
     if (casa && await fb.soyMiembro(casa, u.uid)) { this.meta.casa = casa; this.guardarMeta(); await this.conectar(); return 'conectado'; }
     this.guardarMeta(); this.setStatus('sin-casa');
     return 'sin-casa';
@@ -1837,7 +1842,7 @@ function errNube(e) {
     'auth/email-already-in-use': 'Ya hay una cuenta con ese correo. Pulsa «Entrar».',
     'auth/invalid-credential': 'Correo o contraseña incorrectos.', 'auth/wrong-password': 'Correo o contraseña incorrectos.',
     'auth/user-not-found': 'No hay ninguna cuenta con ese correo.', 'auth/too-many-requests': 'Demasiados intentos. Espera un poco.',
-    'auth/network-request-failed': 'No hay conexión a internet.', 'permission-denied': 'Firebase no deja entrar: falta pegar las reglas nuevas.'
+    'auth/network-request-failed': 'No hay conexión a internet.', 'permission-denied': 'La nube no ha dejado entrar todavía. Espera unos segundos y vuelve a pulsar «Entrar».'
   })[c] || 'No se ha podido. ' + (c ? '(' + String(c).replace('auth/', '') + ')' : 'Comprueba la conexión.');
 }
 function haceCuanto() { if (!SYNC.ultimo) return ''; const s = Math.round((Date.now() - SYNC.ultimo) / 1000); return s < 60 ? 'hace un momento' : s < 3600 ? 'hace ' + Math.round(s / 60) + ' min' : 'hace ' + Math.round(s / 3600) + ' h'; }
