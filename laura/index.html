@@ -69,8 +69,9 @@ textarea.f{padding:12px 14px;min-height:90px;resize:none}
 label.lab{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--sub)}
 .tm{border-radius:18px;background:var(--chip);padding:10px 14px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--sub)}
 .tm input{border:none;background:transparent;font-size:22px;font-weight:600;color:var(--ink);padding:0;min-height:30px;width:100%}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--cream);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:var(--safe-b);z-index:20}
-nav.tabs button{height:64px;font-size:14px;color:var(--sub)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(243,239,230,.97);border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;align-items:center;padding-bottom:var(--safe-b);z-index:20;max-width:520px;margin:0 auto}
+nav.tabs button{height:64px;font-size:13px;color:var(--sub)}
+nav.tabs .mas{display:flex;justify-content:center;align-items:center}nav.tabs .mas span{width:58px;height:58px;border-radius:20px;background:var(--ink);display:flex;align-items:center;justify-content:center;margin-top:-20px;box-shadow:0 6px 18px rgba(29,27,22,.22)}
 nav.tabs button.on{color:var(--ink);font-weight:700}
 .strip{display:grid;grid-template-columns:repeat(30,minmax(0,1fr));gap:2px}
 .strip span{height:22px;border-radius:4px;background:var(--chip)}
@@ -107,6 +108,32 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
 .n-seg button.on{background:var(--dolor);color:var(--dolor-fg)}
 .n-link{color:#b7c7a8;font-size:14px;padding:8px}
 .hidden{display:none!important}
+.cab{display:flex;align-items:center;gap:12px;padding:8px 6px 4px}.cab .tt{display:flex;flex-direction:column;gap:2px}
+.crisisbtn{height:40px;padding:0 14px;border-radius:14px;background:#0d100d;color:#efc993;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+.cuad{width:40px;height:40px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center}
+.pills{display:flex;gap:6px;flex-wrap:wrap;padding:2px 6px 4px}.pill{padding:7px 12px;border-radius:999px;background:#fff;font-size:13px}.pill.alerta{background:var(--warn);font-weight:600}
+.hero{border-radius:28px;background:var(--ink);color:var(--cream);padding:20px;display:flex;flex-direction:column;gap:14px}
+.hero .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--sky);font-weight:700}
+.btn.sky{background:var(--sky);color:var(--ink);font-weight:700;font-size:17px}
+.links{display:flex;justify-content:center;gap:28px}.links button{color:#c9c2b4;font-size:14px;text-decoration:underline;padding:6px}
+.luego{border-radius:20px;background:#fff;padding:12px 14px;display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+.luego .ico{width:36px;height:36px;border-radius:12px;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none}
+.luego .tx{display:flex;flex-direction:column;flex:1;min-width:0;font-size:15px}.luego .tx span{font-size:13px;color:var(--sub)}
+.luego .go{padding:8px 12px;border-radius:12px;background:var(--chip);font-size:14px;font-weight:600}
+.sec{display:flex;justify-content:space-between;align-items:baseline;padding:14px 8px 0}
+.filas{display:flex;flex-direction:column;gap:6px}
+.fila{display:grid;grid-template-columns:44px 32px 1fr 18px;align-items:center;gap:8px;padding:10px 12px;background:#fff;border-radius:16px;text-align:left;width:100%}
+.fila .h{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}.fila .i{width:32px;height:32px;border-radius:10px;background:var(--chip);display:flex;align-items:center;justify-content:center}
+.fila .tx{display:flex;flex-direction:column;min-width:0;font-size:15px}.fila .tx span{font-size:13px;color:var(--sub);overflow:hidden;text-overflow:ellipsis}
+.fila .f{color:#a39b8c}.fila.cr{background:#fbe4dc}
+.chip.dash{background:transparent;border:1.5px dashed #bdb5a5;color:var(--sub);font-size:14px;min-height:38px}.chip.dash.on{border-style:solid;background:#fff;color:var(--ink)}
+.tmas{border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;text-align:left;min-height:96px}
+.tmas .ico{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}
+.tmas>span:last-child{display:flex;flex-direction:column;font-size:16px}.tmas>span:last-child span{font-size:12px;color:var(--sub)}
+.dia{border-radius:24px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:6px}.dia .fila{background:transparent;padding:6px 2px;border-top:1px solid #f0ebe1;border-radius:0}.dia .fila.cr{background:#fbe4dc;border-radius:12px;border-top:none;padding:8px 6px}
+.dia.cr{box-shadow:inset 0 0 0 2px var(--tomato)}.tagcr{font-size:12px;font-weight:700;color:#a33515;text-transform:uppercase;letter-spacing:.06em}
+.cmp{display:grid;grid-template-columns:70px 1fr 42px;gap:8px;align-items:center;font-size:13px}.cmp b{text-align:right}
+
 </style>
 </head>
 <body>
@@ -118,7 +145,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '1.7';
+const APP_VER = '2.0';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -463,6 +490,16 @@ function calcularPlan() {
     const dia = dayKey(c.t, tzHere()), t = epochDe(sumarDias(dia, -1), '20:00', tzHere());
     if (t > now() - HORA) avisos.push({ id: 'cita|' + c.id + '|' + c.t, t, rep: 1, cada: 0, abrir: 'consulta', titulo: 'Mañana: ' + (c.tipo || 'Neurología'), texto: 'A las ' + hhmm(c.t, tzHere()) + (c.lugar ? ' · ' + c.lugar : '') + '. Tienes ' + plural((c.preguntas || []).filter(q => !q.hecho).length, 'pregunta apuntada', 'preguntas apuntadas') + '.' });
   });
+  // Comidas: si a tu hora de siempre (+1 h) no has apuntado nada, te pregunta
+  if (CFG().avisoComidas !== false && typeof horaHabitual === 'function') {
+    const hv = hoyV();
+    [[hv, 0], [sumarDias(hv, 1), 1]].forEach(([d]) => ['Comida', 'Cena'].forEach(m => {
+      const hh = horaHabitual(m); if (!hh) return;
+      if (vivos('comidas').some(r => r.momento === m && diaVivido(r.t) === d)) return;
+      const t = epochVivido(d, hh) + HORA; if (t < now() - 30 * MIN) return;
+      avisos.push({ id: 'comida|' + d + '|' + m, t, rep: 2, cada: 60, abrir: 'comida:' + m, titulo: m === 'Cena' ? '¿Qué has cenado?' : '¿Qué has comido?', texto: 'Toca y díctalo en un momento.' });
+    }));
+  }
   // Pocas plumas
   const c = CFG();
   if (c.plumas > 0 && c.plumas <= (c.avisoPlumas || 3)) avisos.push({ id: 'plumas|' + c.plumas, t: now(), rep: 1, cada: 0, abrir: 'medicinas', titulo: 'Quedan ' + plural(c.plumas, 'pluma', 'plumas') + ' de sumatriptán', texto: 'Acuérdate de pedir la receta.' });
@@ -555,7 +592,7 @@ function repintar() {
   try {
     if (noche) h = pInicio();
     else {
-      const f = { hoy: pHoy, registro: pRegistro, medicinas: pMedicinas, patrones: pPatrones, consulta: pConsulta, ajustes: pAjustes, distinta: pDistinta, efecto: pEfecto, comida: pComida, pasada: pPasada, med: pMed, tanda: pTanda, dias: pDias }[S.pant] || pHoy;
+      const f = { hoy: pHoy, registro: pDiario, diario: pDiario, 'patrones-det': pPatronesDetalle, medicinas: pMedicinas, patrones: pPatrones, consulta: pConsulta, ajustes: pAjustes, distinta: pDistinta, efecto: pEfecto, comida: pComida, pasada: pPasada, med: pMed, tanda: pTanda, dias: pDias }[S.pant] || pHoy;
       h = `<div class="wrap">${f()}</div>` + navHTML();
     }
   } catch (e) { console.error(e); h = `<div class="wrap"><div class="card warn"><b>Algo ha fallado al pintar esta pantalla.</b><span class="small">${esc(e.message)}</span><button class="btn" data-a="ir" data-v="hoy">Ir a Hoy</button></div></div>`; }
@@ -564,10 +601,6 @@ function repintar() {
   app.innerHTML = h;
   if (S.mantenerScroll) window.scrollTo(0, y);
   S.mantenerScroll = false;
-}
-function navHTML() {
-  const t = { hoy: 'hoy', registro: 'registro', efecto: 'registro', comida: 'hoy', pasada: 'registro', distinta: 'registro', medicinas: 'medicinas', med: 'medicinas', tanda: 'medicinas', patrones: 'patrones', consulta: 'patrones', dias: 'patrones', ajustes: 'hoy' }[S.pant] || 'hoy';
-  return `<nav class="tabs">${[['hoy', 'Hoy'], ['registro', 'Registro'], ['medicinas', 'Medicinas'], ['patrones', 'Patrones']].map(([k, n]) => `<button class="${t === k ? 'on' : ''}" data-a="ir" data-v="${k}">${n}</button>`).join('')}</nav>`;
 }
 function ir(p) { S.pant = p; S.sheet = null; window.scrollTo(0, 0); repintar(); }
 
@@ -695,57 +728,6 @@ function suenoHabitual() {
   const med2 = arr => { const v = arr.map(x => { const p = partes(x); return p.h * 60 + p.mi; }).sort((a, b) => a - b); const m = v[Math.floor(v.length / 2)]; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
   return { dormir: med(l.map(s => s.dormir)), despertar: med2(l.map(s => s.despertar)) };
 }
-function pHoy() {
-  const c = CFG(), h = partes(now()).h, hoy = hoyV();
-  let out = topBar('Hoy', `<div class="row">${lejos() ? `<span class="chip" style="background:#fff;font-size:13px;min-height:34px">${esc(ciudad(tzHere()))} · ${difHoras()}</span>` : ''}<button aria-label="Ajustes" data-a="ir" data-v="ajustes" style="width:44px;height:44px;border-radius:22px;background:#fff;display:flex;align-items:center;justify-content:center">${ICON_GEAR}</button></div>`);
-  out += `<span class="small" style="padding:0 8px">${fechaLarga(hoy)} · ${hhmm(now())}</span>`;
-  if (S.nuevaVersion) out += `<div class="card ink"><b>Hay una versión nueva de Laura</b><button class="btn light" data-a="actualizar">Actualizar</button></div>`;
-  if (!SYNC.meta.uid) out += `<div class="card warn"><b>Conecta tu nube</b><span style="font-size:14px">Para tener copia de tus datos y recibir los avisos de las pastillas.</span><button class="btn" data-a="ir" data-v="ajustes">Conectar</button></div>`;
-  const e = abierto();
-  if (e) out += `<button class="card ink" data-a="ir" data-v="inicio" style="text-align:left"><span class="G h3" style="color:#efc993">${e.dolor || (e.pinchazos || []).length ? 'Tienes una crisis abierta' : 'Laura está abierta'}</span><span style="font-size:14px">Toca para seguir con los botones de crisis</span></button>`;
-  // Sin dolor
-  const ds = diasSinDolor();
-  if (ds === null) out += `<div class="card sky"><span style="font-size:14px;font-weight:600">Sin crisis apuntadas todavía</span><span style="font-size:14px">Cuando apuntes la primera, aquí verás los días que llevas sin dolor.</span></div>`;
-  else { const pct = Math.min(100, Math.round(ds / 90 * 100)); const f3 = dayKey(ultimaCrisis() + 90 * DIA);
-    out += `<div class="card sky"><span style="font-size:14px;font-weight:600">Sin dolor</span><span class="G" style="font-size:56px;letter-spacing:-0.04em;line-height:.95">${plural(ds, 'día', 'días')}</span><div class="bar"><i style="width:${pct}%"></i></div><div class="between" style="font-size:13px"><span>${Math.min(ds, 90)} de 90 días</span><span>${ds >= 90 ? '¡3 meses!' : '3 meses el ' + fechaCorta(f3)}</span></div></div>`; }
-  // Sueño (por la mañana)
-  if (h >= 5 && h < 14) {
-    const s = ultimoSueno(), hab = suenoHabitual();
-    const dorm = s ? hhmm(s.dormir) : hab.dormir, desp = s && s.despertar ? hhmm(s.despertar) : (s ? '' : hab.despertar);
-    const dur = s && s.despertar ? durTxt(s.despertar - s.dormir) : '';
-    out += `<div class="card">${h3('Anoche dormiste', dur)}
-      <div class="tiles"><label class="tm">Te dormiste<input type="time" value="${dorm}" data-in="sueno-dormir"></label><label class="tm">Te despertaste<input type="time" value="${desp}" data-in="sueno-despertar"></label></div>
-      ${seg(['Bien', 'Regular', 'Mal'], s && s.calidad, 'sueno-calidad')}
-      <span class="small">${s ? (s.auto ? 'Con tus botones: «Me voy a dormir» (+' + c.margen + ' min)' + (s.despertar ? ' y «Me he despertado».' : '.') : 'Apuntado a mano.') : 'Vienen puestas tus horas de siempre: toca cómo dormiste para guardarlo.'}</span></div>`;
-  }
-  // Pastillas
-  const pend = pendientesAhora();
-  if (!preventivos().length && !tandaActiva(dayKey(now(), tzTomas()))) out += `<div class="card tomato"><span class="G h3">Añade tu medicación</span><span style="font-size:14px">Verapamilo, topiramato y sus horas, para que Laura te avise.</span><button class="btn" style="background:#1a0f0a;color:#fbe3d8" data-a="ir" data-v="medicinas">Añadir</button></div>`;
-  else if (pend.length) {
-    const s = pend[0], ya = s.t <= now() + 15 * MIN, casa = tzTomas() === homeTz() && lejos();
-    out += `<div class="card tomato"><div class="between" style="align-items:flex-start"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:600">${s.t < now() - 20 * MIN ? 'Te tocaba ' + haceTxt(s.t) : ya ? 'Te toca ahora' : 'Próxima toma'}</span><span class="G" style="font-size:28px">${esc(lista(s.meds.map(m => m.nombre)))}</span><span style="font-size:14px">${esc(s.meds.map(m => m.dosis).filter(Boolean).join(' · '))}${casa ? ' · hora de casa' : ''}${s.day !== dayKey(now(), tzTomas()) ? ' · ' + cuandoDia(s.day).toLowerCase() : ''}</span></span><span class="G" style="font-size:34px">${casa ? hhmm(s.t) : s.hora}</span></div>
-      <button class="btn" style="background:#1a0f0a;color:#fbe3d8" data-a="tomar" data-v="${s.day}|${s.hora}">${s.t < now() - 20 * MIN ? 'Me la tomo ahora' : s.meds.length > 1 ? 'Tomadas' : 'Tomada'}</button>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn" style="background:rgba(26,15,10,.15);color:#1a0f0a;font-size:14px" data-a="tomar-otra" data-v="${s.day}|${s.hora}">Me la tomé a otra hora</button><button class="btn" style="background:rgba(26,15,10,.15);color:#1a0f0a;font-size:14px" data-a="olvide" data-v="${s.day}|${s.hora}">Se me olvidó</button></div></div>`;
-  }
-  // Ayer / hoy: dolor de fondo, agua, ánimo
-  const tarde = h >= 18 || h < CORTE, dk = tarde ? hoy : sumarDias(hoy, -1), dd = diaRec(dk), et = tarde ? 'hoy' : 'ayer';
-  out += `<div class="card">${h3('Dolor de fondo ' + et, 'entre crisis')}${seg(['No', 'Leve', 'Molesto'], dd.fondo, 'dia-fondo', ` data-d="${dk}"`)}${h3('Agua ' + et)}${seg(['Poca', 'Normal', 'Mucha'], dd.agua, 'dia-agua', ` data-d="${dk}"`)}${h3('Ánimo ' + et)}${seg(['Bien', 'Regular', 'Mal'], dd.animo, 'dia-animo', ` data-d="${dk}"`)}</div>`;
-  // Comida
-  const mom = momentoPorHora(h), hechos = vivos('comidas').filter(r => diaVivido(r.t) === hoy).map(r => r.momento);
-  const frec = frecuentes(mom).slice(0, 6);
-  out += `<div class="card sage"><div class="between" style="align-items:center"><span class="G h3">${mom}</span><button class="btn small" data-a="comida-nueva" data-v="${mom}">Apuntar</button></div>
-    <div class="seg" style="--n:4;font-size:12px">${['Desayuno', 'Comida', 'Merienda', 'Cena'].map(m => `<button style="font-size:12px;padding:8px 0;min-height:36px;${hechos.includes(m) ? 'background:#1d1b16;color:#f3efe6;font-weight:600' : 'background:transparent;border:2px dashed #1d1b16'}" data-a="${hechos.includes(m) ? 'co-editar-mom' : 'comida-nueva'}" data-v="${m}">${m}${hechos.includes(m) ? ' ✓' : ''}</button>`).join('')}</div>
-    ${frec.length ? `<div class="chips">${frec.map(f => `<button class="chip" data-a="comida-rapida" data-v="${esc(f.txt)}" data-m="${mom}">${esc(f.txt)}</button>`).join('')}</div><span class="small" style="color:#2d3a24">Lo que más tomas a esta hora: un toque y queda apuntado.</span>` : `<span class="small" style="color:#2d3a24">Apunta lo que comes y bebes: con el tiempo, aquí saldrá lo de siempre para apuntarlo con un toque.</span>`}</div>`;
-  // Qué ha pasado
-  const dh = diaRec(hoy);
-  out += `<div class="card"><span style="font-size:15px;font-weight:600">¿Qué ha pasado hoy?</span>${chipsM(CHIPS_DIA, dh.chips, 'dia-chip')}${extrasDia(hoy, dh)}</div>`;
-  if (c.plumas > 0 && c.plumas <= c.avisoPlumas) out += `<div class="card butter"><span class="G h3">Quedan ${plural(c.plumas, 'pluma', 'plumas')}</span><span style="font-size:14px">Acuérdate de pedir la receta de sumatriptán.</span></div>`;
-  const cita = proximaCita();
-  if (cita && cita.t - now() < 14 * DIA) out += `<button class="card" data-a="ir" data-v="consulta" style="text-align:left"><span class="small">Próxima cita</span><span class="G h3">${esc(cita.tipo || 'Neurología')} · ${fechaCorta(dayKey(cita.t))} ${hhmm(cita.t)}</span></button>`;
-  out += `<button class="card ink" data-a="ir" data-v="inicio" style="flex-direction:row;justify-content:space-between;align-items:center;color:#efc993"><span class="G h3">Botones de crisis</span><span style="font-size:13px;text-align:right">Laura · Dolor<br>Me pincho</span></button>`;
-  return out;
-}
-
 /* ---------------- Registro ---------------- */
 function itemsRegistro() {
   const it = [];
@@ -754,22 +736,6 @@ function itemsRegistro() {
   vivos('comidas').forEach(r => it.push({ t: r.t, tipo: 'comida', r }));
   vivos('suenos').forEach(r => it.push({ t: r.dormir, tipo: 'sueno', r }));
   return it.sort((a, b) => b.t - a.t);
-}
-function pRegistro() {
-  const f = S.filtro;
-  let out = topBar('Registro');
-  out += `<div class="tiles" style="--n:3"><button class="btn light small" style="width:100%" data-a="ir" data-v="efecto">+ Efecto</button><button class="btn light small" style="width:100%" data-a="comida-nueva">+ Comida</button><button class="btn light small" style="width:100%" data-a="ir" data-v="pasada">+ Crisis</button></div>`;
-  out += `<div class="chips">${[['todo', 'Todo'], ['crisis', 'Crisis'], ['laura', 'Laura'], ['efecto', 'Efectos'], ['comida', 'Comida'], ['sueno', 'Sueño']].map(([v, t]) => `<button class="chip ${f === v ? 'on' : ''}" data-a="filtro" data-v="${v}">${t}</button>`).join('')}</div>`;
-  const items = itemsRegistro().filter(x => f === 'todo' || x.tipo === f);
-  if (!items.length) return out + `<div class="card"><span class="small">Todavía no hay nada apuntado${f !== 'todo' ? ' de este tipo' : ''}.</span></div>`;
-  let dia = '';
-  items.slice(0, S.ver).forEach(x => {
-    const d = diaVivido(x.t);
-    if (d !== dia) { dia = d; out += `<span style="font-size:14px;font-weight:600;padding:8px 8px 0">${cuandoDia(d)}</span>`; }
-    out += itemHTML(x);
-  });
-  if (items.length > S.ver) out += `<button class="btn chipc" data-a="ver-mas">Ver más</button>`;
-  return out;
 }
 function itemHTML(x) {
   const r = x.r, lugar = r.tz && r.tz !== homeTz() ? ' · ' + ciudad(r.tz) : '';
@@ -805,7 +771,7 @@ function pEfecto() {
   const f = S.f.efecto = S.f.efecto || { tipos: [], hora: hhmm(now()) };
   const u = ultimoPinchazo(), tomas = vivos('tomas').filter(t => t.t > now() - DIA).sort((a, b) => b.t - a.t);
   const ctx = [u && now() - u < 12 * HORA ? 'último pinchazo ' + haceTxt(u) : '', tomas[0] ? 'última pastilla ' + haceTxt(tomas[0].t) : ''].filter(Boolean).join(' · ');
-  return `<button class="back" data-a="ir" data-v="registro">‹ Registro</button>${topBar('Efecto secundario')}
+  return `<button class="back" data-a="ir" data-v="diario">‹ Diario</button>${topBar('Efecto secundario')}
   ${ctx ? `<span class="small" style="padding:0 8px">Se guarda solo: ${esc(ctx)} y tus dosis de ahora.</span>` : ''}
   <div class="card">${h3('¿Qué notas?')}${chipsM(EFECTOS, f.tipos, 'ef-tipo')}<input class="f" placeholder="Otra cosa…" value="${esc(f.otro || '')}" data-in="ef-otro"></div>
   <div class="card">${h3('Lado')}${seg([['izq', 'Izq.'], ['der', 'Der.'], ['ambos', 'Ambos'], ['', '—']], f.lado, 'ef-lado')}${h3('Cuánto')}${seg(['Leve', 'Moderado', 'Fuerte'], f.cuanto, 'ef-cuanto')}${h3('Cuánto dura')}${seg(['Minutos', 'Horas', 'Todo el día'], f.dura, 'ef-dura')}</div>
@@ -816,37 +782,10 @@ function pEfecto() {
 }
 
 /* ---------------- Comida ---------------- */
-function nuevaComida(mom) { return { momento: mom || momentoPorHora(partes(now()).h), dia: hoyV(), hora: hhmm(now()), items: [], bebidas: [], q: '' }; }
-function sugComidaHTML() {
-  const f = S.f.comida || {}, q = norm(f.q);
-  if (q.length < 2) return '';
-  return frecuentes().filter(x => norm(x.txt).includes(q) && !f.items.some(i => norm(i) === norm(x.txt))).slice(0, 4)
-    .map(s => `<button class="card" style="padding:12px 16px;text-align:left;border-radius:18px" data-a="co-item" data-v="${esc(s.txt)}">${esc(s.txt)} <span class="small">· ya la tienes, ${plural(s.n, 'vez', 'veces')}</span></button>`).join('');
-}
-function pComida() {
-  const f = S.f.comida = S.f.comida || nuevaComida();
-  if (!f.dia) f.dia = hoyV();
-  const frec = frecuentes(f.momento).filter(x => !f.items.some(i => norm(i) === norm(x.txt))).slice(0, 8);
-  const vig = vigiladosDe(f.items.concat(f.bebidas));
-  return `<button class="back" data-a="co-salir">‹ ${f.editId ? 'Volver' : 'Hoy'}</button>${topBar(f.editId ? 'Editar ' + f.momento.toLowerCase() : 'Comida')}
-  ${seg([[hoyV(), 'Hoy · ' + fechaCorta(hoyV())], [sumarDias(hoyV(), -1), 'Ayer · ' + fechaCorta(sumarDias(hoyV(), -1))]].concat(f.dia < sumarDias(hoyV(), -1) ? [[f.dia, fechaCorta(f.dia)]] : []), f.dia, 'co-dia')}
-  ${seg(['Desayuno', 'Comida', 'Merienda', 'Cena', 'Picoteo'], f.momento, 'co-mom')}
-  <div class="card" style="padding:10px 18px"><div class="between" style="align-items:center"><span>Hora${partes(now()).h < CORTE ? '<br><span class="small">Hasta las 5:00 sigue contando como ' + (f.dia === hoyV() ? 'hoy' : 'ese día') + '</span>' : ''}</span><input type="time" value="${f.hora}" data-in="co-hora" style="border:none;background:var(--chip);border-radius:12px;padding:8px 10px;font-size:17px;font-weight:600"></div></div>
-  <div class="card sage"><span class="G h3">¿Qué has ${({ Desayuno: 'desayunado', Comida: 'comido', Merienda: 'merendado', Cena: 'cenado', Picoteo: 'picado' })[f.momento]}?</span>
-    <div class="row"><input class="f grow" placeholder="Escribe y pulsa Añadir" value="${esc(f.q)}" data-in="co-q" enterkeyhint="done"><button class="btn small" data-a="co-add">Añadir</button></div>
-    <div id="co-sug" style="display:contents">${sugComidaHTML()}</div>
-    ${f.items.length ? `<div class="chips">${f.items.map(i => `<button class="chip on" data-a="co-quitar" data-v="${esc(i)}">${esc(i)} ✕</button>`).join('')}</div>` : ''}
-    ${frec.length ? `<span class="small" style="color:#2d3a24">Lo de siempre a esta hora</span><div class="chips">${frec.map(x => `<button class="chip" data-a="co-item" data-v="${esc(x.txt)}">${esc(x.txt)}</button>`).join('')}</div>` : ''}</div>
-  <div class="card">${h3('Para beber')}${segM(['Agua', 'Café', 'Refresco', 'Cerveza', 'Vino', 'Copa'], f.bebidas, 'co-beb')}</div>
-  ${vig.length ? `<div class="card"><span style="font-size:15px"><span class="dot"></span> Vigilado: <b>${esc(lista(vig))}</b></span><span class="small">Se marca solo. Puedes cambiar la lista en Ajustes.</span></div>` : ''}
-  <button class="chip ${f.fuera ? 'on' : ''}" data-a="co-fuera" style="align-self:flex-start">Comí fuera de casa</button>
-  <button class="btn" data-a="co-guardar">${f.editId ? 'Guardar cambios' : 'Guardar ' + f.momento.toLowerCase()}</button>`;
-}
-
 /* ---------------- Crisis pasada ---------------- */
 function pPasada() {
   const f = S.f.pasada = S.f.pasada || { dia: hoyV(), laura: '', dolor: hhmm(now() - HORA), pinchazo: '', fin: hhmm(now()), como: 'siempre', plumas: true };
-  return `<button class="back" data-a="ir" data-v="registro">‹ Registro</button>${topBar('Crisis pasada')}
+  return `<button class="back" data-a="ir" data-v="diario">‹ Diario</button>${topBar('Crisis pasada')}
   <span class="small" style="padding:0 8px">Para apuntar una crisis que no registraste en el momento. Deja en blanco lo que no hubo.</span>
   <div class="card"><label class="lab">Día<input class="f" type="date" value="${f.dia}" data-in="pa-dia"></label>
     <div class="tiles"><label class="tm">Laura<input type="time" value="${f.laura}" data-in="pa-laura"></label><label class="tm">Dolor<input type="time" value="${f.dolor}" data-in="pa-dolor"></label><label class="tm">Pinchazo<input type="time" value="${f.pinchazo}" data-in="pa-pinchazo"></label><label class="tm">Se fue<input type="time" value="${f.fin}" data-in="pa-fin"></label></div></div>
@@ -960,9 +899,9 @@ function analisisFactores() {
   if (di.length >= 2) { const a = di.filter(d => crisisEn(d.id)).length, b = nd.filter(d => crisisEn(d.id)).length; out.push({ ch: 'Deporte intenso', con: di.length, a, pa: Math.round(a / di.length * 100), pb: nd.length ? Math.round(b / nd.length * 100) : 0 }); }
   return out.sort((x, y) => (y.pa - y.pb) - (x.pa - x.pb));
 }
-function pPatrones() {
+function pPatronesDetalle() {
   const cr = crisisL(), hoy = hoyV();
-  let out = topBar('Patrones') + `<div class="seg" style="--n:2"><button class="on">Patrones</button><button style="background:#fff" data-a="ir" data-v="consulta">Consulta</button></div>`;
+  let out = `<button class="back" data-a="ir" data-v="patrones">‹ Patrones</button>` + topBar('Todos los datos');
   const sem = cr.filter(x => x.t > now() - 7 * DIA).length, ant = cr.filter(x => x.t > now() - 35 * DIA && x.t <= now() - 7 * DIA).length / 4;
   const fondo = vivos('dias').filter(d => d.id.startsWith(hoy.slice(0, 7)) && d.fondo && d.fondo !== 'No').length;
   const ds = diasSinDolor();
@@ -1115,6 +1054,306 @@ function pDias() {
   }
   if (!pintados) out += `<div class="card"><span class="small">${solo ? 'No hay crisis en estos días.' : 'Todavía no hay nada apuntado.'}</span></div>`;
   out += `<button class="btn chipc" data-a="dias-mas">Ver ${n} días más</button>`;
+  return out;
+}
+
+/* =========================================================
+   REDISEÑO 2.0: Hoy con «Ahora toca», botón +, Diario y
+   Patrones en frases. La pantalla de crisis no cambia.
+   ========================================================= */
+const IC = {
+  pill: '<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="M9.5 8.3l5 6.4"/>',
+  plato: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3.5"/>',
+  luna: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  gota: '<path d="M12 3c3.5 4.5 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 2.5-6.5 6-11z"/>',
+  rayo: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  correr: '<circle cx="14" cy="4.5" r="1.8"/><path d="M9 21l3-6 3 2v5M7 11l3-3 4 1 2 3 3 1M12 15l-1-5"/>',
+  cara: '<circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8.5 15.5c1.8-1.2 5.2-1.2 7 0"/>',
+  reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  mas: '<path d="M12 5v14M5 12h14"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  flecha: '<path d="M9 6l6 6-6 6"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  avion: '<path d="M2 16l20-7-20-7 4 7-4 7zM6 9h7"/>',
+  aviso: '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h.01"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>'
+};
+const ic = (k, s, c) => `<svg width="${s || 20}" height="${s || 20}" viewBox="0 0 24 24" fill="none" stroke="${c || 'currentColor'}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k] || ''}</svg>`;
+const LOGO = s => `<svg width="${s}" height="${s}" viewBox="0 0 180 180" role="img" aria-label="Laura"><rect width="180" height="180" rx="44" fill="#8cc0ea"/><g fill="#f3efe6"><circle cx="66" cy="78" r="24"/><circle cx="92" cy="66" r="26"/><circle cx="118" cy="80" r="24"/><circle cx="120" cy="106" r="22"/><circle cx="92" cy="114" r="24"/><circle cx="62" cy="104" r="22"/></g><path d="M92 48 C84 62 100 72 92 86 C84 100 100 108 92 132" fill="none" stroke="#8cc0ea" stroke-width="7" stroke-linecap="round"/></svg>`;
+
+/* ---------- Barra de abajo con el + ---------- */
+function navHTML() {
+  const t = { hoy: 'hoy', comida: 'hoy', ajustes: 'hoy', diario: 'diario', registro: 'diario', efecto: 'diario', pasada: 'diario', distinta: 'diario', dias: 'diario', medicinas: 'medicinas', med: 'medicinas', tanda: 'medicinas', patrones: 'patrones', 'patrones-det': 'patrones', consulta: 'patrones' }[S.pant] || 'hoy';
+  const b = (k, n) => `<button class="${t === k ? 'on' : ''}" data-a="ir" data-v="${k}">${n}</button>`;
+  return `<nav class="tabs">${b('hoy', 'Hoy')}${b('diario', 'Diario')}<button class="mas" aria-label="Apuntar algo" data-a="sh" data-v="mas"><span>${ic('mas', 28, '#f3efe6')}</span></button>${b('medicinas', 'Medicinas')}${b('patrones', 'Patrones')}</nav>`;
+}
+
+/* ---------- Lo que ha pasado en un día (para Hoy y el Diario) ---------- */
+function entradasDia(d, diario) {
+  const E = [], add = o => E.push(o);
+  noches().forEach(s => {
+    if (!diario && s.despertar && diaVivido(s.despertar) === d) add({ t: s.despertar, ic: 'sol', tit: 'Te despertaste', det: 'dormiste ' + durTxt(s.despertar - s.dormir), a: 'detalle', c: 'suenos', v: s.id, tipo: 'sueno' });
+    if (s.dormir && diaVivido(s.dormir) === d) add({ t: s.dormir, ic: 'luna', tit: s.despertar ? 'Te dormiste' : 'A dormir', det: s.despertar ? (diario ? durTxt(s.despertar - s.dormir) + ' · hasta las ' + hhmm(s.despertar) : '') : (durmiendoAhora() && durmiendoAhora().id === s.id ? 'durmiendo' : 'sin hora de despertar'), a: 'detalle', c: 'suenos', v: s.id, tipo: 'sueno' });
+  });
+  siestas().filter(s => diaVivido(s.dormir) === d).forEach(s => add({ t: s.dormir, ic: 'luna', tit: 'Siesta', det: s.despertar ? durTxt(s.despertar - s.dormir) : 'en curso', a: 'detalle', c: 'suenos', v: s.id, tipo: 'sueno' }));
+  if (preventivos().length || tandaActiva(d)) tomasDelDia(d).forEach(s => {
+    if (s.t > now()) return;
+    const xs = s.meds.map(m => tomaDe(d, s.hora, m.id)), noms = lista(s.meds.map(m => m.nombre));
+    let det = '', mal = false;
+    if (xs.every(x => x && x.estado === 'tomada')) det = s.meds.length > 1 ? 'tomadas' : 'tomada';
+    else if (xs.some(x => x && x.estado === 'olvidada')) { det = 'no tomada'; mal = true; }
+    else if (xs.some(x => x && x.estado === 'otra')) det = 'a las ' + hhmm(xs.find(x => x && x.estado === 'otra').t);
+    else { det = 'sin marcar'; mal = true; }
+    add({ t: s.t, ic: 'pill', tit: noms, det, mal, a: 'sh', v: 'pastilla', tipo: 'pastilla', ok: !mal });
+  });
+  vivos('tomas').filter(x => String(x.slot || '').startsWith('sup|') && diaVivido(x.t) === d).forEach(x => { const m = porId('meds', x.medId); add({ t: x.t, ic: 'pill', tit: m ? m.nombre : 'Suplemento', det: 'tomado', a: 'sh', v: 'pastilla', tipo: 'pastilla', ok: true }); });
+  vivos('comidas').filter(r => diaVivido(r.t) === d).forEach(r => add({ t: r.t, ic: 'plato', tit: r.momento || 'Comida', det: lista((r.items || []).concat(r.bebidas || [])), a: 'co-editar', v: r.id, tipo: 'comida' }));
+  vivos('efectos').filter(r => diaVivido(r.t) === d).forEach(r => add({ t: r.t, ic: 'aviso', tit: lista(r.tipos || []) || 'Efecto', det: [r.cuanto, r.dura].filter(Boolean).join(' · '), a: 'detalle', c: 'efectos', v: r.id, tipo: 'efecto' }));
+  vivos('eventos').filter(e => diaVivido(inicioEv(e)) === d).forEach(e => { const cr = esCrisis(e), p = e.pinchazos || [];
+    add({ t: inicioEv(e), ic: 'rayo', tit: cr ? 'Crisis' + (e.intensidad ? ' ' + e.intensidad + '/10' : '') : 'Laura', det: [p.length ? 'pinchazo ' + p.map(x => hhmm(x)).join(', ') : (cr ? '' : 'se fue sola'), e.fin ? 'se fue ' + hhmm(e.fin) : (abierto() && abierto().id === e.id ? 'abierta' : ''), e.como === 'distinta' ? 'distinta' : ''].filter(Boolean).join(' · '), a: 'detalle', c: 'eventos', v: e.id, tipo: 'crisis', crisis: cr }); });
+  const dr = diaRec(d);
+  if ((dr.chips || []).includes('Deporte') || dr.deporte) add({ t: dr.deporteH ? epochVivido(d, dr.deporteH) : epochVivido(d, '23:59'), sinHora: !dr.deporteH, ic: 'correr', tit: 'Deporte', det: [dr.deporte ? dr.deporte.toLowerCase() : '', dr.deporteMin ? dr.deporteMin + ' min' : ''].filter(Boolean).join(' · '), a: 'sh', v: 'deporte', tipo: 'otro' });
+  return E.sort((a, b) => a.t - b.t);
+}
+function filaHTML(x) {
+  const col = x.crisis ? '#a33515' : x.mal ? '#a33515' : 'var(--ink)';
+  return `<button class="fila${x.crisis ? ' cr' : ''}" data-a="${x.a}" data-v="${esc(x.v)}"${x.c ? ` data-c="${x.c}"` : ''}><span class="h">${x.sinHora ? '' : hhmm(x.t)}</span><span class="i" style="color:${col}">${ic(x.ic, 18)}</span><span class="tx"><b style="color:${col}">${esc(x.tit)}</b>${x.det ? `<span>${esc(x.det)}</span>` : ''}</span><span class="f">${ic(x.ok ? 'check' : 'flecha', 16)}</span></button>`;
+}
+
+/* ---------- Horas habituales ---------- */
+function horaHabitual(momento) {
+  const l = vivos('comidas').filter(r => r.momento === momento).sort((a, b) => b.t - a.t).slice(0, 30);
+  if (l.length < 3) return null;
+  const m = mediana(l.map(r => { const p = partes(r.t); return (p.h * 60 + p.mi - CORTE * 60 + 1440) % 1440; }));
+  const t = (m + CORTE * 60) % 1440; return pad(Math.floor(t / 60)) + ':' + pad(t % 60);
+}
+const VERBO = { Desayuno: 'desayunado', Comida: 'comido', Merienda: 'merendado', Cena: 'cenado', Picoteo: 'picado' };
+
+/* ---------- HOY ---------- */
+function pHoy() {
+  const c = CFG(), h = partes(now()).h, hoy = hoyV();
+  let out = `<div class="cab">${LOGO(38)}<span class="tt"><span class="G" style="font-size:24px;line-height:1">Hoy</span><span class="small">${fechaLarga(hoy).replace(/ de [a-zé]+$/i, '')} · ${hhmm(now())}</span></span><span class="grow"></span>
+    <button class="crisisbtn" data-a="ir" data-v="inicio">${ic('luna', 16, '#efc993')}Crisis</button><button class="cuad" aria-label="Ajustes" data-a="ir" data-v="ajustes">${ICON_GEAR}</button></div>`;
+  // Píldoras de estado
+  const ds = diasSinDolor(), pills = [];
+  if (ds !== null) pills.push(`<span class="pill"><b>${plural(ds, 'día', 'días')}</b> sin dolor</span>`);
+  if (lejos()) pills.push(`<span class="pill">${esc(ciudad(tzHere()))} · ${difHoras()}</span>`);
+  if (!SYNC.meta.uid) pills.push(`<button class="pill alerta" data-a="ir" data-v="ajustes">Conecta tu nube</button>`);
+  else if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') pills.push(`<button class="pill alerta" data-a="ir" data-v="ajustes">Activa los avisos</button>`);
+  if (pills.length) out += `<div class="pills">${pills.join('')}</div>`;
+  if (S.nuevaVersion) out += `<div class="card ink"><b>Hay una versión nueva de Laura</b><button class="btn light" data-a="actualizar">Actualizar</button></div>`;
+  const e = abierto();
+  if (e) out += `<button class="card ink" data-a="ir" data-v="inicio" style="text-align:left"><span class="G h3" style="color:#efc993">${e.dolor || (e.pinchazos || []).length ? 'Tienes una crisis abierta' : 'Laura está abierta'}</span><span style="font-size:14px">Toca para seguir con los botones de crisis</span></button>`;
+
+  // Qué toca: pastilla, siesta, dormir, comida
+  const cosas = [];
+  const pend = pendientesAhora();
+  if (!preventivos().length && !tandaActiva(dayKey(now(), tzTomas()))) cosas.push({ k: 'sinmed' });
+  else if (pend.length) cosas.push({ k: 'toma', s: pend[0] });
+  const sie = durmiendoAhora();
+  if (sie && sie.siesta) cosas.unshift({ k: 'siesta', s: sie });
+  if (h >= 5 && h < 14 && !noches().some(s => s.despertar && diaVivido(s.despertar) === hoy) && !(sie && !sie.siesta)) cosas.push({ k: 'sueno' });
+  const hechos = vivos('comidas').filter(r => diaVivido(r.t) === hoy).map(r => r.momento);
+  const momAhora = momentoPorHora(h);
+  ['Desayuno', 'Comida', 'Cena'].forEach(m => { const hh = horaHabitual(m); if (hechos.includes(m)) return;
+    const ya = hh ? epochVivido(hoy, hh) <= now() + 30 * MIN : m === momAhora;
+    if (ya && (!hh || now() - epochVivido(hoy, hh) < 5 * HORA)) cosas.push({ k: 'comida', m, hh }); });
+  // Próxima toma de hoy (para «luego»)
+  const prox = pend.length ? null : tomasDelDia(dayKey(now(), tzTomas())).find(s => s.t > now() && s.meds.some(m => !tomaDe(s.day || dayKey(now(), tzTomas()), s.hora, m.id)));
+  const hero = cosas[0], luego = cosas.slice(1, 3);
+  if (hero) out += heroHTML(hero); else out += `<div class="hero"><span class="k">Ahora</span><span class="G" style="font-size:28px;line-height:1.1">Todo al día</span><span style="font-size:15px;color:#c9c2b4">${prox ? 'Próxima toma: ' + esc(lista(prox.meds.map(m => m.nombre))) + ' a las ' + prox.hora : 'Nada pendiente.'}</span></div>`;
+  luego.forEach(x => out += luegoHTML(x));
+  if (hero && prox && luego.length < 2) out += `<div class="luego"><span class="ico" style="background:#f7e3b0">${ic('pill', 18)}</span><span class="tx"><b>${esc(lista(prox.meds.map(m => m.nombre)))} a las ${prox.hora}</b><span>te aviso a la hora</span></span></div>`;
+  // Avisos sueltos
+  if (c.plumas > 0 && c.plumas <= c.avisoPlumas) out += `<button class="luego" data-a="ir" data-v="medicinas"><span class="ico" style="background:#f7e3b0">${ic('aviso', 18)}</span><span class="tx"><b>Quedan ${plural(c.plumas, 'pluma', 'plumas')}</b><span>pide la receta de sumatriptán</span></span></button>`;
+  const cita = proximaCita();
+  if (cita && cita.t - now() < 14 * DIA) out += `<button class="luego" data-a="ir" data-v="consulta"><span class="ico">${ic('cal', 18)}</span><span class="tx"><b>${esc(cita.tipo || 'Neurología')} · ${cuandoDia(dayKey(cita.t))}</b><span>${fechaCorta(dayKey(cita.t))} a las ${hhmm(cita.t)}</span></span></button>`;
+  // Lo de hoy
+  const E = entradasDia(hoy);
+  out += `<div class="sec"><span class="G" style="font-size:20px">Lo de hoy</span><span class="small">${E.length ? 'toca para cambiar' : ''}</span></div>`;
+  out += E.length ? `<div class="filas">${E.map(filaHTML).join('')}</div>` : `<span class="small" style="padding:0 8px">Todavía nada. Con el + apuntas lo que sea.</span>`;
+  const dr = diaRec(hoy), chipsHoy = (dr.chips || []).filter(x => !['Siesta', 'Deporte'].includes(x));
+  out += `<div class="chips" style="padding:4px 2px">
+    <button class="chip dash${dr.agua ? ' on' : ''}" data-a="sh" data-v="agua">${dr.agua ? 'Agua: ' + dr.agua.toLowerCase() : '+ Agua'}</button>
+    <button class="chip dash${dr.animo || dr.fondo ? ' on' : ''}" data-a="sh" data-v="como">${dr.animo || dr.fondo ? [dr.animo ? 'Ánimo: ' + dr.animo.toLowerCase() : '', dr.fondo && dr.fondo !== 'No' ? 'fondo ' + dr.fondo.toLowerCase() : ''].filter(Boolean).join(' · ') : '+ Cómo estás'}</button>
+    <button class="chip dash${chipsHoy.length ? ' on' : ''}" data-a="sh" data-v="algo">${chipsHoy.length ? esc(lista(chipsHoy)) : '+ Algo ha pasado'}</button></div>`;
+  return out;
+}
+function heroHTML(x) {
+  if (x.k === 'sinmed') return `<div class="hero"><span class="k">Para empezar</span><span class="G" style="font-size:30px;line-height:1.05">Añade tu medicación</span><span style="font-size:15px;color:#c9c2b4">Verapamilo, topiramato y sus horas, para que Laura te avise.</span><button class="btn sky" data-a="ir" data-v="medicinas">Añadir</button></div>`;
+  if (x.k === 'toma') { const s = x.s, casa = tzTomas() === homeTz() && lejos(), tarde = s.t < now() - 20 * MIN;
+    return `<div class="hero"><span class="k">${tarde ? 'Te tocaba ' + haceTxt(s.t) : s.t <= now() + 15 * MIN ? 'Ahora toca' : 'Próxima toma'}</span>
+      <div class="between" style="align-items:flex-end"><span style="display:flex;flex-direction:column;gap:4px;min-width:0"><span class="G" style="font-size:32px;line-height:1">${esc(lista(s.meds.map(m => m.nombre)))}</span><span style="font-size:15px;color:#c9c2b4">${esc(s.meds.map(m => m.dosis).filter(Boolean).join(' · '))}${casa ? ' · hora de casa' : ''}${s.day !== dayKey(now(), tzTomas()) ? ' · ' + cuandoDia(s.day).toLowerCase() : ''}</span></span><span class="G" style="font-size:34px;line-height:1;color:var(--sky)">${casa ? hhmm(s.t) : s.hora}</span></div>
+      <button class="btn sky" data-a="tomar" data-v="${s.day}|${s.hora}">${tarde ? 'Me la tomo ahora' : s.meds.length > 1 ? 'Tomadas' : 'Tomada'}</button>
+      <div class="links"><button data-a="tomar-otra" data-v="${s.day}|${s.hora}">A otra hora</button><button data-a="olvide" data-v="${s.day}|${s.hora}">Se me olvidó</button></div></div>`; }
+  if (x.k === 'siesta') return `<div class="hero"><span class="k">Siesta</span><span class="G" style="font-size:30px;line-height:1">Desde las ${hhmm(x.s.dormir)}</span><button class="btn sky" data-a="despertar">Me he despertado</button></div>`;
+  if (x.k === 'sueno') return `<div class="hero"><span class="k">Buenos días</span><span class="G" style="font-size:30px;line-height:1.05">¿Cómo has dormido?</span><span style="font-size:15px;color:#c9c2b4">Si no pulsaste los botones de dormir, apúntalo aquí.</span><button class="btn sky" data-a="sh" data-v="sueno">Apuntar la noche</button></div>`;
+  if (x.k === 'comida') return `<div class="hero"><span class="k">${x.m}</span><span class="G" style="font-size:30px;line-height:1.05">¿Qué has ${VERBO[x.m]}?</span>${x.hh ? `<span style="font-size:15px;color:#c9c2b4">Sueles ${x.m === 'Desayuno' ? 'desayunar' : x.m === 'Comida' ? 'comer' : 'cenar'} sobre las ${x.hh}</span>` : ''}<button class="btn sky" data-a="comida-nueva" data-v="${x.m}">Apuntar</button></div>`;
+  return '';
+}
+function luegoHTML(x) {
+  if (x.k === 'comida') return `<button class="luego" data-a="comida-nueva" data-v="${x.m}"><span class="ico" style="background:#dbe9d0">${ic('plato', 18)}</span><span class="tx"><b>${x.m === 'Cena' ? 'La cena' : x.m === 'Comida' ? 'La comida' : 'El desayuno'}, sin apuntar</b><span>${x.hh ? 'sueles ' + (x.m === 'Desayuno' ? 'desayunar' : x.m === 'Comida' ? 'comer' : 'cenar') + ' sobre las ' + x.hh : 'toca para apuntarla'}</span></span><span class="go">Apuntar</span></button>`;
+  if (x.k === 'sueno') return `<button class="luego" data-a="sh" data-v="sueno"><span class="ico">${ic('luna', 18)}</span><span class="tx"><b>La noche, sin apuntar</b><span>cuándo te dormiste y te despertaste</span></span><span class="go">Apuntar</span></button>`;
+  if (x.k === 'toma') return `<button class="luego" data-a="sh" data-v="pastilla"><span class="ico" style="background:#f7e3b0">${ic('pill', 18)}</span><span class="tx"><b>${esc(lista(x.s.meds.map(m => m.nombre)))} · ${x.s.hora}</b><span>sin marcar</span></span><span class="go">Marcar</span></button>`;
+  if (x.k === 'sinmed') return `<button class="luego" data-a="ir" data-v="medicinas"><span class="ico">${ic('pill', 18)}</span><span class="tx"><b>Añade tu medicación</b><span>para que Laura te avise</span></span></button>`;
+  return '';
+}
+
+/* ---------- Hojas (sheets) ---------- */
+const tileMas = (k, t, s, bg, a, v) => `<button class="tmas" style="background:${bg}" data-a="${a}" data-v="${v || ''}"><span class="ico">${ic(k, 20)}</span><span><b>${t}</b><span>${s}</span></span></button>`;
+const SH = {
+  mas: () => `<span class="G" style="font-size:26px;padding:0 4px">¿Qué apuntas?</span><div class="tiles">
+    ${tileMas('plato', 'Comida', 'dictar o repetir', '#dbe9d0', 'comida-nueva', '')}
+    ${tileMas('pill', 'Pastilla', 'tomada, olvidada…', '#f7e3b0', 'sh', 'pastilla')}
+    ${tileMas('aviso', 'Efecto', 'hormigueo, mareo…', '#f6d9cf', 'ir', 'efecto')}
+    ${tileMas('luna', 'Siesta', 'empieza o pasada', 'var(--chip)', 'sh', 'siesta')}
+    ${tileMas('correr', 'Deporte', 'suave o intenso', 'var(--chip)', 'sh', 'deporte')}
+    ${tileMas('gota', 'Agua', 'poca · normal · mucha', 'var(--chip)', 'sh', 'agua')}
+    ${tileMas('reloj', 'Crisis pasada', 'no la apuntaste', 'var(--chip)', 'ir', 'pasada')}
+    ${tileMas('avion', 'Algo ha pasado', 'bolo, vuelo, estrés…', 'var(--chip)', 'sh', 'algo')}
+    ${tileMas('cara', 'Cómo estás', 'ánimo y dolor de fondo', 'var(--chip)', 'sh', 'como')}
+    ${tileMas('sol', 'Sueño', 'la noche de ayer', 'var(--chip)', 'sh', 'sueno')}
+  </div><button class="btn light" data-a="cerrar-sheet">Cerrar</button>`,
+  pastilla: () => { const t = tomasRecientesHTML(), sups = suplementos();
+    return `<span class="G h3">Pastillas</span>${t || '<span class="small">No hay tomas con horario. Añádelas en Medicinas.</span>'}
+    ${sups.length ? `<div class="card">${h3('Suplementos')}<div class="list">${sups.map(m => `<div class="it"><b>${esc(m.nombre)}</b><button class="btn small" data-a="sup-tomar" data-v="${m.id}">Tomado</button></div>`).join('')}</div></div>` : ''}
+    <button class="btn light" data-a="cerrar-sheet">Listo</button>`; },
+  siesta: () => { const s = durmiendoAhora(), hoy = hoyV(), sd = siestaDe(hoy);
+    if (s && s.siesta) return `<span class="G h3">Siesta desde las ${hhmm(s.dormir)}</span><button class="btn" data-a="despertar">Me he despertado</button><button class="btn light" data-a="cerrar-sheet">Cerrar</button>`;
+    return `<span class="G h3">Siesta</span><button class="btn" data-a="siesta">Me la echo ahora</button><span class="small" style="padding:0 4px">O apunta una que ya te echaste:</span>
+    <div class="tiles"><label class="tm">Desde<input type="time" value="${sd ? hhmm(sd.dormir) : ''}" data-in="siesta-ini" data-d="${hoy}"></label><label class="tm">Hasta<input type="time" value="${sd && sd.despertar ? hhmm(sd.despertar) : ''}" data-in="siesta-fin" data-d="${hoy}"></label></div>
+    <button class="btn chipc" data-a="siesta-ok">Guardar</button>`; },
+  deporte: () => { const d = hoyV(), dr = diaRec(d);
+    return `<span class="G h3">Deporte</span>${seg(['Suave', 'Intenso'], dr.deporte, 'dia-deporte', ` data-d="${d}"`)}
+    <div class="tiles"><label class="tm">Hora<input type="time" value="${dr.deporteH || hhmm(now())}" data-in="deporte-hora" data-d="${d}"></label><label class="tm">Minutos<input inputmode="numeric" placeholder="45" value="${esc(dr.deporteMin || '')}" data-in="deporte-min" data-d="${d}"></label></div>
+    <button class="btn" data-a="deporte-ok">Guardar</button>${(dr.chips || []).includes('Deporte') ? `<button class="btn danger" data-a="deporte-quitar">Quitar el deporte de hoy</button>` : ''}`; },
+  agua: () => { const d = hoyV(); return `<span class="G h3">Agua hoy</span>${seg(['Poca', 'Normal', 'Mucha'], diaRec(d).agua, 'dia-agua-c', ` data-d="${d}"`)}<span class="small">Más o menos, sin contar vasos.</span>`; },
+  como: () => { const d = hoyV(), dr = diaRec(d); return `<span class="G h3">¿Cómo estás hoy?</span>${h3('Ánimo')}${seg(['Bien', 'Regular', 'Mal'], dr.animo, 'dia-animo', ` data-d="${d}"`)}${h3('Dolor de fondo', 'entre crisis')}${seg(['No', 'Leve', 'Molesto'], dr.fondo, 'dia-fondo', ` data-d="${d}"`)}<button class="btn light" data-a="cerrar-sheet">Listo</button>`; },
+  algo: () => { const d = hoyV(); return `<span class="G h3">¿Qué ha pasado hoy?</span>${chipsM(CHIPS_DIA.filter(x => !['Siesta', 'Deporte'].includes(x)), diaRec(d).chips, 'dia-chip')}<button class="btn light" data-a="cerrar-sheet">Listo</button>`; },
+  sueno: () => { const s = ultimoSueno(), hab = suenoHabitual(), c = CFG();
+    const dorm = s ? hhmm(s.dormir) : hab.dormir, desp = s && s.despertar ? hhmm(s.despertar) : (s ? '' : hab.despertar);
+    return `<span class="G h3">Anoche${s && s.despertar ? ' · ' + durTxt(s.despertar - s.dormir) : ''}</span>
+    <div class="tiles"><label class="tm">Te dormiste<input type="time" value="${dorm}" data-in="sueno-dormir"></label><label class="tm">Te despertaste<input type="time" value="${desp}" data-in="sueno-despertar"></label></div>
+    ${h3('¿Qué tal?')}${seg(['Bien', 'Regular', 'Mal'], s && s.calidad, 'sueno-calidad')}
+    <span class="small">${s ? (s.auto ? 'Con tus botones de dormir (+' + c.margen + ' min).' : 'Apuntado a mano.') : 'Vienen tus horas de siempre: cámbialas si hace falta y toca qué tal.'}</span><button class="btn light" data-a="cerrar-sheet">Listo</button>`; }
+};
+
+/* ---------- COMIDA: dictar o escribir ---------- */
+const BEBIDAS_RE = /^(agua|caf[eé]|cafe con leche|cortado|t[eé]|infusi[oó]n|manzanilla|leche|zumo|refresco|coca[ -]?cola|cola|fanta|aquarius|nestea|t[oó]nica|sprite|7up|seven up|red ?bull|monster|bebida energ[eé]tica|cerveza|ca[ñn]a|tercio|botell[ií]n|clara|vino|tinto|blanco|ros[aé]do|cava|champ[aá]n|sidra|vermut|vermouth|copa|cubata|gin ?tonic|ron|whisky|vodka|tequila|chupito|licor|batido|smoothie|kombucha|gaseosa|soda|isot[oó]nica)\b/i;
+function partirComida(txt) {
+  const t = String(txt || '').replace(/\s+/g, ' ').trim(); if (!t) return { items: [], bebidas: [] };
+  const trozos = t.split(/\s*(?:,|;|\.|\n|\+|\by luego\b|\by de beber\b|\bde beber\b|\bpara beber\b|\by una?\b|\by un\b|\by dos\b|\by\b|\be\b)\s*/i).map(x => x.replace(/^(una?|unos|unas|el|la|los|las|dos|tres|algo de|un poco de|mucha?|poca?)\s+/i, '').trim()).filter(x => x.length > 1);
+  const items = [], bebidas = [];
+  trozos.forEach(x => { const s = cap(x); (BEBIDAS_RE.test(x) ? bebidas : items).push(s); });
+  return { items, bebidas };
+}
+function nuevaComida(mom) {
+  const m = mom || momentoPorHora(partes(now()).h), hh = horaHabitual(m);
+  const lejosHab = hh && Math.abs(epochVivido(hoyV(), hh) - now()) > 90 * MIN && m !== momentoPorHora(partes(now()).h);
+  return { momento: m, txt: '', cuando: lejosHab && epochVivido(hoyV(), hh) < now() ? 'hab' : 0, dia: hoyV(), hora: hh || hhmm(now()) };
+}
+function comidaTiempo(f) {
+  if (f.cuando === 'otra' || f.editId) { let t = epochVivido(f.dia || hoyV(), f.hora); if (!f.editId && t > now() + 5 * MIN && f.dia === hoyV()) t -= DIA; return t; }
+  if (f.cuando === 'hab') { const hh = horaHabitual(f.momento); let t = epochVivido(hoyV(), hh || hhmm(now())); if (t > now()) t = now(); return t; }
+  return now() - (+f.cuando || 0) * HORA;
+}
+function prevComidaHTML() {
+  const f = S.f.comida || {}, p = partirComida(f.txt);
+  if (!p.items.length && !p.bebidas.length) return `<span class="small">Ejemplo: «pollo con patatas y una cerveza»</span>`;
+  return `<span class="small">Se guarda así</span><div class="chips">${p.items.map(i => `<span class="chip on">${esc(i)}</span>`).join('')}${p.bebidas.map(i => `<span class="chip on">${esc(i)} <span style="opacity:.6">· bebida</span></span>`).join('')}</div>`;
+}
+function pComida() {
+  const f = S.f.comida = S.f.comida || nuevaComida(), hh = horaHabitual(f.momento);
+  const ant = vivos('comidas').filter(r => r.momento === f.momento && r.id !== f.editId).sort((a, b) => b.t - a.t)[0];
+  const combos = {}; vivos('comidas').filter(r => r.momento === f.momento).forEach(r => { const k = (r.items || []).concat(r.bebidas || []).map(norm).sort().join('|'); if (!k) return; (combos[k] = combos[k] || { n: 0, r }).n++; });
+  const top = Object.values(combos).sort((a, b) => b.n - a.n)[0];
+  const txtDe = r => lista((r.items || []).concat(r.bebidas || [])).replace(/ y /g, ', ').toLowerCase();
+  const cuandoOpts = [[0, 'Ahora'], [1, 'Hace 1 h'], hh && f.momento !== momentoPorHora(partes(now()).h) ? ['hab', 'Sobre las ' + hh] : [2, 'Hace 2 h'], ['otra', 'Otra']];
+  const editando = !!f.editId;
+  return `<div class="between" style="padding:6px 6px 0"><button class="back" data-a="co-salir">‹ ${editando ? 'Volver' : 'Hoy'}</button><span class="small">${fechaLarga(f.dia || hoyV())}</span></div>
+  <span class="G" style="font-size:34px;line-height:1.05;padding:4px 6px">${editando ? 'Cambiar ' + f.momento.toLowerCase() : '¿Qué has ' + VERBO[f.momento] + '?'}</span>
+  <div class="chips">${['Desayuno', 'Comida', 'Merienda', 'Cena', 'Picoteo'].map(m => `<button class="chip ${f.momento === m ? 'on' : ''}" data-a="co-mom" data-v="${m}">${m}</button>`).join('')}</div>
+  <div class="card"><label class="lab">Dilo o escríbelo<textarea class="f" rows="2" data-in="co-txt" placeholder="pizza y una cerveza" style="font-size:18px">${esc(f.txt)}</textarea></label>
+    <span class="row small">${ic('mic', 16, 'var(--sub)')}Toca el micro del teclado y habla</span>
+    <div id="co-prev" style="display:flex;flex-direction:column;gap:6px">${prevComidaHTML()}</div></div>
+  ${editando ? `<div class="card">${h3('¿Cuándo?')}${seg([[hoyV(), 'Hoy'], [sumarDias(hoyV(), -1), 'Ayer']].concat(f.dia < sumarDias(hoyV(), -1) ? [[f.dia, fechaCorta(f.dia)]] : []), f.dia, 'co-dia')}<label class="tm">Hora<input type="time" value="${f.hora}" data-in="co-hora"></label></div>`
+    : `<span class="G" style="font-size:20px;padding:8px 6px 0">¿Cuándo?</span><div class="seg" style="--n:4">${cuandoOpts.map(([v, t]) => `<button class="${String(f.cuando) === String(v) ? 'on' : ''}" style="font-size:14px" data-a="co-cuando" data-v="${v}">${t}</button>`).join('')}</div>
+    ${f.cuando === 'otra' ? `<div class="tiles">${seg([[hoyV(), 'Hoy'], [sumarDias(hoyV(), -1), 'Ayer']], f.dia, 'co-dia')}<label class="tm">Hora<input type="time" value="${f.hora}" data-in="co-hora"></label></div>` : ''}`}
+  ${!editando && (ant || (top && top.n >= 2)) ? `<span class="G" style="font-size:20px;padding:8px 6px 0">O repite</span>
+    ${ant ? `<button class="luego" data-a="co-repetir" data-v="${ant.id}"><span class="tx"><b>Lo de la última vez</b><span>${esc(txtDe(ant))}</span></span></button>` : ''}
+    ${top && top.n >= 2 && (!ant || top.r.id !== ant.id) ? `<button class="luego" data-a="co-repetir" data-v="${top.r.id}"><span class="tx"><b>Tu ${f.momento.toLowerCase()} de siempre</b><span>${esc(txtDe(top.r))} · ${top.n} veces</span></span></button>` : ''}` : ''}
+  <button class="chip ${f.fuera ? 'on' : ''}" data-a="co-fuera" style="align-self:flex-start">Comí fuera de casa</button>
+  <button class="btn" data-a="co-guardar">${editando ? 'Guardar cambios' : 'Guardar ' + f.momento.toLowerCase()}</button>
+  ${editando ? `<button class="btn danger" data-a="borrar" data-c="comidas" data-v="${f.editId}">Borrar</button>` : ''}`;
+}
+
+/* ---------- DIARIO ---------- */
+function pDiario() {
+  const fil = S.fDiario || 'todo', n = S.verDias || 14, hoy = hoyV();
+  let out = `<div class="top"><span class="G h1">Diario</span><span class="small">toca algo para cambiarlo</span></div>
+  <div class="chips">${[['todo', 'Todo'], ['crisis', 'Con crisis'], ['comida', 'Comidas'], ['pastilla', 'Pastillas'], ['sueno', 'Sueño']].map(([v, t]) => `<button class="chip ${fil === v ? 'on' : ''}" data-a="diario-f" data-v="${v}">${t}</button>`).join('')}</div>`;
+  const R = rasgosDias(sumarDias(hoy, -n - 2));
+  let pint = 0;
+  for (let i = 0; i < n; i++) {
+    const d = sumarDias(hoy, -i);
+    let E = entradasDia(d, true);
+    const hayCr = E.some(x => x.crisis);
+    if (fil === 'crisis' && !hayCr) continue;
+    if (!['todo', 'crisis'].includes(fil)) E = E.filter(x => x.tipo === fil);
+    if (!E.length && fil !== 'todo') continue;
+    pint++;
+    const dr = diaRec(d), tags = [...(dr.chips || []).filter(x => !['Siesta', 'Deporte'].includes(x)), dr.agua ? 'agua ' + dr.agua.toLowerCase() : '', dr.animo ? 'ánimo ' + dr.animo.toLowerCase() : '', dr.fondo && dr.fondo !== 'No' ? 'dolor de fondo ' + dr.fondo.toLowerCase() : ''].filter(Boolean);
+    let h = `<div class="dia${hayCr ? ' cr' : ''}"><div class="between"><span class="G" style="font-size:20px">${cuandoDia(d)}</span>${hayCr ? '<span class="tagcr">Crisis</span>' : ''}</div>`;
+    if (hayCr) { const antes = [...new Set([...(R[sumarDias(d, -1)] || []), ...(R[d] || [])])].filter(k => !['Siesta', 'Deporte'].includes(k));
+      if (antes.length) h += `<span class="small" style="color:#7a2210">Antes: ${esc(lista(antes.map(x => x.toLowerCase())))}</span>`; }
+    h += E.length ? E.map(x => filaHTML(x)).join('') : `<span class="small">Nada apuntado</span>`;
+    if (tags.length && fil === 'todo') h += `<span class="small">${esc(tags.join(' · '))}</span>`;
+    out += h + '</div>';
+  }
+  if (!pint) out += `<div class="card"><span class="small">${fil === 'crisis' ? 'No hay crisis en estos días.' : 'Nada en estos días.'}</span></div>`;
+  out += `<button class="btn chipc" data-a="dias-mas">Ver ${n} días más</button>`;
+  return out;
+}
+
+/* ---------- PATRONES en frases ---------- */
+const FRASE = {
+  'Dormí poco': ['Cuando duermes poco, suele llegar una crisis', 'Las noches bastante más cortas de lo que sueles dormir van seguidas de más crisis.'],
+  'Me acosté tarde': ['Acostarte mucho más tarde de lo normal se nota', 'Después de esas noches hay más crisis.'],
+  'Toma olvidada o a otra hora': ['Saltarte o retrasar una toma también se nota', 'Los días en que se te pasó una pastilla hubo más crisis ese día o el siguiente.'],
+  'Alcohol': ['El alcohol va seguido de más crisis', 'Los días que bebiste hubo más crisis ese día o el siguiente.'],
+  'Siesta': ['Las siestas van seguidas de más crisis', 'Dormir de día puede desencadenarlas en algunas personas.'],
+  'Deporte intenso': ['El deporte fuerte va seguido de más crisis', 'El esfuerzo intenso puede desencadenarlas en algunas personas.'],
+  'Cené muy tarde': ['Cenar muy tarde va seguido de más crisis', 'Las noches con cena a partir de las 23 h.'],
+  'Bebí poca agua': ['Beber poca agua va seguido de más crisis', 'Los días que marcaste poca agua.'],
+  'Fuera de mi horario': ['Estar en otra zona horaria va seguido de más crisis', 'Los días de viaje con otro horario.'],
+  'Cambio de huso horario': ['Cambiar de hora al viajar va seguido de más crisis', 'El día que cambias de huso horario.'],
+  'Bolo': ['Los días de bolo van seguidos de más crisis', 'Puede ser el horario, el cansancio o lo que rodea al bolo.'],
+  'Vuelo': ['Volar va seguido de más crisis', 'Los días con vuelo.'],
+  'Estrés': ['El estrés va seguido de más crisis', 'Los días que marcaste estrés.'],
+  'Dormí fuera': ['Dormir fuera de casa va seguido de más crisis', 'Las noches fuera.'],
+  'Fumé más de lo normal': ['Fumar más de lo normal va seguido de más crisis', 'Los días que lo marcaste.'],
+  'Dolor de fondo': ['El dolor de fondo avisa', 'Los días con dolor de fondo van seguidos de más crisis.'],
+  'Ánimo bajo': ['Los días de ánimo bajo van seguidos de más crisis', '']
+};
+function pPatrones() {
+  const cr = crisisL(), cx = cruces(), hoy = hoyV();
+  let out = `<div class="top"><span class="G h1">Patrones</span></div>`;
+  out += `<span class="small" style="padding:0 8px">${plural(cx.dias, 'día apuntado', 'días apuntados')} · ${plural(cx.crisis, 'crisis', 'crisis')}. Son pistas para hablar con tu neurólogo, no conclusiones.</span>`;
+  const barras = (a, b) => { const bar = (p, c) => `<div class="bar" style="height:10px;background:var(--chip)"><i style="width:${p}%;height:10px;background:${c}"></i></div>`; return `<div class="cmp"><span>Con ello</span>${bar(a, 'var(--tomato)')}<b>${a} %</b><span class="small">Sin ello</span>${bar(b, '#bdb5a5')}<span class="small" style="text-align:right">${b} %</span></div>`; };
+  if (!cx.listo) out += `<div class="card"><span class="G h3">Recogiendo datos</span><div class="between" style="font-size:14px;font-weight:600"><span>${Math.min(cx.dias, 14)} de 14 días</span><span>${Math.min(cx.crisis, 3)} de 3 crisis</span></div><div class="bar"><i style="width:${Math.round((Math.min(cx.dias, 14) / 14 + Math.min(cx.crisis, 3) / 3) * 50)}%"></i></div><span style="font-size:14px;line-height:1.5">Cuando haya suficiente, aquí saldrá en frases lo que se repite antes de tus crisis: sueño, pastillas, comida, viajes, alcohol…</span></div>`;
+  const pistas = cx.listo ? cx.items.filter(x => x.pista) : [];
+  pistas.slice(0, 4).forEach(x => { const f = FRASE[x.ch] || [x.ch + ': más crisis', ''];
+    out += `<div class="card"><span class="G" style="font-size:21px;line-height:1.15">${esc(f[0])}</span>${f[1] ? `<span style="font-size:14px;line-height:1.5;color:var(--sub)">${esc(f[1])}</span>` : ''}${barras(x.pa, x.pb)}<span class="small">Crisis en ${x.a} de ${plural(x.con, 'día', 'días')} con ello</span></div>`; });
+  const ac = analisisComida();
+  if (ac.listo && ac.items.length) ac.items.slice(0, 2).forEach(x => out += `<div class="card"><span class="G" style="font-size:21px;line-height:1.15">${esc(cap(x.txt))} aparece antes de muchas crisis</span><span style="font-size:14px;line-height:1.5;color:var(--sub)">Lo tomaste en las 24 h antes del ${x.pctCrisis} % de tus crisis, y solo lo tomas el ${x.pctDias} % de los días.</span></div>`);
+  if (cr.length >= 3) { const hh = new Array(24).fill(0); cr.forEach(x => hh[partes(x.t, homeTz()).h]++); let best = 0, bi = 0; for (let i = 0; i < 24; i++) { const s = hh[i] + hh[(i + 1) % 24]; if (s > best) { best = s; bi = i; } }
+    if (best / cr.length >= 0.4) out += `<div class="hero"><span class="k">Hora</span><span class="G" style="font-size:22px;line-height:1.15">${best === cr.length ? 'Tus crisis empiezan' : 'Tus crisis empiezan casi siempre'} entre las ${bi} y las ${(bi + 2) % 24} h</span><span style="font-size:14px;color:#c9c2b4">${best} de ${plural(cr.length, 'crisis', 'crisis')}, hora de casa</span></div>`; }
+  const sem = cr.filter(x => x.t > now() - 7 * DIA).length, ant = cr.filter(x => x.t > now() - 35 * DIA && x.t <= now() - 7 * DIA).length / 4, ds = diasSinDolor();
+  out += `<div class="tiles">${tile('Esta semana', plural(sem, 'crisis', 'crisis'), 'antes ' + (Math.round(ant * 10) / 10).toString().replace('.', ',') + ' por semana', '#fff')}${tile('Sin dolor', ds == null ? '—' : plural(ds, 'día', 'días'), ds == null ? '' : Math.min(ds, 90) + ' de los 90 para bajar dosis', '#fff')}</div>`;
+  const resto = cx.listo ? cx.items.filter(x => !x.pista).slice(0, 6) : [];
+  if (resto.length) out += `<span style="font-size:14px;font-weight:600;padding:8px 8px 0">Sin relación clara por ahora</span><div class="card" style="padding:4px 18px"><div class="list">${resto.map(x => `<div class="it"><span>${esc(x.ch)}</span><span class="small">${x.pa} % · sin ello ${x.pb} %</span></div>`).join('')}</div></div>`;
+  out += `<button class="btn chipc" data-a="ir" data-v="consulta">Informe para el neurólogo</button><button class="btn light" data-a="ir" data-v="patrones-det">Ver todos los datos</button>`;
   return out;
 }
 
@@ -1302,7 +1541,16 @@ const ACC = {
   'dia-chip': v => { const d = hoyV(); setDia(d, { chips: tog(diaRec(d).chips, v) }); S.mantenerScroll = true; repintar(); },
   'comida-nueva': v => { S.f.comida = nuevaComida(v); ir('comida'); },
   'co-editar': v => { const r = porId('comidas', v); if (!r) return; S.sheet = null;
-    S.f.comida = { editId: r.id, vuelta: S.pant === 'comida' ? 'hoy' : S.pant, momento: r.momento || momentoPorHora(partes(r.t).h), dia: diaVivido(r.t), hora: hhmm(r.t), items: (r.items || []).slice(), bebidas: (r.bebidas || []).slice(), fuera: !!r.fuera, q: '' }; ir('comida'); },
+    S.f.comida = { editId: r.id, vuelta: S.pant === 'comida' ? 'hoy' : S.pant, momento: r.momento || momentoPorHora(partes(r.t).h), dia: diaVivido(r.t), hora: hhmm(r.t), txt: (r.items || []).concat(r.bebidas || []).join(', '), fuera: !!r.fuera, cuando: 'otra' }; ir('comida'); },
+  'co-cuando': v => { S.f.comida.cuando = /^\d+$/.test(v) ? +v : v; S.mantenerScroll = true; repintar(); },
+  'co-repetir': v => { const r = porId('comidas', v); if (!r) return; S.f.comida.txt = (r.items || []).concat(r.bebidas || []).join(', '); S.mantenerScroll = true; repintar(); },
+  sh: v => { S.sheet = SH[v] || null; repintar(); },
+  'diario-f': v => { S.fDiario = v; repintar(); },
+  'siesta-ok': () => { guardarSiesta(hoyV()); S.sheet = null; repintar(); toast('Siesta apuntada'); },
+  'deporte-ok': () => { const d = hoyV(), dr = diaRec(d), h = document.querySelector('[data-in="deporte-hora"]'), m = document.querySelector('[data-in="deporte-min"]');
+    setDia(d, { chips: (dr.chips || []).includes('Deporte') ? dr.chips : (dr.chips || []).concat('Deporte'), deporteH: h ? h.value : dr.deporteH, deporteMin: m ? m.value.replace(/\D/g, '') : dr.deporteMin }); S.sheet = null; repintar(); toast('Deporte apuntado'); },
+  'deporte-quitar': () => { const d = hoyV(), dr = diaRec(d); setDia(d, { chips: (dr.chips || []).filter(x => x !== 'Deporte'), deporte: '', deporteH: '', deporteMin: '' }); S.sheet = null; repintar(); },
+  'dia-agua-c': (v, el) => { setDia(el.dataset.d, { agua: v }); S.sheet = null; repintar(); toast('Agua: ' + v.toLowerCase()); },
   'co-editar-mom': v => { const r = vivos('comidas').filter(x => diaVivido(x.t) === hoyV() && x.momento === v).sort((a, b) => b.t - a.t)[0]; if (r) ACC['co-editar'](r.id); else ACC['comida-nueva'](v); },
   'co-salir': () => { const f = S.f.comida || {}, v = f.editId ? (f.vuelta || 'hoy') : 'hoy'; if (f.editId) S.f.comida = null; ir(v); },
   'co-dia': v => { S.f.comida.dia = v; S.mantenerScroll = true; repintar(); },
@@ -1310,7 +1558,7 @@ const ACC = {
   filtro: v => { S.filtro = v; S.ver = 40; repintar(); },
   'ver-mas': () => { S.ver += 40; S.mantenerScroll = true; repintar(); },
   detalle: (v, el) => { const col = el.dataset.c; S.sheet = () => sheetDetalle(col, v); repintar(); },
-  borrar: (v, el) => { borrar(el.dataset.c, v); S.sheet = null; repintar(); toast('Borrado'); },
+  borrar: (v, el) => { borrar(el.dataset.c, v); S.sheet = null; if (S.pant === 'comida') { const vu = (S.f.comida && S.f.comida.vuelta) || 'hoy'; S.f.comida = null; ir(vu); } else repintar(); toast('Borrado'); },
   'det-como': (v, el) => { const e = porId('eventos', el.dataset.id); e.como = v; poner('eventos', e); if (v === 'distinta') { S.f.evId = e.id; ir('distinta'); } else repintar(); },
   'det-int': (v, el) => { const e = porId('eventos', el.dataset.id); e.intensidad = +v; poner('eventos', e); repintar(); },
   'ef-tipo': v => { S.f.efecto.tipos = tog(S.f.efecto.tipos, v); S.mantenerScroll = true; repintar(); },
@@ -1332,12 +1580,13 @@ const ACC = {
   'co-beb': v => { S.f.comida.bebidas = tog(S.f.comida.bebidas, v); S.mantenerScroll = true; repintar(); },
   'co-fuera': () => { S.f.comida.fuera = !S.f.comida.fuera; S.mantenerScroll = true; repintar(); },
   'co-guardar': () => {
-    const f = S.f.comida; if ((f.q || '').trim()) f.items.push(f.q.trim());
-    if (!f.items.length && !f.bebidas.length) { toast('Apunta qué has tomado'); return; }
-    let t = epochVivido(f.dia || hoyV(), f.hora, tzHere()); if (t > now() + 5 * MIN && f.dia === hoyV()) t -= DIA;
-    const viejo = f.editId && porId('comidas', f.editId);
-    if (viejo) { const t2 = epochVivido(f.dia, f.hora, viejo.tz || tzHere()); poner('comidas', Object.assign({}, viejo, { t: t2, momento: f.momento, items: f.items, bebidas: f.bebidas, fuera: !!f.fuera, vig: vigiladosDe(f.items.concat(f.bebidas)) })); }
-    else poner('comidas', { id: uid(), t, tz: tzHere(), momento: f.momento, items: f.items, bebidas: f.bebidas, fuera: !!f.fuera, vig: vigiladosDe(f.items.concat(f.bebidas)) });
+    const f = S.f.comida, el = document.querySelector('[data-in="co-txt"]'); if (el) f.txt = el.value;
+    const p = partirComida(f.txt);
+    if (!p.items.length && !p.bebidas.length) { toast('Di o escribe qué has tomado'); return; }
+    const t = comidaTiempo(f), viejo = f.editId && porId('comidas', f.editId);
+    const datos = { t, momento: f.momento, items: p.items, bebidas: p.bebidas, fuera: !!f.fuera, vig: vigiladosDe(p.items.concat(p.bebidas)) };
+    if (viejo) poner('comidas', Object.assign({}, viejo, datos));
+    else poner('comidas', Object.assign({ id: uid(), tz: tzHere() }, datos));
     const vuelta = f.vuelta || 'hoy'; S.f.comida = null; toast(f.momento + (viejo ? ' cambiado' : ' guardado')); ir(vuelta);
   },
   'pa-como': v => { S.f.pasada.como = v; repintar(); },
@@ -1455,7 +1704,7 @@ document.addEventListener('click', ev => {
 });
 document.addEventListener('input', ev => {
   const el = ev.target, k = el.dataset && el.dataset.in; if (!k) return;
-  if (k === 'co-q') { S.f.comida.q = el.value; const box = document.getElementById('co-sug'); if (box) { const h = sugComidaHTML(); if (box.innerHTML !== h) box.innerHTML = h; } return; }
+  if (k === 'co-txt') { S.f.comida.txt = el.value; const box = document.getElementById('co-prev'); if (box) { const h = prevComidaHTML(); if (box.innerHTML !== h) box.innerHTML = h; } return; }
   if (k === 'med-hora') { S.f.med.horas[+el.dataset.i] = el.value; return; }
   if (['sueno-dormir', 'sueno-despertar', 'cfg-home', 'siesta-ini', 'siesta-fin', 'deporte-hora', 'deporte-min'].includes(k)) return;
   if (INP[k]) INP[k](el.value);
@@ -1480,7 +1729,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target
 /* =========================================================
    ARRANQUE
    ========================================================= */
-function desdeAviso(abrir) { if (!abrir) return; if (abrir === 'inicio') { S.cierre = null; ir('inicio'); } else ir(abrir); }
+function desdeAviso(abrir) { if (!abrir) return; if (abrir === 'inicio') { S.cierre = null; ir('inicio'); } else if (abrir.startsWith('comida:')) ACC['comida-nueva'](abrir.slice(7)); else ir(abrir); }
 (function init() {
   if (!DB.cfg.find(r => r.id === 'cfg')) { DB.cfg.push(Object.assign({}, CFG_DEF, { homeTz: tzHere().startsWith('Europe/') || tzHere().startsWith('Atlantic/') ? tzHere() : 'Europe/Madrid', upd: 0 })); guardar(); }
   const h = location.hash.replace('#', '');
