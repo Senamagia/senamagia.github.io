@@ -27,12 +27,13 @@ function onOpen() {
     .addToUi();
 }
 function preparar() {
-  const ui = SpreadsheetApp.getUi(), props = PropertiesService.getScriptProperties();
+  const props = PropertiesService.getScriptProperties();
   if (!props.getProperty('PIN')) props.setProperty('PIN', String(Math.floor(100000 + Math.random() * 900000)));
   ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === 'avisoNoche') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('avisoNoche').timeBased().everyHours(1).create();
   rehacer();
-  ui.alert('Hoja preparada', 'El código para conectar la app es: ' + props.getProperty('PIN') + '\n\nEn la app: Hoy › rueda de ajustes › Hoja de Google › escribe el código › Conectar.', ui.ButtonSet.OK);
+  const txt = 'El código para conectar la app es: ' + props.getProperty('PIN') + '\n\nEn la app: Hoy › rueda de ajustes › Hoja de Google › escribe el código › Conectar.';
+  try { SpreadsheetApp.getUi().alert('Hoja preparada', txt, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) { console.log(txt); }
 }
 function verCodigo() {
   const ui = SpreadsheetApp.getUi();
