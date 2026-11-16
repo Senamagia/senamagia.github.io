@@ -1,0 +1,204 @@
+/** @OnlyCurrentDoc */
+/**
+ * Turnos · hoja de Google que guarda los turnos de elfo y de mago de PequeNavidad.
+ *
+ * La app del móvil manda aquí cada cambio y esta hoja rellena sola las pestañas
+ * Resumen, Elfo, Mago, Facturas y Nóminas (la pestaña oculta «Registro» es la copia
+ * completa que usa la app). También manda el aviso de la noche si no has apuntado el día.
+ *
+ * Primera vez: menú Turnos › Preparar la hoja. Te da el código para conectar la app.
+ */
+
+const PROYECTO_AVISOS = 'laura-8a65c';   // proyecto de Firebase que reparte los avisos al iPhone
+const TZ = 'Europe/Madrid';
+const INICIO = '2026-11-13', FIN = '2027-01-05'; // contrato: solo avisa estos días
+const DEF = { e2: 55, e4: 100, mp: 100, inc: true, iva: 10, irpf: 15, aviso: true, hora: 23 };
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const EUR = '#,##0.00 "€"';
+
+/* ---------------- Menú ---------------- */
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('Turnos')
+    .addItem('Preparar la hoja (primera vez)', 'preparar')
+    .addItem('Ver el código para la app', 'verCodigo')
+    .addItem('Mandar un aviso de prueba', 'avisoPrueba')
+    .addItem('Rehacer las pestañas', 'rehacer')
+    .addToUi();
+}
+function preparar() {
+  const ui = SpreadsheetApp.getUi(), props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('PIN')) props.setProperty('PIN', String(Math.floor(100000 + Math.random() * 900000)));
+  ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === 'avisoNoche') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('avisoNoche').timeBased().everyHours(1).create();
+  rehacer();
+  ui.alert('Hoja preparada', 'El código para conectar la app es: ' + props.getProperty('PIN') + '\n\nEn la app: Hoy › rueda de ajustes › Hoja de Google › escribe el código › Conectar.', ui.ButtonSet.OK);
+}
+function verCodigo() {
+  const ui = SpreadsheetApp.getUi();
+  ui.alert('Código para la app', PropertiesService.getScriptProperties().getProperty('PIN') || 'Todavía no hay código: usa «Preparar la hoja».', ui.ButtonSet.OK);
+}
+
+/* ---------------- La app habla con la hoja ---------------- */
+function doGet(e) {
+  if (!e || !e.parameter || !e.parameter.k) return json_({ ok: true, app: 'turnos' });
+  return atender_({ k: e.parameter.k, ops: [] });
+}
+function doPost(e) {
+  let body = {};
+  try { body = JSON.parse(e.postData.contents); } catch (err) { return json_({ ok: false, error: 'Datos no válidos' }); }
+  return atender_(body);
+}
+function atender_(body) {
+  const cache = CacheService.getScriptCache(), fallos = Number(cache.get('fallos') || 0);
+  if (fallos > 20) return json_({ ok: false, error: 'Demasiados intentos con un código incorrecto. Espera 10 minutos.' });
+  const pin = PropertiesService.getScriptProperties().getProperty('PIN');
+  if (!pin || String(body.k) !== pin) { cache.put('fallos', String(fallos + 1), 600); return json_({ ok: false, error: 'El código no es correcto' }); }
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const R = leer_();
+    let prueba = false;
+    (body.ops || []).forEach(o => {
+      if (o.t === 'dia') { if (o.d) R.dias[o.f] = o.d; else delete R.dias[o.f]; }
+      else if (o.t === 'ajustes') R.ajustes = o.d || {};
+      else if (o.t === 'factura') R.facturas[o.mes] = o.d || {};
+      else if (o.t === 'nomina') { if (o.v == null) delete R.nominas[o.mes]; else R.nominas[o.mes] = Number(o.v); }
+      else if (o.t === 'aviso') { guardarToken_(o.token, o.viejo); if (o.prueba) prueba = true; }
+    });
+    if ((body.ops || []).some(o => o.t !== 'aviso')) { escribirRegistro_(R); pestanas_(R); }
+    if (prueba) { try { enviar_('Avisos de Turnos activados', 'Si no apuntas el día, te avisaré por la noche.', 'hoy'); } catch (err) { console.log(err); } }
+    R.hoja = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+    return json_({ ok: true, datos: R });
+  } finally { lock.releaseLock(); }
+}
+function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+
+/* ---------------- Registro (la copia completa, en una pestaña oculta) ---------------- */
+function hojaRegistro_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('Registro');
+  if (!sh) { sh = ss.insertSheet('Registro'); sh.getRange(1, 1, 1, 4).setValues([['Tipo', 'Clave', 'Datos', 'Actualizado']]).setFontWeight('bold'); sh.hideSheet(); }
+  return sh;
+}
+function leer_() {
+  const R = { dias: {}, ajustes: {}, facturas: {}, nominas: {} };
+  const sh = hojaRegistro_(), n = sh.getLastRow();
+  if (n < 2) return R;
+  sh.getRange(2, 1, n - 1, 3).getValues().forEach(([tipo, k, d]) => {
+    let v; try { v = JSON.parse(d); } catch (e) { return; }
+    if (tipo === 'dia') R.dias[k] = v;
+    else if (tipo === 'ajustes') R.ajustes = v;
+    else if (tipo === 'factura') R.facturas[k] = v;
+    else if (tipo === 'nomina') R.nominas[k] = v;
+  });
+  return R;
+}
+function escribirRegistro_(R) {
+  const sh = hojaRegistro_(), ahora = new Date(), filas = [];
+  Object.keys(R.dias).sort().forEach(k => filas.push(['dia', k, JSON.stringify(R.dias[k]), ahora]));
+  filas.push(['ajustes', '', JSON.stringify(R.ajustes || {}), ahora]);
+  Object.keys(R.facturas).sort().forEach(k => filas.push(['factura', k, JSON.stringify(R.facturas[k]), ahora]));
+  Object.keys(R.nominas).sort().forEach(k => filas.push(['nomina', k, JSON.stringify(R.nominas[k]), ahora]));
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, 4).clearContent();
+  sh.getRange(2, 1, filas.length, 4).setNumberFormat('@').setValues(filas.map(f => [f[0], f[1], f[2], Utilities.formatDate(f[3], TZ, 'dd/MM/yyyy HH:mm')]));
+}
+
+/* ---------------- Cuentas (las mismas que la app) ---------------- */
+function calc_(d) {
+  const p = Object.assign({}, DEF, d.p || {});
+  const elfo = d.e === 2 ? p.e2 : d.e === 4 ? p.e4 : 0;
+  const n = d.m || 0, tot = n * p.mp;
+  const base = p.inc ? tot / (1 + p.iva / 100) : tot;
+  const iva = base * p.iva / 100, irpf = base * p.irpf / 100;
+  return { elfo: elfo, n: n, base: base, iva: iva, irpf: irpf, conIva: base + iva, ingreso: base + iva - irpf, tuyo: base - irpf, p: p };
+}
+const r2_ = x => Math.round(x * 100) / 100;
+const fecha_ = k => { const a = k.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2], 12); };
+const nomMes_ = ym => MESES[Number(ym.slice(5)) - 1] + ' ' + ym.slice(0, 4);
+
+/* ---------------- Pestañas que ves ---------------- */
+function rehacer() { pestanas_(leer_()); }
+function pestanas_(R) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ks = Object.keys(R.dias).sort();
+  const elfo = [], mago = [], porMes = {};
+  ks.forEach(k => {
+    const d = R.dias[k], c = calc_(d), ym = k.slice(0, 7), f = fecha_(k), dia = DIAS[f.getDay()];
+    const M = porMes[ym] = porMes[ym] || { elfo: 0, diasE: 0, turnosE: 0, pn: 0, n: 0, base: 0, iva: 0, irpf: 0, ingreso: 0, tuyo: 0 };
+    if (c.elfo) { elfo.push([f, dia, d.e, d.pn ? 'Sí' : '', c.elfo, d.nota || '']); M.elfo += c.elfo; M.diasE++; M.turnosE += d.e; if (d.pn) M.pn++; }
+    if (c.n) { mago.push([f, dia, c.n, c.p.mp, c.p.inc ? 'Sí' : 'No', r2_(c.base), c.p.iva / 100, r2_(c.iva), c.p.irpf / 100, r2_(c.irpf), r2_(c.conIva), r2_(c.ingreso), nomMes_(ym)]);
+      M.n += c.n; M.base += c.base; M.iva += c.iva; M.irpf += c.irpf; M.ingreso += c.ingreso; M.tuyo += c.tuyo; }
+  });
+  const meses = Object.keys(porMes).sort();
+  const tot = meses.reduce((t, m) => { Object.keys(porMes[m]).forEach(x => t[x] = (t[x] || 0) + porMes[m][x]); return t; }, {});
+
+  tabla_(ss, 'Resumen', 0, ['Mes', 'Elfo (neto)', 'Días de elfo', 'Turnos de elfo', 'Días de Papá Noel', 'Turnos de mago', 'Mago: tuyo (sin IVA ni IRPF)', 'IVA para Hacienda', 'Te queda limpio'],
+    meses.map(m => { const x = porMes[m]; return [nomMes_(m), x.elfo, x.diasE, x.turnosE, x.pn, x.n, r2_(x.tuyo), r2_(x.iva), r2_(x.elfo + x.tuyo)]; })
+      .concat(meses.length ? [['TOTAL', tot.elfo, tot.diasE, tot.turnosE, tot.pn, tot.n, r2_(tot.tuyo), r2_(tot.iva), r2_(tot.elfo + tot.tuyo)]] : []),
+    { eur: [2, 7, 8, 9], total: meses.length > 0 });
+  tabla_(ss, 'Elfo', 1, ['Fecha', 'Día', 'Turnos', 'Papá Noel', 'Neto', 'Nota'], elfo, { eur: [5], fecha: [1] });
+  tabla_(ss, 'Mago', 2, ['Fecha', 'Día', 'Turnos', 'Precio por turno', 'IVA incluido', 'Base', 'IVA %', 'IVA', 'IRPF %', 'IRPF', 'Total con IVA', 'Te ingresan', 'Mes'], mago, { eur: [4, 6, 8, 10, 11, 12], pct: [7, 9], fecha: [1] });
+  tabla_(ss, 'Facturas', 3, ['Mes', 'Turnos', 'Base imponible', 'IVA', 'Retención IRPF', 'Total a cobrar', 'Hecha', 'Cobrada'],
+    meses.filter(m => porMes[m].n).map(m => { const x = porMes[m], f = R.facturas[m] || {}; return [nomMes_(m), x.n, r2_(x.base), r2_(x.iva), r2_(x.irpf), r2_(x.ingreso), f.hecha ? 'Sí' : 'No', f.cobrada ? 'Sí' : 'No']; }), { eur: [3, 4, 5, 6] });
+  tabla_(ss, 'Nóminas', 4, ['Mes', 'Elfo apuntado (neto)', 'Nómina recibida', 'Diferencia'],
+    meses.filter(m => porMes[m].elfo).map(m => { const x = porMes[m], v = R.nominas[m]; return [nomMes_(m), x.elfo, v == null ? '' : v, v == null ? 'Sin apuntar' : r2_(v - x.elfo)]; }), { eur: [2, 3, 4] });
+  const h1 = ss.getSheetByName('Hoja 1') || ss.getSheetByName('Sheet1');
+  if (h1 && h1.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(h1);
+}
+function tabla_(ss, nombre, pos, cab, filas, o) {
+  let sh = ss.getSheetByName(nombre);
+  if (!sh) { sh = ss.insertSheet(nombre, pos); }
+  sh.clear();
+  const datos = [cab].concat(filas);
+  sh.getRange(1, 1, datos.length, cab.length).setValues(datos.map(r => cab.map((_, i) => r[i] == null ? '' : r[i])));
+  const color = { Elfo: '#0B6E55', Mago: '#5B34C7', Facturas: '#5B34C7', 'Nóminas': '#0B6E55' }[nombre] || '#17171B';
+  sh.getRange(1, 1, 1, cab.length).setFontWeight('bold').setBackground(color).setFontColor('#FFFFFF');
+  sh.setFrozenRows(1);
+  if (filas.length) {
+    (o.eur || []).forEach(c => sh.getRange(2, c, filas.length, 1).setNumberFormat(EUR));
+    (o.pct || []).forEach(c => sh.getRange(2, c, filas.length, 1).setNumberFormat('0%'));
+    (o.fecha || []).forEach(c => sh.getRange(2, c, filas.length, 1).setNumberFormat('dd/mm/yyyy'));
+    if (o.total) sh.getRange(datos.length, 1, 1, cab.length).setFontWeight('bold').setBackground('#F4F2EE');
+  }
+  sh.autoResizeColumns(1, cab.length);
+}
+
+/* ---------------- Aviso de la noche ---------------- */
+function avisoNoche() {
+  const R = leer_(), a = Object.assign({}, DEF, R.ajustes || {});
+  if (a.aviso === false) return;
+  const ahora = new Date(), hoy = Utilities.formatDate(ahora, TZ, 'yyyy-MM-dd'), hora = Number(Utilities.formatDate(ahora, TZ, 'H'));
+  if (hora !== Number(a.hora) || hoy < INICIO || hoy > FIN || R.dias[hoy]) return;
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('AVISADO') === hoy) return;
+  enviar_('¿Qué has hecho hoy?', 'Todavía no has apuntado tus turnos de hoy.', 'hoy');
+  props.setProperty('AVISADO', hoy);
+}
+function tokens_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('TOKENS') || '[]'); } catch (e) { return []; } }
+function guardarToken_(token, viejo) {
+  if (!token) return;
+  const l = tokens_().filter(t => t !== token && t !== viejo);
+  l.unshift(token);
+  PropertiesService.getScriptProperties().setProperty('TOKENS', JSON.stringify(l.slice(0, 5)));
+}
+function enviar_(titulo, texto, abrir) {
+  const oauth = ScriptApp.getOAuthToken(), lista = tokens_(), quedan = [];
+  let n = 0;
+  lista.forEach(tk => {
+    const r = UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/' + PROYECTO_AVISOS + '/messages:send', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { Authorization: 'Bearer ' + oauth, 'x-goog-user-project': PROYECTO_AVISOS },
+      payload: JSON.stringify({ message: { token: tk, data: { title: titulo, body: texto, abrir: abrir || '', tag: 'turnos' }, webpush: { headers: { Urgency: 'high', TTL: '3600' } } } })
+    });
+    const c = r.getResponseCode();
+    console.log('Aviso «' + titulo + '» → ' + c + (c === 200 ? '' : ' ' + r.getContentText().slice(0, 300)));
+    if (c === 200) n++;
+    if (!(c === 404 || /UNREGISTERED/.test(r.getContentText()))) quedan.push(tk);
+  });
+  PropertiesService.getScriptProperties().setProperty('TOKENS', JSON.stringify(quedan));
+  return n;
+}
+function avisoPrueba() {
+  const n = enviar_('Prueba de Turnos', 'Si ves esto, los avisos funcionan.', 'hoy');
+  SpreadsheetApp.getUi().alert('Aviso de prueba', n ? 'Enviado a tu iPhone.' : 'Ningún móvil tiene los avisos activados. En la app: Ajustes › Aviso › Activar.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
