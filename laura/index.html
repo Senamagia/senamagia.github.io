@@ -145,7 +145,7 @@ body.noche .toast{background:#262b25;color:var(--n-fg);bottom:calc(var(--safe-b)
    Todo se guarda primero en el móvil (funciona sin internet)
    y se copia a su nube de Firebase cuando hay conexión.
    ========================================================= */
-const APP_VER = '2.2';
+const APP_VER = '2.3';
 const KEY_DB = 'laura-db', KEY_SYNC = 'laura-nube';
 const COLS = ['eventos', 'efectos', 'comidas', 'tomas', 'meds', 'tandas', 'dias', 'suenos', 'citas', 'pruebas', 'cfg'];
 const MIN = 60000, HORA = 3600000, DIA = 86400000;
@@ -181,11 +181,19 @@ function diaVivido(ms, tz) {
   const p = partes(ms, tz), cal = p.y + '-' + pad(p.m) + '-' + pad(p.d);
   if (p.h < CORTE) return sumarDias(cal, -1);
   if (p.h < 12 && typeof DB !== 'undefined' && DB.suenos && DB.suenos.some(s => !s.borrado && !s.siesta && s.dormir > ms && s.dormir - ms < 8 * 3600000 && dayKey(s.dormir, tz) === cal && partes(s.dormir, tz).h < 12)) return sumarDias(cal, -1);
+  // Sigues despierto desde ayer: la última noche que dormiste acabó hace más de 14 h y no has vuelto a acostarte
+  if (p.h < 10 && typeof DB !== 'undefined' && DB.suenos) {
+    const ns = DB.suenos.filter(s => !s.borrado && !s.siesta && s.dormir && s.dormir < ms);
+    if (ns.length) { const u = ns.reduce((a, b) => b.dormir > a.dormir ? b : a); if (u.despertar && u.despertar < ms - 14 * 3600000) return sumarDias(cal, -1); }
+  }
   return cal;
 }
 const hoyV = () => diaVivido(Date.now());
 /* Instante de una hora dentro de un día vivido: la 01:00 del día 11 es la madrugada del 12 */
-function epochVivido(day, hm, tz) { const h = +(hm || '0').split(':')[0]; return epochDe(h < CORTE ? sumarDias(day, 1) : day, hm, tz); }
+function epochVivido(day, hm, tz) { const h = +(hm || '0').split(':')[0];
+  if (h < CORTE) return epochDe(sumarDias(day, 1), hm, tz);
+  if (h < 10) { const t2 = epochDe(sumarDias(day, 1), hm, tz); if (t2 <= Date.now() + 10 * 60000 && diaVivido(t2, tz) === day) return t2; }
+  return epochDe(day, hm, tz); }
 const hhmm = (ms, tz) => { const p = partes(ms, tz); return pad(p.h) + ':' + pad(p.mi); };
 function offsetMin(ms, tz) { const p = partes(ms, tz); return Math.round((Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi) - Math.floor(ms / MIN) * MIN) / MIN); }
 function epochDe(day, hm, tz) {
@@ -327,7 +335,7 @@ function frecuentes(momento) {
   vivos('comidas').forEach(r => { if (momento && r.momento !== momento) return; (r.items || []).forEach(i => { const k = norm(i); if (!c[k]) c[k] = { txt: i, n: 0 }; c[k].n++; }); });
   return (FREC[k] = Object.values(c).sort((a, b) => b.n - a.n));
 }
-function momentoPorHora(h) { if (h < 5) return (typeof DB !== 'undefined' && DB.comidas.some(r => !r.borrado && r.momento === 'Cena' && diaVivido(r.t) === hoyV())) ? 'Picoteo' : 'Cena'; return h < 11 ? 'Desayuno' : h < 11 ? 'Desayuno' : h < 13 ? 'Picoteo' : h < 17 ? 'Comida' : h < 20 ? 'Merienda' : 'Cena'; }
+function momentoPorHora(h) { if (h < 5 || (h < 10 && typeof DB !== 'undefined' && hoyV() !== dayKey(Date.now()))) return (typeof DB !== 'undefined' && DB.comidas.some(r => !r.borrado && r.momento === 'Cena' && diaVivido(r.t) === hoyV())) ? 'Picoteo' : 'Cena'; return h < 11 ? 'Desayuno' : h < 11 ? 'Desayuno' : h < 13 ? 'Picoteo' : h < 17 ? 'Comida' : h < 20 ? 'Merienda' : 'Cena'; }
 
 /* =========================================================
    NUBE (Firebase): solo para Sena. Cada registro es un documento
@@ -617,7 +625,7 @@ function pInicio() {
     let sueno = '';
     if (s && (s.siesta || (h >= 5 && h < 15))) sueno = `<button class="n-btn" data-a="despertar">${ICON_SUN}Me he despertado${s.siesta ? ' de la siesta' : ''}</button>`;
     else if (!s && h >= 12 && h < 19) sueno = `<button class="n-btn" data-a="siesta">${ICON_MOON}Me echo la siesta</button>`;
-    else if (!s && (h >= 19 || h < 5)) sueno = `<button class="n-btn" data-a="dormir">${ICON_MOON}Me voy a dormir</button>`;
+    else if (!s && (h >= 19 || h < 5 || hoyV() !== dayKey(now()))) sueno = `<button class="n-btn" data-a="dormir">${ICON_MOON}Me voy a dormir</button>`;
     else if (s) sueno = `<div class="n-small" style="text-align:center;padding:4px">Durmiendo desde las ${hhmm(s.dormir)}</div>`;
     return `<div class="n-wrap">${top('Lado ' + (c.lado === 'izq' ? 'izquierdo' : 'derecho'))}
       <div class="n-grid">
