@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.8';
+const VERSION = '2.8.1';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -821,17 +821,7 @@ function vistaProg() {
   h += patronesHTML();
   h += alimentosHTML();
   h += graficaPeso(desde, hasta, map);
-  // Etapas
-  const E = etapas(desde, hasta);
-  const ER = E.map(e => Object.assign({}, e, resumen(e.desde < desde ? desde : e.desde, e.hasta, map)));
-  h += `<section class="card col" style="gap:14px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Antes y después de cada cambio</h2><span class="tiny muted">Cada cambio de dieta o de medicación empieza una etapa nueva</span></div>
-    ${ER.map((e, i) => `<div class="etapa" style="background:${i % 2 ? 'var(--teal-s)' : 'var(--soft)'}">
-      <div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><span class="b" style="font-size:16px">${esc(e.nombre)}</span><span class="tiny muted" style="white-space:nowrap">${fCorta(e.desde)} – ${e.hasta === hasta ? 'hoy' : fCorta(e.hasta)}</span></div>
-      ${barra(e.g, e.r, e.m, 0)}
-      <div class="grid2"><div class="col"><span style="font-size:24px;font-weight:800">${e.tot ? Math.round(e.g * 100 / e.tot) + ' %' : '—'}</span><span class="tiny muted">de días buenos</span></div><div class="col"><span style="font-size:24px;font-weight:800">${e.peso != null ? Math.round(e.peso) + ' g' : '—'}</span><span class="tiny muted">peso medio</span></div></div>
-    </div>`).join('')}
-    ${conclusion(ER)}
-  </section>`;
+  h += cambiosHTML();
   h += semanas();
   h += `<section class="card col" style="gap:10px"><h2 style="font-size:18px;font-weight:800">Informe para la vet</h2><p class="small muted">Este resumen en texto, para mandarlo por WhatsApp a la vet o a la nutricionista.</p><div class="grid2"><button class="btn btn-line" data-a="informe">Copiar texto</button><button class="btn btn-teal" data-a="pdf">Imprimir o PDF</button></div><span class="tiny muted">«Imprimir o PDF» abre el informe con la gráfica: en el iPhone, en la pantalla de imprimir, elige Compartir › Guardar en Archivos para tenerlo en PDF.</span></section>`;
   return h;
@@ -955,6 +945,63 @@ function statsRango(a, b) {
   return s;
 }
 const rangoTxt = (a, b) => { const A = parseD(a), B = parseD(b); return A.getMonth() === B.getMonth() ? A.getDate() + '–' + B.getDate() + ' ' + MESES[B.getMonth()] : fCorta(a) + ' – ' + fCorta(b); };
+// Fila de comparación: antes → después, con flecha verde si mejora y roja si empeora
+function filaComp(n, b, a, fmt, sentido, umbral, unidad, out) {
+  let flecha = '', color = 'var(--muted)', dtxt = '';
+  if (a != null && b != null) {
+    const d = a - b;
+    if (Math.abs(d) <= umbral) { dtxt = 'igual'; flecha = '='; }
+    else { const bien = d * sentido > 0; color = bien ? 'var(--teal-d)' : 'var(--bad)'; flecha = bien ? '✓' : '✗'; dtxt = (d > 0 ? '+' : '−') + (unidad === 'g' ? Math.round(Math.abs(d)) + ' g' : unidad === '%' ? Math.round(Math.abs(d)) + ' %' : fNum(Math.round(Math.abs(d) * 10) / 10)); (bien ? out.mejor : out.peor).push(n.toLowerCase()); }
+  }
+  return `<div class="row" style="gap:8px;padding:8px 0;border-top:1px solid var(--line);align-items:center"><span class="small b grow" style="min-width:0">${n}</span><span class="col" style="align-items:flex-end;text-align:right"><span class="tiny muted">${b != null ? fmt(b) : '—'}</span><span class="small b">${a != null ? fmt(a) : '—'}</span></span><span class="small b" style="color:${color};min-width:62px;text-align:right;white-space:nowrap">${flecha ? flecha + ' ' + dtxt : ''}</span></div>`;
+}
+function cambiosHTML() {
+  const cs = vivos('cambios').filter(c => ES_DIETA(c) || ES_MED(c)).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (!cs.length) return '';
+  const ayer = addDays(hoy(), -1), ini = primerDia() || ayer;
+  const pct = (n, d) => d ? n * 100 / d : null;
+  const f1 = v => fNum(Math.round(v * 10) / 10);
+  const tarjetas = cs.slice().reverse().slice(0, 6).map(c => {
+    const i = cs.indexOf(c), prev = cs[i - 1], next = cs[i + 1];
+    // antes: hasta 14 días, sin pasar del cambio anterior; después: hasta 14 días, sin llegar al siguiente
+    const bA = addDays(c.fecha, -1), aA = [addDays(c.fecha, -14), prev ? prev.fecha : ini, ini].sort().pop();
+    let bD = [addDays(c.fecha, 13), next ? addDays(next.fecha, -1) : ayer, ayer].sort()[0]; const aD = c.fecha;
+    const nA = bA >= aA ? diffDays(bA, aA) + 1 : 0, nD = bD >= aD ? diffDays(bD, aD) + 1 : 0;
+    const A = nA ? statsRango(aA, bA) : null, D = nD ? statsRango(aD, bD) : null;
+    const titulo = `<div class="col" style="gap:2px"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">${ES_DIETA(c) ? 'Cambio de dieta' : 'Cambio de medicación'} · ${fFecha(c.fecha)}</span><span class="b" style="font-size:16px">${esc(nombreCambio(c))}</span></div>`;
+    const minimo = ES_DIETA(c) ? 7 : 4;
+    if (!A || !A.cacasDias && !A.pesos.length) return `<div class="col" style="gap:8px;background:var(--soft);border-radius:14px;padding:12px">${titulo}<span class="small muted">No hay datos de antes de este cambio para comparar.</span></div>`;
+    if (nD < minimo) return `<div class="col" style="gap:8px;background:var(--soft);border-radius:14px;padding:12px">${titulo}<span class="small muted">${next && nD < minimo ? 'Solo duró ' + nD + ' día' + (nD === 1 ? '' : 's') + ' antes del siguiente cambio: no da para comparar.' : 'Aún es pronto: lleva ' + nD + ' día' + (nD === 1 ? '' : 's') + '. Se compara a partir de ' + minimo + ' días' + (ES_DIETA(c) ? ' (una dieta se valora bien a las 2–3 semanas)' : '') + '.'}</span></div>`;
+    const out = { mejor: [], peor: [] };
+    const filas = [
+      filaComp('Peso medio', A.peso, D.peso, v => Math.round(v) + ' g', 1, 3, 'g', out),
+      filaComp('Come al día', A.gm, D.gm, v => Math.round(v) + ' g', 1, 5, 'g', out),
+      filaComp('Cacas (nota de 1 a 5)', A.pm, D.pm, f1, 1, 0.2, '', out),
+      filaComp('Días buenos', pct(A.buenos, A.cacasDias), pct(D.buenos, D.cacasDias), v => Math.round(v) + ' %', 1, 5, '%', out),
+      filaComp('Días con alpistada', pct(A.alp, A.cacasDias), pct(D.alp, D.cacasDias), v => Math.round(v) + ' %', -1, 5, '%', out),
+      filaComp('Días con mucosa o diarrea', pct(A.muc, A.cacasDias), pct(D.muc, D.cacasDias), v => Math.round(v) + ' %', -1, 5, '%', out),
+      filaComp('Vómitos por semana', A.vom * 7 / nA, D.vom * 7 / nD, f1, -1, 0.3, '', out)
+    ];
+    let concl, fondo = 'var(--soft)';
+    if (out.mejor.length && !out.peor.length) { concl = 'Desde este cambio va mejor: ' + out.mejor.slice(0, 3).join(', ') + '.'; fondo = 'var(--teal-s)'; }
+    else if (out.peor.length && !out.mejor.length) { concl = 'Desde este cambio va peor: ' + out.peor.slice(0, 3).join(', ') + '.'; fondo = '#FCE8E6'; }
+    else if (!out.mejor.length) concl = 'Desde este cambio, todo sigue más o menos igual.';
+    else if (out.mejor.length > out.peor.length) { concl = 'Desde este cambio va mejor en general (' + out.mejor.slice(0, 3).join(', ') + '). Ojo con: ' + out.peor.join(', ') + '.'; fondo = 'var(--teal-s)'; }
+    else if (out.peor.length > out.mejor.length) { concl = 'Desde este cambio va peor en general (' + out.peor.slice(0, 3).join(', ') + '). Mejor en: ' + out.mejor.join(', ') + '.'; fondo = '#FCE8E6'; }
+    else concl = 'Mejor en ' + out.mejor.join(', ') + '; peor en ' + out.peor.join(', ') + '.';
+    const solape = cs.some(x => x !== c && x.fecha === c.fecha);
+    return `<div class="col" style="gap:6px;background:var(--soft);border-radius:14px;padding:12px">${titulo}
+      <div style="background:${fondo};border-radius:10px;padding:8px 10px"><span class="small b">${esc(concl)}</span></div>
+      <span class="tiny muted">Arriba: ${nA} día${nA === 1 ? '' : 's'} antes (${rangoTxt(aA, bA)}). Abajo: ${nD} día${nD === 1 ? '' : 's'} después (${rangoTxt(aD, bD)})${next && bD === addDays(next.fecha, -1) ? ', hasta el siguiente cambio' : ''}.</span>
+      ${filas.join('')}
+      ${solape ? '<span class="tiny muted">Ese mismo día hubo otro cambio: no se puede saber cuál de los dos ha influido.</span>' : ''}
+    </div>`;
+  });
+  return `<section class="card col" style="gap:12px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">¿Qué tal le sentó cada cambio?</h2><span class="tiny muted">Para cada cambio de dieta o de medicación, las 2 semanas de antes frente a las de después (o hasta el siguiente cambio). Los días buenos y de alpistada van en %, para que se puedan comparar aunque haya distinto número de días.</span></div>
+    ${tarjetas.join('')}
+    <span class="tiny muted">Las subidas de cantidad de la transición no cuentan como cambio. Si dos cambios van muy seguidos, no se puede separar el efecto de cada uno.</span>
+  </section>`;
+}
 function semanas() {
   const fin = addDays(hoy(), -1);
   const A = statsRango(addDays(fin, -6), fin), B = statsRango(addDays(fin, -13), addDays(fin, -7));
@@ -975,7 +1022,7 @@ function semanas() {
     if (a != null && b != null) {
       const d = a - b;
       if (Math.abs(d) <= umbral) { dtxt = 'igual'; flecha = '='; }
-      else { const bien = d * sentido > 0; color = bien ? 'var(--teal-d)' : 'var(--bad)'; flecha = bien ? '▲' : '▼'; dtxt = (d > 0 ? '+' : '−') + (Number.isInteger(d) ? Math.abs(d) : fNum(Math.round(Math.abs(d) * 10) / 10)) + (n === 'Peso medio' || n === 'Come al día' ? ' g' : ''); if (n === 'Peso medio' || n === 'Come al día') dtxt = (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'; (bien ? mejor : peor).push(n.toLowerCase()); }
+      else { const bien = d * sentido > 0; color = bien ? 'var(--teal-d)' : 'var(--bad)'; flecha = bien ? '✓' : '✗'; dtxt = (d > 0 ? '+' : '−') + (Number.isInteger(d) ? Math.abs(d) : fNum(Math.round(Math.abs(d) * 10) / 10)) + (n === 'Peso medio' || n === 'Come al día' ? ' g' : ''); if (n === 'Peso medio' || n === 'Come al día') dtxt = (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'; (bien ? mejor : peor).push(n.toLowerCase()); }
     }
     const sub = st => extra ? extra(st) : '';
     return `<div class="row" style="gap:8px;padding:9px 0;border-top:1px solid var(--line);align-items:center"><span class="small b grow" style="min-width:0">${n}</span><span class="col" style="align-items:flex-end;text-align:right"><span class="tiny muted">${b != null ? fmt(b) : '—'}${sub(B) ? ' · ' + sub(B) : ''}</span><span class="small b">${a != null ? fmt(a) : '—'}${sub(A) ? ' <span class="tiny muted">· ' + sub(A) + '</span>' : ''}</span></span><span class="small b" style="color:${color};min-width:62px;text-align:right;white-space:nowrap">${flecha ? flecha + ' ' + dtxt : ''}</span></div>`;
@@ -998,7 +1045,7 @@ function semanas() {
   return `<section class="card col" style="gap:4px"><div class="col" style="gap:2px;padding-bottom:6px"><h2 style="font-size:19px;font-weight:800">Esta semana frente a la anterior</h2><span class="tiny muted">${rangoTxt(addDays(fin, -6), fin)} frente a ${rangoTxt(addDays(fin, -13), addDays(fin, -7))} · arriba la anterior, abajo la última</span></div>
     <div style="background:${fondo};border-radius:12px;padding:10px 12px;margin-bottom:6px"><span class="small b">${esc(concl)}</span></div>
     ${rows.join('')}
-    <span class="tiny muted" style="padding-top:6px">▲ verde: mejora · ▼ rojo: empeora. Nota de las cacas: 5 normal, 4 con forma, 3 pastosa, 2 sin forma o alpistada, 1 diarrea, mucosa o alpistada sin forma. Días con cacas apuntadas: ${A.cacasDias} de 7.</span>
+    <span class="tiny muted" style="padding-top:6px">✓ verde: mejora · ✗ rojo: empeora. Nota de las cacas: 5 normal, 4 con forma, 3 pastosa, 2 sin forma o alpistada, 1 diarrea, mucosa o alpistada sin forma. Días con cacas apuntadas: ${A.cacasDias} de 7.</span>
     ${prev.length ? `<details style="padding-top:8px"><summary class="small b" style="color:var(--teal-d);cursor:pointer">Ver semanas anteriores</summary>${prev.join('')}</details>` : ''}
   </section>`;
 }
