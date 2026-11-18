@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.8.2';
+const VERSION = '2.8.3';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -225,12 +225,12 @@ function sembrarMeds() {
     m({ nombre: 'Vitamina B12', dosis: '0,25 ml subcutánea', tipo: 'semanal', dias: [1, 4], aviso: true }),
     m(SUPL.melena), m(SUPL.maxi), m(SUPL.glut)
   ];
-  DB.migr = 3;
+  DB.migr = 6;
   guardar();
 }
 // Suplementos: se preparan para varios días y se le da un poco cada día
 const SUPL = {
-  melena: { nombre: 'Melena de león', dosis: '1 g por semana', tipo: 'diario', momentos: ['manana', 'noche'], dil: { cada: 7, texto: '1 g para toda la semana (de martes a martes)' } },
+  melena: { nombre: 'Melena de león', dosis: '0,5 g por semana', tipo: 'diario', momentos: ['manana', 'noche'], dil: { cada: 7, texto: '0,5 g para toda la semana (de martes a martes)' } },
   maxi: { nombre: 'Maxi Digest', dosis: '1 g por semana', tipo: 'diario', momentos: ['manana', 'noche'], dil: { cada: 7, texto: '1 g para toda la semana (de martes a martes)' } },
   glut: { nombre: 'Glutamina', dosis: '1 g cada 4 días', tipo: 'diario', momentos: ['manana', 'noche'], dil: { cada: 4, texto: '1 g para 4 días' } }
 };
@@ -280,11 +280,22 @@ function migrar5() {
   const malo = DB.cambios.find(c => !c.borrado && c.tipo === 'dosis' && c.fecha === '2026-11-11' && /^Melena de le[oó]n: 1 g por semana → 0,5 g por semana$/.test(c.texto || ''));
   if (malo) {
     malo.borrado = true; malo.upd = Date.now(); malo.por = 'corrección'; SYNC.marcar('cambios', malo.id);
-    const m = DB.meds.find(x => !x.borrado && /^melena de le[oó]n$/i.test(x.nombre || ''));
-    if (m && m.dosis === '0,5 g por semana') { m.dosis = '1 g por semana'; m.upd = Date.now(); SYNC.marcar('meds', m.id); }
-    DB.tomas.forEach(t => { let c = false; (t.meds || []).forEach(x => { if (m && x.id === m.id && x.dosis === '0,5 g por semana') { x.dosis = '1 g por semana'; c = true; } }); if (c) { t.upd = Date.now(); SYNC.marcar('tomas', t.id); } });
   }
   DB.migr = 5;
+  guardar();
+}
+// Versión 6: la Melena de león siempre ha sido 0,5 g por semana (el 1 g de serie estaba mal)
+function migrar6() {
+  if ((DB.migr || 1) >= 6) return;
+  const m = DB.meds.find(x => !x.borrado && /^melena de le[oó]n$/i.test(x.nombre || ''));
+  if (m) {
+    let c = false;
+    if (m.dosis !== '0,5 g por semana') { m.dosis = '0,5 g por semana'; c = true; }
+    if (m.dil && /^1 g para toda la semana/.test(m.dil.texto || '')) { m.dil.texto = '0,5 g para toda la semana (de martes a martes)'; c = true; }
+    if (c) { m.upd = Date.now(); SYNC.marcar('meds', m.id); }
+    DB.tomas.forEach(t => { let k = false; (t.meds || []).forEach(x => { if (x.id === m.id && x.dosis !== '0,5 g por semana') { x.dosis = '0,5 g por semana'; k = true; } }); if (k) { t.upd = Date.now(); SYNC.marcar('tomas', t.id); } });
+  }
+  DB.migr = 6;
   guardar();
 }
 const vivos = c => DB[c].filter(r => !r.borrado);
@@ -2245,6 +2256,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 migrar3();
 migrar4();
 migrar5();
+migrar6();
 aplicarPlanes();
 pintar();
 if (!yo()) abrirSheet('quien');
