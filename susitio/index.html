@@ -53,6 +53,7 @@ h1,h2,h3,p{margin:0}
 .hero{background:var(--teal);color:#fff;border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:14px}
 .hero .kicker{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--teal-t)}
 .hero h2{font-size:32px;font-weight:800;line-height:1.1}
+.linkbtn{background:none;border:0;padding:4px 0;color:var(--teal-d);font-weight:800;font-size:14px;text-decoration:underline;text-align:left}
 .pill-btn{min-height:40px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.16);font-size:15px;font-weight:800;color:#fff}
 .hero-item{background:rgba(255,255,255,.14);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:56px;border:2px solid transparent}
 .hero-item .n{font-size:16px;font-weight:800}
@@ -171,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.7.3';
+const VERSION = '2.8';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -254,6 +255,25 @@ function migrar3() {
   DB.migr = 3;
   guardar();
 }
+// Versión 4: las subidas de cantidad (pavo 6 g, 7 g, 8 g…) dejan de ser dietas nuevas; se deduce el plan de transición
+function migrar4() {
+  if ((DB.migr || 1) >= 4) return;
+  const re = /([a-záéíóúñ]+)\s*\(\s*(\d+(?:[.,]\d+)?)\s*g\s*\)/i;
+  const ds = DB.cambios.filter(c => !c.borrado && c.tipo === 'dieta').sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.upd || 0) - (b.upd || 0));
+  const pasos = [];
+  for (let i = 1; i < ds.length; i++) {
+    const a = re.exec(ds[i - 1].alimento || ''), b = re.exec(ds[i].alimento || '');
+    if (!a || !b || a[1].toLowerCase() !== b[1].toLowerCase()) continue;
+    if (!ds[i].ajuste) { ds[i].ajuste = true; ds[i].upd = Date.now(); SYNC.marcar('cambios', ds[i].id); }
+    pasos.push({ fecha: ds[i].fecha, g: num(b[2]), prevF: ds[i - 1].fecha, prevG: num(a[2]), alimento: b[1].toLowerCase() });
+  }
+  if (pasos.length >= 2 && !DB.ajustes.some(x => x.id === 'transicion')) {
+    const u = pasos[pasos.length - 1], paso = u.g - u.prevG, cada = diffDays(u.fecha, u.prevF);
+    if (paso > 0 && cada > 0) { DB.ajustes.push({ id: 'transicion', alimento: u.alimento, desde: u.fecha, inicio: u.g, paso, cada, hasta: null, auto: true, upd: Date.now(), autor: yo() || 'Sena' }); SYNC.marcar('ajustes', 'transicion'); }
+  }
+  DB.migr = 4;
+  guardar();
+}
 const vivos = c => DB[c].filter(r => !r.borrado);
 function poner(col, rec) {
   rec.upd = Date.now();
@@ -292,7 +312,7 @@ const medsToma = mom => medsActivos().filter(m => m.tipo === 'diario' && (m.mome
 const medsSueltos = () => medsActivos().filter(m => m.tipo === 'diario' && !(m.momentos || []).length);
 const tomaDe = (f, mom) => vivos('tomas').find(t => t.fecha === f && t.momento === mom);
 const cacaDe = f => vivos('cacas').find(c => c.fecha === f);
-const hk = h => !h ? '0' : (h < '04' ? '2' : '1') + h; // las horas de madrugada van al final del día
+const hk = h => { if (!h) return '0'; if (/^\d:/.test(h)) h = '0' + h; return (h < '04' ? '2' : '1') + h; }; // las horas de madrugada van al final del día
 const comidasDe = f => vivos('comidas').filter(c => c.fecha === f).sort((a, b) => hk(a.hora).localeCompare(hk(b.hora)));
 const apetitoDe = f => vivos('apetito').find(a => a.fecha === f);
 const ultimaDil = medId => vivos('diluciones').filter(d => d.medId === medId).sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
@@ -393,6 +413,7 @@ function vistaHoy() {
       </div>
       <h2>Toma de la ${NOMBRE_MOM[mom]}</h2>
       <div class="hero-peso"><label for="hpeso">Peso (g)</label><input id="hpeso" inputmode="decimal" placeholder="${F.ref != null ? fNum(F.ref) : '—'}" value="${esc(F.peso)}" data-hero="peso"></div>
+      <div class="row" style="gap:6px;align-items:center"><span class="tiny grow" style="color:var(--teal-t)">¿Pesada antes o después de comer?</span>${[['antes', 'Antes'], ['despues', 'Después']].map(([k, l]) => `<button class="pill-btn" style="min-height:34px;padding:0 12px;${F.pmom === k ? 'background:#fff;color:var(--teal-d)' : ''}" data-a="hero-pmom" data-v="${k}" aria-pressed="${F.pmom === k}">${l}</button>`).join('')}</div>
       ${meds.length ? `<div class="grid2">${meds.map(m => `<button class="hero-item" data-a="hero-med" data-id="${m.id}" aria-pressed="${F.sel[m.id] !== false}"><span class="n">${esc(m.nombre)}</span><span class="d">${esc(m.dosis)}</span></button>`).join('')}</div>
       <span class="tiny" style="color:var(--teal-t)">Toca uno si esta vez no se lo has dado.</span>` : `<span class="small" style="color:var(--teal-t)">No hay medicación en esta toma. Puedes añadirla en Medicación.</span>`}
       <button class="btn btn-big btn-white" data-a="hero-dar" data-mom="${mom}">Ya se la he dado</button>
@@ -404,8 +425,10 @@ function vistaHoy() {
   const sh = sintomasDe(f);
   const v7 = vivos('sintomas').filter(x => x.tipo === 'vomito' && x.fecha > addDays(f, -7)).length;
   if (sh.length) h += `<button class="mini" data-a="reg" data-reg="sintoma" style="background:#FCE8E6"><span class="ico" style="background:#B3261E;color:#fff;font-weight:800;font-size:20px">!</span><span class="col grow"><span class="tiny b" style="color:#8C1D18;text-transform:uppercase;letter-spacing:.05em">Hoy</span>${sh.map(x => `<span class="b" style="font-size:16px;color:#5C1410">${esc(x.hora || '')} ${esc(textoSintoma(x))}</span>`).join('')}${v7 > 1 ? `<span class="small b" style="color:#8C1D18">${v7} vómitos en los últimos 7 días</span>` : ''}</span>${I.chev}</button>`;
-  if (esMalo(f)) h += pistasHTML(f, 'Posibles pistas de hoy');
-  else if (esMalo(addDays(f, -1))) h += pistasHTML(addDays(f, -1), 'Ayer fue un día malo: posibles pistas');
+  if (esMalo(f)) h += pistasHTML(f, 'Posibles pistas de hoy', 'cacas');
+  else if (esMalo(addDays(f, -1))) h += pistasHTML(addDays(f, -1), 'Ayer fue un día malo: posibles pistas', 'cacas');
+  if (comePoco(addDays(f, -1))) h += pistasHTML(addDays(f, -1), 'Ayer comió poco: posibles pistas', 'come');
+  h += cierreHTML(f);
   // Resto de tomas
   ['manana', 'noche'].forEach(mm => {
     if (mm === mom) return;
@@ -430,7 +453,7 @@ function vistaHoy() {
   if (da && da.alimento) {
     const n = diffDays(f, da.fecha) + 1;
     const mp = datosDia(); const r = resumen(da.fecha, f, mp);
-    h += `<button class="mini" data-a="tab" data-tab="prog"><span class="ico" style="background:var(--teal-s);font-size:18px;font-weight:800;color:var(--teal-d)">${n}</span><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Dieta actual · día ${n}${da.diasPrueba ? ' de ' + da.diasPrueba : ''}</span><span class="b" style="font-size:17px">Solo ${esc(da.alimento)}</span><span class="small muted">${r.tot ? r.g + ' días buenos de ' + r.tot : 'Aún sin días apuntados'}${r.peso != null ? ' · peso medio ' + Math.round(r.peso) + ' g' : ''}</span></span>${I.chev}</button>`;
+    h += `<button class="mini" data-a="tab" data-tab="prog"><span class="ico" style="background:var(--teal-s);font-size:18px;font-weight:800;color:var(--teal-d)">${n}</span><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Dieta actual · día ${n}${da.diasPrueba ? ' de ' + da.diasPrueba : ''}</span><span class="b" style="font-size:17px">Solo ${esc(sinGramos(da.alimento))}</span>${gramosTransicion(f) != null ? `<span class="small b" style="color:${subeTransicion(f) ? 'var(--warn)' : 'var(--teal-d)'}">${subeTransicion(f) ? 'Hoy sube ' : 'Hoy: '}${esc(transicion().alimento)} ${fNum(gramosTransicion(f))} g</span>` : ''}<span class="small muted">${r.tot ? r.g + ' días buenos de ' + r.tot : 'Aún sin días apuntados'}${r.peso != null ? ' · peso medio ' + Math.round(r.peso) + ' g' : ''}</span></span>${I.chev}</button>`;
   }
   // Cómo va hoy
   const up = ultimoPeso();
@@ -443,9 +466,23 @@ function vistaHoy() {
   h += `<section class="col" style="gap:10px"><h2 class="sec-title">Cómo va Susi hoy</h2><div class="grid3">
     <button class="stat" data-a="tab" data-tab="prog"><span class="l">Peso</span><span class="v">${up ? fNum(up.peso) : '—'}</span><span class="s" style="${dif != null && dif < 0 ? 'color:var(--warn);font-weight:800' : ''}">${dif != null ? (dif > 0 ? '+' : dif < 0 ? '−' : '±') + fNum(Math.abs(dif)) + ' g' : up ? 'gramos' : 'sin datos'}</span></button>
     <button class="stat" data-a="reg" data-reg="cacas"><span class="l">Cacas</span><span class="v${cc ? '' : ' vacio'}" style="${cc ? (cc.dia === 'bueno' ? 'color:var(--teal)' : cc.dia === 'malo' ? 'color:var(--bad)' : 'color:var(--warn)') : ''}">${cc ? DIA_N[cc.dia] || '—' : 'Apuntar'}</span><span class="s">${cc ? esc(cc.autor) : 'cómo han sido'}</span></button>
-    <button class="stat" data-a="reg" data-reg="comida"><span class="l">Comida</span><span class="v${com.length ? '' : ' vacio'}">${com.length ? fNum(tot) + ' g' : 'Apuntar'}</span><span class="s" style="${com.length && tot >= metaComida() ? 'color:var(--teal-d);font-weight:800' : ''}">${com.length ? (tot >= metaComida() ? '✓ meta ' + fNum(metaComida()) + ' g' : 'de ' + fNum(metaComida()) + ' g') : 'meta ' + fNum(metaComida()) + ' g'}</span><span style="display:block;height:6px;border-radius:9px;background:#F1E2CF;margin-top:4px;overflow:hidden"><span style="display:block;height:100%;width:${Math.min(100, Math.round(tot * 100 / metaComida()))}%;background:var(--teal)"></span></span></button>
+    <button class="stat" data-a="reg" data-reg="comida"><span class="l">Comida</span><span class="v${com.length ? '' : ' vacio'}">${com.length ? fNum(Math.round(tot)) + ' g' : 'Apuntar'}</span>${kcalDia(f) != null ? `<span class="s">~${Math.round(kcalDia(f))} kcal</span>` : ''}<span class="s" style="${com.length && tot >= metaComida() ? 'color:var(--teal-d);font-weight:800' : ''}">${com.length ? (tot >= metaComida() ? '✓ meta ' + fNum(metaComida()) + ' g' : 'de ' + fNum(metaComida()) + ' g') : 'meta ' + fNum(metaComida()) + ' g'}</span><span style="display:block;height:6px;border-radius:9px;background:#F1E2CF;margin-top:4px;overflow:hidden"><span style="display:block;height:100%;width:${Math.min(100, Math.round(tot * 100 / metaComida()))}%;background:var(--teal)"></span></span></button>
   </div></section>`;
   return h;
+}
+function cierreHTML(f) {
+  const hs = horaSusi();
+  const dia = hs >= 16 ? f : hs < 8 ? addDays(f, -1) : null; // desde las 20:00, o hasta las 12:00 para cerrar el de ayer
+  if (!dia) return '';
+  const c = cacaDe(dia), ap = apetitoDe(dia), en = energiaDe(dia), sp = sospechaDe(dia);
+  if (c && ap && en) return '';
+  const cual = dia === f ? 'hoy' : 'ayer';
+  return `<section class="card col" style="gap:12px;border:2px solid var(--teal-s)"><div class="col" style="gap:2px"><span class="b" style="font-size:18px">Cierre del día (${cual})</span><span class="tiny muted">Tres toques para que las pistas y los patrones funcionen.</span></div>
+    ${c ? `<span class="small b" style="color:var(--teal-d)">✓ Cacas: ${DIA_N[c.dia] || ''}</span>` : `<button class="btn btn-line" style="min-height:46px" data-a="reg-caca" data-f="${dia}">Apuntar las cacas de ${cual}</button>`}
+    <div class="col" style="gap:6px"><span class="small b">Apetito ${ap ? '✓' : ''}</span><div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))">${APETITO.map(([k, l]) => `<button data-a="cierre-ap" data-f="${dia}" data-v="${k}" aria-pressed="${!!ap && ap.valor === k}">${l}</button>`).join('')}</div></div>
+    <div class="col" style="gap:6px"><span class="small b">Energía ${en ? '✓' : ''} <span class="tiny muted">(1 muy baja · 5 muy activa)</span></span><div class="seg" style="grid-template-columns:repeat(5,minmax(0,1fr))">${ENERGIA.map(([k, l]) => `<button data-a="cierre-en" data-f="${dia}" data-v="${k}" aria-pressed="${!!en && en.valor === k}" aria-label="${l}">${k}</button>`).join('')}</div></div>
+    <button class="chip" style="align-self:flex-start" data-a="sosp-abrir" data-f="${dia}">${sp ? '✓ Algo raro apuntado' : '¿Algo raro ' + cual + '? Apúntalo'}</button>
+  </section>`;
 }
 function faltan(t) {
   const esper = medsToma(t.momento).map(m => m.id);
@@ -512,6 +549,22 @@ function alarmas(f) {
   // comida: mucho tiempo sin comer (solo si se apuntan las comidas)
   const com = vivos('comidas').filter(c => c.hora && c.fecha >= addDays(f, -2));
   if (com.length >= 3) { const u = Math.max(...com.map(c => tomaMs({ fecha: c.fecha, hora: c.hora }))); const h = (ahora - u) / 3600000; if (h > 10 && h < 72) ambar('No hay comida apuntada desde hace ' + Math.round(h) + ' horas.'); }
+  // bajada rápida de peso: media de los 3 últimos días frente a los 3 anteriores
+  const p3 = [f, ayer, addDays(f, -2)].map(pesoDia).filter(x => x != null), p0 = [3, 4, 5].map(i => pesoDia(addDays(f, -i))).filter(x => x != null);
+  if (p3.length >= 2 && p0.length >= 2 && !out.some(x => /perdido/.test(x.t))) { const a = media(p3), b = media(p0), pct = (b - a) / b * 100; if (pct > 3) rojo('El peso ha bajado un ' + fNum(Math.round(pct * 10) / 10) + ' % en 3 días (de unos ' + Math.round(b) + ' g a unos ' + Math.round(a) + ' g).'); }
+  // dos días seguidos comiendo menos del 70 % de la meta
+  const gA = gramosDia(ayer), gB = gramosDia(addDays(f, -2)), meta = metaComida();
+  if (gA != null && gB != null && gA < meta * 0.7 && gB < meta * 0.7) rojo('Lleva 2 días comiendo menos del 70 % de la meta (' + Math.round(gB) + ' g y ' + Math.round(gA) + ' g, de ' + fNum(meta) + ' g).');
+  // dos días seguidos con mucosa, diarrea o vómito
+  const diaMal = d => { const c = cacaDe(d); return !!(c && (c.tipos || []).some(t => t === 'mucosa' || t === 'diarrea')) || vivos('sintomas').some(x => x.fecha === d && x.tipo === 'vomito'); };
+  if ((diaMal(f) && diaMal(ayer)) || (diaMal(ayer) && diaMal(addDays(f, -2)))) rojo('Dos días seguidos con mucosa, diarrea o vómito.');
+  // a mitad del día: va comiendo menos de lo que suele a esta hora
+  if (f === hoy() && horaSusi() >= 4) {
+    const ya = hk(nowHM());
+    const hasta = d => vivos('comidas').filter(c => c.fecha === d && c.g != null && c.hora && hk(c.hora) <= ya).reduce((a, c) => a + c.g, 0);
+    const prevs = []; for (let i = 1; i <= 14; i++) { const d = addDays(f, -i); if (vivos('comidas').some(c => c.fecha === d && c.hora && c.g != null)) prevs.push(hasta(d)); }
+    if (prevs.length >= 5) { const m = mediana(prevs), y = hasta(f); if (m >= 30 && y < m * 0.6) ambar('Hoy va comiendo poco: lleva ' + Math.round(y) + ' g y a esta hora suele llevar unos ' + Math.round(m) + ' g.'); }
+  }
   // a comentar en la próxima visita
   const s7 = vivos('sintomas').filter(x => x.fecha >= addDays(f, -6));
   if (s7.some(x => x.tipo === 'sed')) ambar('Bebe mucha agua (puede ser por la prednisona): coméntalo con la vet.');
@@ -574,6 +627,7 @@ function formCacas() {
     <div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:14px">
       <span class="b" style="font-size:16px">El día ha sido…</span>
       <div class="dia-opts">${['bueno', 'regular', 'malo'].map(k => `<button data-a="caca-dia" data-v="${k}" aria-pressed="${dia === k}">${DIA_N[k]}</button>`).join('')}</div>
+      ${puntCaca({ tipos: F.tipos, ninguna: F.ninguna }) != null ? `<span class="small b">Nota de las cacas: ${fNum(Math.round(puntCaca({ tipos: F.tipos, ninguna: F.ninguna }) * 10) / 10)} de 5</span>` : ''}
       <span class="tiny muted">${F.manual ? 'Elegido a mano.' : sug ? 'Propuesto por lo que has marcado; tócalo si no estás de acuerdo.' : 'Marca arriba cómo han sido.'}</span>
     </div>
     <button class="btn btn-teal" data-a="caca-guardar">${r ? 'Actualizar' : 'Guardar'}</button>
@@ -605,11 +659,13 @@ function formComida() {
   vivos('comidas').forEach(c => { const k = (c.que || '').trim(); if (k) cuenta[k] = (cuenta[k] || 0) + 1; });
   let rap = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a]).slice(0, 6);
   const da = dietaActual();
-  if (da && da.alimento) { rap = rap.filter(x => x.toLowerCase() !== da.alimento.toLowerCase()); rap.unshift(da.alimento); rap = rap.slice(0, 6); }
+  if (da && da.alimento) { const dn = sinGramos(da.alimento); rap = rap.filter(x => x.toLowerCase() !== dn.toLowerCase()); rap.unshift(dn); rap = rap.slice(0, 6); }
   ['Papilla', 'Pienso', 'Carne', 'Premio'].forEach(x => { if (rap.length < 6 && !rap.includes(x)) rap.push(x); });
   return `<section class="card form">
     <div class="row" style="justify-content:space-between;align-items:baseline"><h2 style="font-size:19px;font-weight:800">Comida</h2><button class="chip" style="min-height:38px" data-a="meta">Meta: ${fNum(metaComida())} g</button></div>
     ${metaBarra(tot, lista.length - gs.length)}
+    ${kcalDia(F.fecha) != null ? `<span class="small muted" style="margin-top:-6px">≈ ${Math.round(kcalDia(F.fecha))} kcal${lista.some(c => c.g != null && kcal100(c.que) && kcal100(c.que).est) ? ' (estimadas)' : ''} · <button class="linkbtn" data-a="kcal-abrir">kcal de cada alimento</button></span>` : `<button class="linkbtn" style="align-self:flex-start" data-a="kcal-abrir">Calorías de cada alimento</button>`}
+    ${transCard(F.fecha)}
     ${fechaPicker('comida', F.fecha)}
     ${lista.length ? `<div class="col">${lista.map(c => `<div class="list-row"><button class="row grow" style="text-align:left;min-height:48px" data-a="comida-edit" data-id="${c.id}"><span class="small b muted" style="width:46px">${esc(c.hora || '—')}</span><span class="col grow"><span class="b">${esc(c.que)}</span><span class="tiny muted">${c.g != null ? fNum(c.g) + ' g' : 'sin pesar'} · ${esc(c.autor)}</span></span></button><button class="x-btn" aria-label="Quitar ${esc(c.que)}" data-a="comida-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Aún no hay nada apuntado ${F.fecha === hoy() ? 'hoy' : 'ese día'}.</div>`}
     <div class="col" style="gap:10px;border-top:1px solid var(--line);padding-top:14px">
@@ -621,6 +677,10 @@ function formComida() {
         <button class="chip add" style="align-self:flex-start" data-a="comida-hora-mas">+ Otra hora (comió varias veces)</button>
       </div>
       <label class="lbl">${F.horas.length > 1 ? 'Gramos en total (si los sabes)' : 'Gramos (si los sabes)'}<input class="field" id="c-g" placeholder="—" inputmode="decimal" value="${esc(F.g)}" data-bind="comida.g" data-repinta="1"></label>
+      <details ${F.puse || F.sobro ? 'open' : ''}><summary class="small b" style="color:var(--teal-d);cursor:pointer">Calcular por lo que sobró</summary>
+        <div class="grid2" style="margin-top:8px"><label class="lbl">Le puse (g)<input class="field" inputmode="decimal" value="${esc(F.puse || '')}" data-bind="comida.puse" data-repinta="1" placeholder="—"></label><label class="lbl">Sobró (g)<input class="field" inputmode="decimal" value="${esc(F.sobro || '')}" data-bind="comida.sobro" data-repinta="1" placeholder="—"></label></div>
+        ${num(F.puse) != null && num(F.sobro) != null ? `<span class="small b" style="color:var(--teal-d)">Comió ${fNum(Math.round((num(F.puse) - num(F.sobro)) * 10) / 10)} g${F.horas.length > 1 ? ' en ' + F.horas.length + ' veces' : ''}. Se usará al pulsar Añadir si no pones los gramos arriba.</span>` : ''}
+      </details>
       ${F.horas.length > 1 && num(F.g) != null ? `<span class="small b" style="color:var(--teal-d)">Se reparte a partes iguales: ${fNum(Math.round(num(F.g) / F.horas.length * 10) / 10)} g en cada una de las ${F.horas.length} veces.</span>` : ''}
       <button class="btn btn-teal" data-a="comida-add">Añadir</button>
       <span class="tiny muted">Si lo viste por la cámara, pon la hora a la que comió de verdad.</span>
@@ -630,6 +690,30 @@ function formComida() {
       <div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))">${APETITO.map(([k, l]) => `<button data-a="apetito" data-v="${k}" aria-pressed="${ap && ap.valor === k}">${l}</button>`).join('')}</div>
     </div>
   </section>`;
+}
+function transCard(f) {
+  const t = transicion();
+  if (!t) return `<button class="linkbtn" style="align-self:flex-start" data-a="trans-abrir">¿Hacéis una transición poco a poco a un alimento nuevo? Configúrala</button>`;
+  const g = gramosTransicion(f), sig = (() => { for (let k = 1; k <= 30; k++) if (subeTransicion(addDays(f, k))) return addDays(f, k); return null; })();
+  return `<button class="row" style="gap:10px;background:var(--soft);border-radius:14px;padding:10px 12px;text-align:left" data-a="trans-abrir"><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Transición</span><span class="b">${esc(t.alimento)}: ${g != null ? fNum(g) + ' g ' + (f === hoy() ? 'hoy' : 'ese día') : 'empieza el ' + fCorta(t.desde)}</span><span class="tiny muted">Sube ${fNum(t.paso)} g cada ${t.cada} día${t.cada > 1 ? 's' : ''}${t.hasta ? ' hasta ' + fNum(t.hasta) + ' g' : ''}${sig ? ' · próxima subida: ' + fCorta(sig) + ' (' + fNum(gramosTransicion(sig)) + ' g)' : ''}${t.auto ? ' · calculado de lo apuntado, corrígelo si no es así' : ''}</span></span>${I.chev}</button>`;
+}
+function vistaSheetTrans() {
+  const F = S.form;
+  return `<h2>Transición a un alimento nuevo</h2><p class="small muted" style="margin-top:-8px">La app calcula sola cuántos gramos tocan cada día. No hace falta apuntar cada subida como cambio de dieta.</p>
+    <div class="form">
+      <label class="lbl">Alimento nuevo<input class="field" data-bind="form.alimento" value="${esc(F.alimento || '')}" placeholder="Ej.: pavo"></label>
+      <div class="grid2"><label class="lbl">Desde el día<input class="field" type="date" data-bind="form.desde" value="${esc(F.desde || '')}"></label><label class="lbl">Ese día, gramos<input class="field" inputmode="decimal" data-bind="form.inicio" value="${esc(F.inicio != null ? fNum(F.inicio) : '')}"></label></div>
+      <div class="grid2"><label class="lbl">Sube (g)<input class="field" inputmode="decimal" data-bind="form.paso" value="${esc(F.paso != null ? fNum(F.paso) : '')}"></label><label class="lbl">Cada (días)<input class="field" inputmode="numeric" data-bind="form.cada" value="${esc(F.cada != null ? F.cada : '')}"></label></div>
+      <label class="lbl">Hasta (g, opcional)<input class="field" inputmode="decimal" data-bind="form.hasta" value="${esc(F.hasta != null ? fNum(F.hasta) : '')}" placeholder="Sin límite"></label>
+      <button class="btn btn-teal" data-a="trans-guardar">Guardar</button>
+      ${F.existe ? `<button class="btn btn-danger" data-a="trans-fin">Terminar la transición</button>` : ''}
+    </div>`;
+}
+function vistaSheetKcal() {
+  const F = S.form;
+  return `<h2>Calorías de cada alimento</h2><p class="small muted" style="margin-top:-8px">kcal por cada 100 g. Las que pone «estimado» son aproximadas: si la nutricionista o la etiqueta dan otra cifra, cámbiala.</p>
+    <div class="form">${F.lista.map((x, i) => `<label class="lbl">${esc(x.nombre)}${x.est ? ' <span class="tiny muted">(estimado)</span>' : ''}<input class="field" inputmode="decimal" id="kcal-${i}" value="${x.v != null ? fNum(x.v) : ''}" placeholder="kcal / 100 g"></label>`).join('') || '<div class="empty">Apunta primero alguna comida.</div>'}
+      <button class="btn btn-teal" data-a="kcal-guardar">Guardar</button></div>`;
 }
 function metaBarra(tot, sinPesar) {
   const meta = metaComida();
@@ -667,13 +751,13 @@ function formCambio() {
   return `<section class="card form">
     <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cambio u observación</h2><span class="small muted">Los cambios de dieta y de medicación salen marcados en la gráfica de peso y empiezan una etapa nueva en Progreso. Las visitas y notas quedan en el Diario.</span></div>
     <div class="chips">${TIPOS_CAMBIO.map(([k, l]) => `<button class="chip" data-a="cambio-tipo" data-v="${k}" aria-pressed="${F.tipo === k}">${l}</button>`).join('')}</div>
-    ${F.tipo === 'dieta' ? `<div class="grid2"><label class="lbl">Marca<input class="field" data-bind="cambio.marca" value="${esc(F.marca || '')}" placeholder="Opcional"></label><label class="lbl">Proteína<input class="field" data-bind="cambio.proteina" value="${esc(F.proteina || '')}" placeholder="Ej.: pollo"></label></div><label class="lbl">Días de prueba que recomienda la nutricionista<input class="field" inputmode="numeric" data-bind="cambio.diasPrueba" value="${esc(F.diasPrueba || '')}" placeholder="Opcional"></label><label class="lbl">Qué come ahora<input class="field" data-bind="cambio.alimento" value="${esc(F.alimento || '')}" placeholder="Ej.: papilla de pollo"><span class="tiny muted" style="font-weight:600">Solo eso hasta ver cómo le sienta. Saldrá como etapa en Progreso y como botón rápido en Comida.</span></label>` : ''}
+    ${F.tipo === 'dieta' ? `<div class="grid2"><label class="lbl">Marca<input class="field" data-bind="cambio.marca" value="${esc(F.marca || '')}" placeholder="Opcional"></label><label class="lbl">Proteína<input class="field" data-bind="cambio.proteina" value="${esc(F.proteina || '')}" placeholder="Ej.: pollo"></label></div><label class="lbl">Días de prueba que recomienda la nutricionista<input class="field" inputmode="numeric" data-bind="cambio.diasPrueba" value="${esc(F.diasPrueba || '')}" placeholder="Opcional"></label><label class="lbl">Qué come ahora<input class="field" data-bind="cambio.alimento" value="${esc(F.alimento || '')}" placeholder="Ej.: papilla de pollo"><span class="tiny muted" style="font-weight:600">Solo eso hasta ver cómo le sienta. Saldrá como etapa en Progreso y como botón rápido en Comida.</span></label><button class="chip" style="align-self:flex-start" data-a="cambio-ajuste" aria-pressed="${!!F.ajuste}">${F.ajuste ? '✓ ' : ''}Es solo una subida de cantidad (misma dieta)</button><span class="tiny muted" style="margin-top:-6px">Así no empieza una etapa nueva. Para subidas regulares (p. ej. +1 g cada 2 días) es mejor configurar la transición en Comida.</span>` : ''}
     <label class="lbl">${F.tipo === 'dieta' ? 'Notas (opcional)' : 'Qué ha cambiado'}<textarea class="field" rows="3" data-bind="cambio.texto" placeholder="${F.tipo === 'dieta' ? 'Ej.: indicado por la nutricionista' : 'Ej.: Prednisona baja a 0,05 ml'}">${esc(F.texto)}</textarea></label>
     <label class="lbl">Desde qué día<input class="field" type="date" value="${F.fecha}" data-bind="cambio.fecha"></label>
     <button class="btn btn-teal" data-a="cambio-guardar">Guardar cambio</button>
   </section>
   <section class="col" style="gap:8px"><h2 class="sec-title">Cambios apuntados</h2>
-    ${lista.length ? `<div class="card" style="padding:4px 16px">${lista.map(c => `<div class="list-row"><span class="col grow"><span class="b">${esc(nombreCambio(c))}</span><span class="tiny muted">${fFecha(c.fecha)} · ${esc(TIPO_CAMBIO_N[c.tipo] || '')} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Borrar cambio" data-a="cambio-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Apunta aquí cuándo empezasteis los suplementos, para que Progreso compare desde ese día.</div>`}
+    ${lista.length ? `<div class="card" style="padding:4px 16px">${lista.map(c => `<div class="list-row"><span class="col grow"><span class="b">${esc(nombreCambio(c))}</span><span class="tiny muted">${fFecha(c.fecha)} · ${esc(c.ajuste ? 'Subida de cantidad' : TIPO_CAMBIO_N[c.tipo] || '')} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Borrar cambio" data-a="cambio-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Apunta aquí cuándo empezasteis los suplementos, para que Progreso compare desde ese día.</div>`}
   </section>`;
 }
 
@@ -748,7 +832,7 @@ function vistaProg() {
     </div>`).join('')}
     ${conclusion(ER)}
   </section>`;
-  h += semanas(desde, hasta, map);
+  h += semanas();
   h += `<section class="card col" style="gap:10px"><h2 style="font-size:18px;font-weight:800">Informe para la vet</h2><p class="small muted">Este resumen en texto, para mandarlo por WhatsApp a la vet o a la nutricionista.</p><div class="grid2"><button class="btn btn-line" data-a="informe">Copiar texto</button><button class="btn btn-teal" data-a="pdf">Imprimir o PDF</button></div><span class="tiny muted">«Imprimir o PDF» abre el informe con la gráfica: en el iPhone, en la pantalla de imprimir, elige Compartir › Guardar en Archivos para tenerlo en PDF.</span></section>`;
   return h;
 }
@@ -763,9 +847,11 @@ function conclusion(ER) {
   if (dp != null) t += ' y ' + (Math.abs(dp) < 3 ? 'el peso estable' : (dp > 0 ? Math.round(dp) + ' g más' : Math.round(-dp) + ' g menos') + ' de media');
   return `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b" style="color:var(--teal-d)">${t}.</span></div>`;
 }
-const ES_DIETA = c => c.tipo === 'dieta';
-const nombreCambio = c => c.tipo === 'dieta' && c.alimento ? 'Solo ' + c.alimento : (c.texto || TIPO_CAMBIO_N[c.tipo] || '');
-function dietaActual() { const d = vivos('cambios').filter(c => c.tipo === 'dieta' && c.fecha <= hoy()).sort((a, b) => a.fecha.localeCompare(b.fecha)).pop(); return d || null; }
+const ES_DIETA = c => c.tipo === 'dieta' && !c.ajuste;
+const ES_SUBIDA = c => c.tipo === 'dieta' && !!c.ajuste;
+const sinGramos = a => transicion() ? (a || '').replace(/\s*\(\s*\d+(?:[.,]\d+)?\s*g\s*\)/i, '').trim() : (a || '');
+const nombreCambio = c => c.tipo === 'dieta' && c.alimento ? 'Solo ' + (c.ajuste ? c.alimento : sinGramos(c.alimento)) : (c.texto || TIPO_CAMBIO_N[c.tipo] || '');
+function dietaActual() { const d = vivos('cambios').filter(c => ES_DIETA(c) && c.fecha <= hoy()).sort((a, b) => a.fecha.localeCompare(b.fecha)).pop(); return d || null; }
 const ES_MED = c => ['dosis', 'medicacion', 'suplemento'].includes(c.tipo);
 function graficaPeso(desde, hasta, map) {
   const N = diffDays(hasta, desde) + 1;
@@ -823,7 +909,7 @@ function graficaPeso(desde, hasta, map) {
   const conNum = pts.length <= 14;
   pts.forEach((p, k) => {
     const last = k === pts.length - 1, x = XP(p), y = Y(p.v);
-    const info = `${fCorta(p.t.fecha)} · toma de ${p.t.momento === 'noche' ? 'noche' : 'mañana'}${p.t.hora ? ' (' + p.t.hora + ')' : ''}: ${fNum(p.v)} g`;
+    const info = `${fCorta(p.t.fecha)} · toma de ${p.t.momento === 'noche' ? 'noche' : 'mañana'}${p.t.hora ? ' (' + p.t.hora + ')' : ''}: ${fNum(p.v)} g${p.t.pesoMom ? (p.t.pesoMom === 'antes' ? ' · antes de comer' : ' · después de comer') : ''}`;
     s += `<g data-a="peso-pt" data-t="${esc(info)}" style="cursor:pointer"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="12" fill="transparent"/>`;
     if (pts.length < 60 || last) s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${last ? 5.5 : 3.5}" fill="#2A2320" stroke="#fff" stroke-width="1.5"/>`;
     if (conNum || last) { const abajo = k > 0 ? p.v < pts[k - 1].v : p.v < pts[1].v; s += `<text x="${x.toFixed(1)}" y="${(y + (abajo ? 17 : -9)).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="${last ? 800 : 600}" fill="#2A2320">${fNum(p.v)}</text>`; }
@@ -855,23 +941,66 @@ function graficaPeso(desde, hasta, map) {
   if (Object.keys(map).some(f => f >= desde && map[f].vomitos)) h += `<span class="tiny" style="display:flex;align-items:center;gap:6px"><svg aria-hidden="true" width="14" height="12" viewBox="0 0 14 12"><path d="M1 11 L13 11 L7 1 Z" fill="#B3261E"/></svg>Día con vómito</span>`;
   return h + '</section>';
 }
-function semanas(desde, hasta, map) {
-  const cambios = vivos('cambios');
-  const rows = [];
-  let l = lunes(hasta);
-  let prevPeso = null;
-  const lista = [];
-  while (addDays(l, 6) >= desde) { lista.push(l); l = addDays(l, -7); }
-  const res = lista.map(l => { const a = l < desde ? desde : l, b = addDays(l, 6) > hasta ? hasta : addDays(l, 6); const r = resumen(a, b, map); r.l = l; r.dias = diffDays(addDays(l, 6), a) + 1; r.cambios = cambios.filter(c => c.fecha >= l && c.fecha <= addDays(l, 6)); return r; });
-  res.forEach((r, i) => {
-    const prev = res[i + 1];
-    const d = prev && prev.peso != null && r.peso != null ? r.peso - prev.peso : null;
-    const vac = Math.max(0, r.dias - r.tot);
-    rows.push(`<div class="week"><span class="small b">${fCorta(r.l)}</span>${barra(r.g, r.r, r.m, vac)}<span class="col" style="align-items:flex-end"><span class="small b">${r.peso != null ? Math.round(r.peso) + ' g' : '—'}</span>${r.vomitos ? `<span class="tiny b" style="color:var(--bad)">${r.vomitos} vómito${r.vomitos > 1 ? 's' : ''}</span>` : ''}<span class="tiny b" style="color:${d != null && d < 0 ? 'var(--warn)' : 'var(--teal-d)'}">${d == null ? '' : (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.round(Math.abs(d)) + ' g'}</span></span></div>`);
-    r.cambios.sort((a, b) => b.fecha.localeCompare(a.fecha)).forEach(c => rows.push(`<div class="marker"><i></i><b>${esc(nombreCambio(c))} · ${fCorta(c.fecha)}</b><i></i></div>`));
+function statsRango(a, b) {
+  const s = { dias: diffDays(b, a) + 1, pesos: [], g: [], kcal: [], buenos: 0, malos: 0, alp: 0, muc: 0, vom: 0, punt: [], cacasDias: 0 };
+  for (let f = a; f <= b; f = addDays(f, 1)) {
+    vivos('tomas').forEach(t => { if (t.fecha === f && t.peso != null) s.pesos.push(t.peso); });
+    const g = gramosDia(f); if (g != null) s.g.push(g);
+    const k = kcalDia(f); if (k != null) s.kcal.push(k);
+    const c = cacaDe(f);
+    if (c) { s.cacasDias++; if (c.dia === 'bueno') s.buenos++; else if (c.dia === 'malo') s.malos++; const t = c.tipos || []; if (t.includes('alpistada') || t.includes('alpistada_sf')) s.alp++; if (t.includes('mucosa') || t.includes('diarrea')) s.muc++; const p = puntCaca(c); if (p != null) s.punt.push(p); }
+    s.vom += vivos('sintomas').filter(x => x.fecha === f && x.tipo === 'vomito').length;
+  }
+  s.peso = media(s.pesos); s.gm = media(s.g); s.km = media(s.kcal); s.pm = media(s.punt);
+  return s;
+}
+const rangoTxt = (a, b) => { const A = parseD(a), B = parseD(b); return A.getMonth() === B.getMonth() ? A.getDate() + '–' + B.getDate() + ' ' + MESES[B.getMonth()] : fCorta(a) + ' – ' + fCorta(b); };
+function semanas() {
+  const fin = addDays(hoy(), -1);
+  const A = statsRango(addDays(fin, -6), fin), B = statsRango(addDays(fin, -13), addDays(fin, -7));
+  const f1 = n => fNum(Math.round(n * 10) / 10);
+  const filas = [
+    ['Peso medio', B.peso, A.peso, v => Math.round(v) + ' g', 1, 3],
+    ['Come al día', B.gm, A.gm, v => Math.round(v) + ' g', 1, 5, (st) => st.km != null ? '~' + Math.round(st.km) + ' kcal' : ''],
+    ['Cacas (nota de 1 a 5)', B.pm, A.pm, f1, 1, 0.2],
+    ['Días buenos', B.cacasDias ? B.buenos : null, A.cacasDias ? A.buenos : null, v => v + ' de ' + 7, 1, 0],
+    ['Días malos', B.cacasDias ? B.malos : null, A.cacasDias ? A.malos : null, v => String(v), -1, 0],
+    ['Días con alpistada', B.cacasDias ? B.alp : null, A.cacasDias ? A.alp : null, v => v + ' de ' + 7, -1, 0],
+    ['Días con mucosa o diarrea', B.cacasDias ? B.muc : null, A.cacasDias ? A.muc : null, v => String(v), -1, 0],
+    ['Vómitos', B.vom, A.vom, v => String(v), -1, 0]
+  ];
+  const mejor = [], peor = [];
+  const rows = filas.map(([n, b, a, fmt, sentido, umbral, extra]) => {
+    let flecha = '', color = 'var(--muted)', dtxt = '';
+    if (a != null && b != null) {
+      const d = a - b;
+      if (Math.abs(d) <= umbral) { dtxt = 'igual'; flecha = '='; }
+      else { const bien = d * sentido > 0; color = bien ? 'var(--teal-d)' : 'var(--bad)'; flecha = bien ? '▲' : '▼'; dtxt = (d > 0 ? '+' : '−') + (Number.isInteger(d) ? Math.abs(d) : fNum(Math.round(Math.abs(d) * 10) / 10)) + (n === 'Peso medio' || n === 'Come al día' ? ' g' : ''); if (n === 'Peso medio' || n === 'Come al día') dtxt = (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'; (bien ? mejor : peor).push(n.toLowerCase()); }
+    }
+    const sub = st => extra ? extra(st) : '';
+    return `<div class="row" style="gap:8px;padding:9px 0;border-top:1px solid var(--line);align-items:center"><span class="small b grow" style="min-width:0">${n}</span><span class="col" style="align-items:flex-end;text-align:right"><span class="tiny muted">${b != null ? fmt(b) : '—'}${sub(B) ? ' · ' + sub(B) : ''}</span><span class="small b">${a != null ? fmt(a) : '—'}${sub(A) ? ' <span class="tiny muted">· ' + sub(A) + '</span>' : ''}</span></span><span class="small b" style="color:${color};min-width:62px;text-align:right;white-space:nowrap">${flecha ? flecha + ' ' + dtxt : ''}</span></div>`;
   });
-  return `<section class="card col" style="gap:4px"><div class="col" style="gap:2px;padding-bottom:8px"><h2 style="font-size:19px;font-weight:800">Semana a semana</h2><span class="tiny muted">Días buenos, regulares y malos, y peso medio</span></div>${rows.join('')}
-    <div class="legend" style="padding-top:8px"><span><i style="background:var(--good)"></i>Bueno</span><span><i style="background:var(--reg)"></i>Regular</span><span><i style="background:var(--bad)"></i>Malo</span><span><i style="border:1.5px dashed #D9CBBB"></i>Sin apuntar</span></div></section>`;
+  let concl, fondo;
+  if (!A.cacasDias && !A.pesos.length) { concl = 'Aún no hay datos de la última semana.'; fondo = 'var(--soft)'; }
+  else if (!B.cacasDias && !B.pesos.length) { concl = 'Todavía no hay una semana anterior con la que comparar.'; fondo = 'var(--soft)'; }
+  else if (mejor.length && !peor.length) { concl = 'Va mejor: ' + mejor.slice(0, 3).join(', ') + '.'; fondo = 'var(--teal-s)'; }
+  else if (mejor.length > peor.length) { concl = 'Va mejor en general. Ojo con: ' + peor.join(', ') + '.'; fondo = 'var(--teal-s)'; }
+  else if (peor.length > mejor.length) { concl = 'Va peor en: ' + peor.slice(0, 3).join(', ') + '.'; fondo = '#FCE8E6'; }
+  else if (!mejor.length) { concl = 'Parecida a la semana anterior.'; fondo = 'var(--soft)'; }
+  else { concl = 'Mejor en ' + mejor.join(', ') + '; peor en ' + peor.join(', ') + '.'; fondo = 'var(--soft)'; }
+  // semanas anteriores, cada una con su comparación de peso
+  const prev = [];
+  for (let k = 0; k < 8; k++) {
+    const b = addDays(fin, -7 * k), a = addDays(b, -6); if (b < (primerDia() || b)) break;
+    const st = statsRango(a, b); if (!st.cacasDias && !st.pesos.length) continue;
+    prev.push(`<div class="col" style="gap:2px;padding:8px 0;border-top:1px solid var(--line)"><span class="small b">${rangoTxt(a, b)}</span><span class="tiny muted">${st.peso != null ? Math.round(st.peso) + ' g' : '— g'} · come ${st.gm != null ? Math.round(st.gm) + ' g' : '—'}${st.km != null ? ' (~' + Math.round(st.km) + ' kcal)' : ''} · ${st.buenos} buenos, ${st.malos} malos · cacas ${st.pm != null ? f1(st.pm) : '—'}/5${st.vom ? ' · ' + st.vom + ' vómito' + (st.vom > 1 ? 's' : '') : ''}</span></div>`);
+  }
+  return `<section class="card col" style="gap:4px"><div class="col" style="gap:2px;padding-bottom:6px"><h2 style="font-size:19px;font-weight:800">Esta semana frente a la anterior</h2><span class="tiny muted">${rangoTxt(addDays(fin, -6), fin)} frente a ${rangoTxt(addDays(fin, -13), addDays(fin, -7))} · arriba la anterior, abajo la última</span></div>
+    <div style="background:${fondo};border-radius:12px;padding:10px 12px;margin-bottom:6px"><span class="small b">${esc(concl)}</span></div>
+    ${rows.join('')}
+    <span class="tiny muted" style="padding-top:6px">▲ verde: mejora · ▼ rojo: empeora. Nota de las cacas: 5 normal, 4 con forma, 3 pastosa, 2 sin forma o alpistada, 1 diarrea, mucosa o alpistada sin forma. Días con cacas apuntadas: ${A.cacasDias} de 7.</span>
+    ${prev.length ? `<details style="padding-top:8px"><summary class="small b" style="color:var(--teal-d);cursor:pointer">Ver semanas anteriores</summary>${prev.join('')}</details>` : ''}
+  </section>`;
 }
 function textoInforme() {
   const { desde, hasta } = rangoProg();
@@ -900,6 +1029,24 @@ function textoInforme() {
 }
 
 /* =========================================================
+   TRANSICIÓN, CALORÍAS Y PUNTUACIÓN DE LAS CACAS
+   ========================================================= */
+const transicion = () => { const r = (DB.ajustes || []).find(x => x.id === 'transicion' && !x.borrado); return r && r.activa !== false && r.desde ? r : null; };
+function gramosTransicion(f) { const t = transicion(); if (!t || f < t.desde) return null; let g = (t.inicio || 0) + Math.floor(diffDays(f, t.desde) / (t.cada || 1)) * (t.paso || 0); if (t.hasta) g = Math.min(g, t.hasta); return g; }
+function subeTransicion(f) { const t = transicion(); if (!t || f <= t.desde) return false; return diffDays(f, t.desde) % (t.cada || 1) === 0 && gramosTransicion(f) > gramosTransicion(addDays(f, -1)); }
+const kcalMapa = () => { const r = (DB.ajustes || []).find(x => x.id === 'kcal' && !x.borrado); return (r && r.mapa) || {}; };
+const claveAlim = q => (q || '').trim().toLowerCase();
+// kcal por 100 g: lo que hayáis puesto; si no, una estimación (caballo en lata ~90, pavo magro ~110)
+function kcal100(que) { const m = kcalMapa(), k = claveAlim(que); if (m[k] != null) return { v: m[k], est: false }; if (/caballo|leonardo/.test(k)) return { v: 90, est: true }; if (/pavo/.test(k)) return { v: 110, est: true }; return null; }
+function kcalDia(f) { const l = vivos('comidas').filter(c => c.fecha === f && c.g != null); if (!l.length) return null; let t = 0; for (const c of l) { const k = kcal100(c.que); if (!k) return null; t += c.g * k.v / 100; } return t; }
+const PUNT = { normal: 5, con_forma: 4, pastosa: 3, sin_forma: 2, alpistada: 2, alpistada_sf: 1, diarrea: 1, mucosa: 1 };
+function puntCaca(c) { if (!c || c.ninguna) return null; const l = (c.tipos || []).map(t => PUNT[t]).filter(x => x != null); return l.length ? l.reduce((a, b) => a + b, 0) / l.length : null; }
+const media = l => l.length ? l.reduce((a, b) => a + b, 0) / l.length : null;
+function mediana(l) { const s = l.slice().sort((a, b) => a - b), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; }
+const minSusi = h => { const [a, b] = (h || '0:0').split(':').map(Number); return ((a + 20) % 24) * 60 + (b || 0); };
+const hhmm = m => { m = Math.round(m); const h = (Math.floor(m / 60) + 4) % 24; return pad(h) + ':' + pad(m % 60); };
+
+/* =========================================================
    PISTAS: qué pasó antes de un día malo
    No son diagnósticos: solo coincidencias en las 48 horas anteriores.
    ========================================================= */
@@ -909,7 +1056,9 @@ const FACTOR_N = {
   comida_mucha: 'Comió más de lo habitual el día antes', comida_poca: 'Comió menos de lo habitual el día antes', comida_nueva: 'Comió algo nuevo o que no comía hacía tiempo',
   madrugada: 'Comió varias veces de madrugada', apetito: 'Tenía poco apetito', cambio: 'Hubo un cambio de dieta o medicación en los 3 días anteriores',
   toma_incompleta: 'Faltó algo en una toma', toma_falta: 'No está apuntada alguna toma', toma_tarde: 'Pasaron más de 13 h y media entre dos tomas',
-  tanda: 'Se preparó una tanda o dilución nueva', peso_baja: 'Bajó de peso', sintoma_previo: 'Tuvo otro síntoma antes'
+  tanda: 'Se preparó una tanda o dilución nueva', peso_baja: 'Bajó de peso', sintoma_previo: 'Tuvo otro síntoma antes',
+  subida: 'Se subió la cantidad del alimento nuevo (transición)', toma_retrasada: 'La medicina se dio más tarde de lo normal', b12: 'Tocaba la inyección de B12',
+  caca_mala: 'Tuvo cacas malas o vómito el día antes', energia_baja: 'Tenía la energía baja'
 };
 SOSPECHAS.forEach(([k, l]) => FACTOR_N['sosp_' + k] = 'Sospecha: ' + l.charAt(0).toLowerCase() + l.slice(1));
 const sospechaDe = f => vivos('sospechas').find(x => x.fecha === f);
@@ -917,56 +1066,86 @@ const gramosDia = f => { const l = vivos('comidas').filter(c => c.fecha === f &&
 const pesoDia = f => { const l = vivos('tomas').filter(t => t.fecha === f && t.peso != null).map(t => t.peso); return l.length ? l.reduce((a, b) => a + b, 0) / l.length : null; };
 function esMalo(f) { const c = cacaDe(f); return !!(c && c.dia === 'malo') || vivos('sintomas').some(x => x.fecha === f && x.tipo === 'vomito'); }
 function tieneDatos(f) { return !!cacaDe(f) || vivos('sintomas').some(x => x.fecha === f && x.tipo === 'vomito'); }
-function factores(f) {
+function factores(f, tipo) {
+  tipo = tipo || 'cacas';
   const out = [];
-  const ayer = addDays(f, -1), dias = [ayer, f];
+  const ayer = addDays(f, -1), ante = addDays(f, -2), dias = [ante, ayer, f], dos = [ayer, f];
+  const cuando = d => d === f ? 'Hoy' : d === ayer ? 'Ayer' : 'Anteayer';
   const add = (k, texto) => { if (!out.some(x => x.k === k)) out.push({ k, texto }); };
-  // comida
+  // comida del día anterior frente a lo habitual
   const base = []; for (let i = 2; i <= 15; i++) { const g = gramosDia(addDays(f, -i)); if (g != null) base.push(g); }
   const gA = gramosDia(ayer);
   if (gA != null && base.length >= 3) {
-    const m = base.reduce((a, b) => a + b, 0) / base.length;
+    const m = mediana(base);
     if (gA > m * 1.3) add('comida_mucha', 'Ayer comió ' + fNum(Math.round(gA)) + ' g (lo habitual son ' + Math.round(m) + ' g)');
-    else if (gA < m * 0.7) add('comida_poca', 'Ayer comió ' + fNum(Math.round(gA)) + ' g (lo habitual son ' + Math.round(m) + ' g)');
+    else if (gA < m * 0.8) add('comida_poca', 'Ayer comió ' + fNum(Math.round(gA)) + ' g (lo habitual son ' + Math.round(m) + ' g)');
   }
-  const prev = vivos('comidas').filter(c => c.fecha < ayer && c.fecha >= addDays(f, -16));
-  const antes = new Set(new Set(prev.map(c => c.fecha)).size >= 7 ? prev.map(c => (c.que || '').trim().toLowerCase()) : []);
-  vivos('comidas').filter(c => dias.includes(c.fecha)).forEach(c => { const q = (c.que || '').trim().toLowerCase(); if (q && antes.size && !antes.has(q)) add('comida_nueva', 'Comió ' + c.que + ' (no lo comía en las 2 semanas anteriores)'); });
-  const madr = vivos('comidas').filter(c => dias.includes(c.fecha) && c.hora && c.hora < '04').length;
+  const prev = vivos('comidas').filter(c => c.fecha < ante && c.fecha >= addDays(f, -17));
+  const antes = new Set(new Set(prev.map(c => c.fecha)).size >= 7 ? prev.map(c => claveAlim(c.que)) : []);
+  vivos('comidas').filter(c => dias.includes(c.fecha)).forEach(c => { const q = claveAlim(c.que); if (q && antes.size && !antes.has(q)) add('comida_nueva', 'Comió ' + c.que + ' (no lo comía en las 2 semanas anteriores)'); });
+  const madr = vivos('comidas').filter(c => dos.includes(c.fecha) && c.hora && hk(c.hora) >= '2').length;
   if (madr >= 2) add('madrugada', 'Comió ' + madr + ' veces de madrugada');
-  dias.forEach(d => { const a = apetitoDe(d); if (a && (a.valor === 'poco' || a.valor === 'nada')) add('apetito', (d === f ? 'Hoy' : 'Ayer') + ' tenía ' + (a.valor === 'nada' ? 'nada de' : 'poco') + ' apetito'); });
-  // cambios de dieta o medicación
+  dias.forEach(d => { if (tipo === 'come' && d === f) return; const a = apetitoDe(d); if (a && (a.valor === 'poco' || a.valor === 'nada')) add('apetito', cuando(d) + ' tenía ' + (a.valor === 'nada' ? 'nada de' : 'poco') + ' apetito'); });
+  // cambios de dieta o medicación (las subidas de cantidad van aparte)
   vivos('cambios').filter(c => (ES_DIETA(c) || ES_MED(c)) && c.fecha >= addDays(f, -3) && c.fecha <= f).forEach(c => add('cambio', (c.fecha === f ? 'Hoy' : 'El ' + fCorta(c.fecha)) + ': ' + nombreCambio(c)));
+  const tr = transicion();
+  dias.forEach(d => { if (subeTransicion(d)) add('subida', cuando(d) + ' subió ' + (tr ? tr.alimento : 'la cantidad nueva') + ' a ' + fNum(gramosTransicion(d)) + ' g'); });
+  vivos('cambios').filter(c => ES_SUBIDA(c) && dias.includes(c.fecha)).forEach(c => add('subida', cuando(c.fecha) + ': ' + nombreCambio(c)));
   // tomas
-  dias.forEach(d => ['manana', 'noche'].forEach(mom => {
+  dos.forEach(d => ['manana', 'noche'].forEach(mom => {
     if (d === f && mom === 'noche') return;
     const t = tomaDe(d, mom);
     if (!t) { const pt = vivos('tomas').reduce((m, x) => !m || x.fecha < m ? x.fecha : m, null); if (d === ayer && pt && ayer > pt) add('toma_falta', 'No está apuntada la toma de la ' + NOMBRE_MOM[mom] + ' de ayer'); return; }
     const falta = medsToma(mom).filter(m => (m.upd || 0) < (t.upd || 0) && !(t.meds || []).some(x => x.id === m.id));
     if (falta.length) add('toma_incompleta', 'En la toma de la ' + NOMBRE_MOM[mom] + (d === f ? ' de hoy' : ' de ayer') + ' faltó ' + falta.map(m => m.nombre).join(', '));
   }));
-  const ts = vivos('tomas').filter(t => t.hora && t.fecha >= addDays(f, -2) && t.fecha <= f).sort((a, b) => tomaMs(a) - tomaMs(b));
+  const ts = vivos('tomas').filter(t => t.hora && t.fecha >= ante && t.fecha <= f).sort((a, b) => tomaMs(a) - tomaMs(b));
   for (let i = 1; i < ts.length; i++) { const h = (tomaMs(ts[i]) - tomaMs(ts[i - 1])) / 3600000; if (h > 13.5 && ts[i].fecha >= ayer) { add('toma_tarde', 'Entre la toma de las ' + ts[i - 1].hora + ' y la de las ' + ts[i].hora + ' pasaron ' + fNum(Math.round(h * 10) / 10) + ' h'); break; } }
-  // tandas nuevas
-  vivos('diluciones').filter(x => dias.includes(x.fecha)).forEach(x => { const m = DB.meds.find(y => y.id === x.medId); add('tanda', (x.fecha === f ? 'Hoy' : 'Ayer') + ' se preparó ' + (m ? m.nombre : 'una tanda nueva')); });
+  ['manana', 'noche'].forEach(mom => {
+    const hs = vivos('tomas').filter(t => t.momento === mom && t.hora && t.fecha < ante && t.fecha >= addDays(f, -16)).map(t => minSusi(t.hora));
+    if (hs.length < 5) return;
+    const m = mediana(hs);
+    dos.forEach(d => { const t = tomaDe(d, mom); if (t && t.hora && minSusi(t.hora) - m > 60) add('toma_retrasada', cuando(d) + ' la toma de la ' + NOMBRE_MOM[mom] + ' fue a las ' + t.hora + ' (normalmente hacia las ' + hhmm(m) + ')'); });
+  });
+  vivos('semanales').filter(x => dos.includes(x.fecha)).forEach(x => { const m = DB.meds.find(y => y.id === x.medId); if (m && /b12/i.test(m.nombre)) add('b12', cuando(x.fecha) + ' se le puso la ' + m.nombre); });
+  vivos('diluciones').filter(x => dos.includes(x.fecha)).forEach(x => { const m = DB.meds.find(y => y.id === x.medId); add('tanda', cuando(x.fecha) + ' se preparó ' + (m ? m.nombre : 'una tanda nueva')); });
   // peso
-  const pA = pesoDia(ayer) != null ? pesoDia(ayer) : pesoDia(f);
-  const pb = []; for (let i = 2; i <= 8; i++) { const p = pesoDia(addDays(f, -i)); if (p != null) pb.push(p); }
-  if (pA != null && pb.length >= 3) { const m = pb.reduce((a, b) => a + b, 0) / pb.length; if (pA < m * 0.98) add('peso_baja', 'El peso bajó a ' + Math.round(pA) + ' g (venía de ' + Math.round(m) + ' g)'); }
-  // otros síntomas antes
-  vivos('sintomas').filter(x => x.fecha >= addDays(f, -2) && x.fecha <= f && !(x.fecha === f && x.tipo === 'vomito')).forEach(x => add('sintoma_previo', fCorta(x.fecha) + ': ' + textoSintoma(x)));
-  // sospechas apuntadas
-  dias.forEach(d => { const s = sospechaDe(d); if (s) (s.items || []).forEach(k => add('sosp_' + k, (d === f ? 'Hoy' : 'Ayer') + ': ' + (SOSPECHA_N[k] || k).toLowerCase() + (k === 'otra' && s.nota ? ' (' + s.nota + ')' : ''))); });
+  if (tipo !== 'peso') {
+    const pA = pesoDia(ayer) != null ? pesoDia(ayer) : pesoDia(f);
+    const pb = []; for (let i = 2; i <= 8; i++) { const p = pesoDia(addDays(f, -i)); if (p != null) pb.push(p); }
+    if (pA != null && pb.length >= 3) { const m = media(pb); if (pA < m * 0.98) add('peso_baja', 'El peso bajó a ' + Math.round(pA) + ' g (venía de ' + Math.round(m) + ' g)'); }
+  }
+  // cacas malas antes (para comer poco o bajar de peso)
+  if (tipo !== 'cacas') [ante, ayer].forEach(d => { if (esMalo(d)) add('caca_mala', cuando(d) + ' tuvo cacas malas o vómito'); });
+  if (tipo === 'cacas') { const g = gramosDia(ayer), m = comeHabitual(ayer); if (g != null && m != null && g < m * 0.8) add('comida_poca', 'Ayer comió ' + fNum(Math.round(g)) + ' g (lo habitual son ' + Math.round(m) + ' g)'); }
+  dos.forEach(d => { const e = energiaDe(d); if (e && e.valor <= 2) add('energia_baja', cuando(d) + ' tenía la energía baja (' + e.valor + ' de 5)'); });
+  vivos('sintomas').filter(x => x.fecha >= ante && x.fecha <= f && !(x.fecha === f && x.tipo === 'vomito')).forEach(x => add('sintoma_previo', fCorta(x.fecha) + ': ' + textoSintoma(x)));
+  dias.forEach(d => { const s = sospechaDe(d); if (s) (s.items || []).forEach(k => add('sosp_' + k, cuando(d) + ': ' + (SOSPECHA_N[k] || k).toLowerCase() + (k === 'otra' && s.nota ? ' (' + s.nota + ')' : ''))); });
   return out;
 }
-// Compara días malos y no malos: qué factores aparecen más antes de los malos
-function patrones() {
+/* ---------- Tipos de día problema ---------- */
+const TIPOS_PROB = [['cacas', 'Cacas malas'], ['come', 'Come poco'], ['peso', 'Baja de peso']];
+const TIPO_DESC = {
+  cacas: 'Días con cacas malas o vómito, comparados con el resto.',
+  come: 'Días en que comió menos del 80 % de lo que suele (su mediana de las 2 semanas anteriores).',
+  peso: 'Días en que el peso de esos 2 días bajó más de un 3 % respecto a los días anteriores.'
+};
+const TIPO_DIA = { cacas: 'días malos', come: 'días de comer poco', peso: 'días de bajar de peso' };
+const TIPO_UNO = { cacas: 'un día malo', come: 'un día de comer poco', peso: 'un día de bajar de peso' };
+function comeHabitual(f) { const l = []; for (let i = 1; i <= 14; i++) { const g = gramosDia(addDays(f, -i)); if (g != null) l.push(g); } return l.length >= 5 ? mediana(l) : null; }
+function comePoco(f) { if (f >= hoy()) return false; const g = gramosDia(f), m = comeHabitual(f); return g != null && m != null && g < m * 0.8; }
+function bajaPeso(f) { const a = [pesoDia(f), pesoDia(addDays(f, -1))].filter(x => x != null), b = []; for (let i = 3; i <= 7; i++) { const p = pesoDia(addDays(f, -i)); if (p != null) b.push(p); } return a.length > 0 && b.length >= 2 && media(a) < media(b) * 0.97; }
+const esProblema = (f, tipo) => tipo === 'come' ? comePoco(f) : tipo === 'peso' ? bajaPeso(f) : esMalo(f);
+const hayDatos = (f, tipo) => tipo === 'come' ? f < hoy() && gramosDia(f) != null : tipo === 'peso' ? pesoDia(f) != null : tieneDatos(f);
+// Compara los días problema con el resto: qué aparece más antes de ellos
+function patrones(tipo) {
+  tipo = tipo || 'cacas';
   const p = primerDia(); if (!p) return { lista: [], malos: 0, total: 0 };
   const cuenta = {}; let malos = 0, total = 0;
   for (let f = addDays(p, 1); f <= hoy(); f = addDays(f, 1)) {
-    if (!tieneDatos(f)) continue;
-    const m = esMalo(f); total++; if (m) malos++;
-    factores(f).forEach(x => { const c = cuenta[x.k] || (cuenta[x.k] = { con: 0, malosCon: 0 }); c.con++; if (m) c.malosCon++; });
+    if (!hayDatos(f, tipo)) continue;
+    const m = esProblema(f, tipo); total++; if (m) malos++;
+    factores(f, tipo).forEach(x => { const c = cuenta[x.k] || (cuenta[x.k] = { con: 0, malosCon: 0 }); c.con++; if (m) c.malosCon++; });
   }
   const tasa = total ? malos / total : 0;
   const lista = Object.keys(cuenta).map(k => Object.assign({ k }, cuenta[k], { tasa: cuenta[k].malosCon / cuenta[k].con }))
@@ -976,27 +1155,46 @@ function patrones() {
 // Hacen falta al menos 14 días con cacas y tomas apuntadas para poder comparar
 const DIAS_MIN = 14;
 function diasConDatos() { const c = new Set(vivos('cacas').map(x => x.fecha)), t = new Set(vivos('tomas').map(x => x.fecha)); return Math.min(c.size, t.size); }
-function pistasHTML(f, titulo) {
+function pistasHTML(f, titulo, tipo) {
+  tipo = tipo || 'cacas';
   const s = sospechaDe(f), n = diasConDatos();
   if (n < DIAS_MIN) return '';
-  const fs = factores(f);
-  return `<section class="card col" style="gap:8px;border:2px solid #F2C9C4"><div class="row" style="justify-content:space-between;align-items:baseline"><span class="b" style="font-size:17px">${titulo}</span><span class="tiny muted">48 h antes</span></div>
-    ${fs.length ? fs.map(x => `<div class="row" style="gap:10px;align-items:flex-start"><span style="width:8px;height:8px;border-radius:9px;background:#B3261E;margin-top:7px;flex:0 0 8px"></span><span class="small">${esc(x.texto)}</span></div>`).join('') : `<span class="small muted">No hay nada fuera de lo normal apuntado en las 48 horas anteriores.</span>`}
+  const fs = factores(f, tipo);
+  return `<section class="card col" style="gap:8px;border:2px solid ${tipo === 'cacas' ? '#F2C9C4' : '#F2D9B0'}"><div class="row" style="justify-content:space-between;align-items:baseline"><span class="b" style="font-size:17px">${titulo}</span><span class="tiny muted">72 h antes</span></div>
+    ${fs.length ? fs.map(x => `<div class="row" style="gap:10px;align-items:flex-start"><span style="width:8px;height:8px;border-radius:9px;background:${tipo === 'cacas' ? '#B3261E' : '#C2620E'};margin-top:7px;flex:0 0 8px"></span><span class="small">${esc(x.texto)}</span></div>`).join('') : `<span class="small muted">No hay nada fuera de lo normal apuntado en las 72 horas anteriores.</span>`}
     <span class="tiny muted">Son coincidencias, no causas. Compáralas con lo que diga la vet.</span>
     <button class="btn btn-line" style="min-height:46px" data-a="sosp-abrir" data-f="${f}">${s ? 'Mis sospechas: ' + s.items.length : '¿Sospechas de algo? Apúntalo'}</button>
   </section>`;
 }
+function completos(n) {
+  const fin = addDays(hoy(), -1); let ok = 0; const falta = { cacas: 0, comida: 0, tomas: 0, apetito: 0, energia: 0 };
+  for (let i = 0; i < n; i++) {
+    const d = addDays(fin, -i); let bien = true;
+    if (!cacaDe(d)) { falta.cacas++; bien = false; }
+    if (gramosDia(d) == null) { falta.comida++; bien = false; }
+    if (!tomaDe(d, 'manana') || !tomaDe(d, 'noche')) { falta.tomas++; bien = false; }
+    if (!apetitoDe(d)) { falta.apetito++; bien = false; }
+    if (!energiaDe(d)) { falta.energia++; bien = false; }
+    if (bien) ok++;
+  }
+  return { ok, n, falta };
+}
 function patronesHTML() {
-  const P = patrones();
-  let h = `<section class="card col" style="gap:10px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Qué se repite antes de los días malos</h2><span class="tiny muted">Días malos = cacas malas o vómito. Se compara con el resto de días.</span></div>`;
+  const tipo = S.patTipo || 'cacas';
+  const P = patrones(tipo);
+  let h = `<section class="card col" style="gap:10px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Qué se repite antes de los días problema</h2><span class="tiny muted">${TIPO_DESC[tipo]}</span></div>
+    <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${TIPOS_PROB.map(([k, l]) => `<button data-a="pat-tipo" data-v="${k}" aria-pressed="${tipo === k}">${l}</button>`).join('')}</div>`;
   const nd = diasConDatos();
   if (nd < DIAS_MIN) h += `<div class="empty">Hacen falta al menos ${DIAS_MIN} días con tomas y cacas apuntadas para empezar a comparar. Lleváis ${nd}.</div>`;
-  else if (P.malos < 3) h += `<div class="empty">Hacen falta al menos 3 días malos apuntados para buscar qué se repite. Ahora hay ${P.malos}.</div>`;
-  else if (!P.lista.length) h += `<span class="small muted">De ${P.total} días apuntados, ${P.malos} fueron malos. De momento nada se repite lo bastante antes de ellos como para destacarlo.</span>`;
-  else h += P.lista.map(x => `<div class="col" style="gap:4px;background:#FCE8E6;border-radius:14px;padding:12px"><span class="b" style="font-size:15px;color:#5C1410">${esc(FACTOR_N[x.k] || x.k)}</span><span class="small" style="color:#5C1410">Cuando pasa, el día fue malo <b>${x.malosCon} de ${x.con}</b> veces. Normalmente es malo ${Math.round(P.tasa * 100)} % de los días.</span></div>`).join('') + `<span class="tiny muted">Solo salen relaciones con al menos 3 casos. Son coincidencias: cuantos más días apuntes, más fiables.</span>`;
-  // últimos días malos con sus pistas
-  const recientes = []; for (let f = hoy(), i = 0; i < 60 && recientes.length < 4; i++, f = addDays(f, -1)) if (esMalo(f)) recientes.push(f);
-  if (recientes.length && nd >= DIAS_MIN) h += `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px"><span class="b">Últimos días malos</span>${recientes.map(f => { const fs = factores(f); return `<div class="col" style="gap:2px"><span class="small b">${fFecha(f)}</span><span class="small muted">${fs.length ? fs.map(x => esc(x.texto)).join(' · ') : 'Sin nada fuera de lo normal'}</span></div>`; }).join('')}</div>`;
+  else if (P.malos < 3) h += `<div class="empty">Hacen falta al menos 3 ${TIPO_DIA[tipo]} apuntados para buscar qué se repite. Ahora hay ${P.malos}.</div>`;
+  else if (!P.lista.length) h += `<span class="small muted">De ${P.total} días con datos, ${P.malos} fueron ${TIPO_DIA[tipo]}. De momento nada se repite lo bastante antes de ellos como para destacarlo.</span>`;
+  else h += P.lista.map(x => `<div class="col" style="gap:4px;background:#FCE8E6;border-radius:14px;padding:12px"><span class="b" style="font-size:15px;color:#5C1410">${esc(FACTOR_N[x.k] || x.k)}</span><span class="small" style="color:#5C1410">Cuando pasa, fue ${TIPO_UNO[tipo]} <b>${x.malosCon} de ${x.con}</b> veces. Normalmente lo es el ${Math.round(P.tasa * 100)} % de los días.</span></div>`).join('') + `<span class="tiny muted">Solo salen relaciones con al menos 3 casos. Son coincidencias: cuantos más días apuntes, más fiables.</span>`;
+  const recientes = []; for (let f = hoy(), i = 0; i < 60 && recientes.length < 4; i++, f = addDays(f, -1)) if (esProblema(f, tipo)) recientes.push(f);
+  if (recientes.length && nd >= DIAS_MIN) h += `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px"><span class="b">Últimos ${TIPO_DIA[tipo]}</span>${recientes.map(f => { const fs = factores(f, tipo); return `<div class="col" style="gap:2px"><span class="small b">${fFecha(f)}${tipo === 'come' && gramosDia(f) != null ? ' · ' + Math.round(gramosDia(f)) + ' g' : ''}</span><span class="small muted">${fs.length ? fs.map(x => esc(x.texto)).join(' · ') : 'Sin nada fuera de lo normal'}</span></div>`; }).join('')}</div>`;
+  const C = completos(14);
+  const peor = Object.entries(C.falta).sort((a, b) => b[1] - a[1]).filter(x => x[1] > 0);
+  const NOMF = { cacas: 'cacas', comida: 'comida pesada', tomas: 'las dos tomas', apetito: 'apetito', energia: 'energía' };
+  h += `<div class="col" style="gap:4px;border-top:1px solid var(--line);padding-top:10px"><div class="row" style="justify-content:space-between;align-items:baseline"><span class="b">Días completos</span><span class="b" style="color:${C.ok >= 10 ? 'var(--teal-d)' : 'var(--warn)'}">${C.ok} de ${C.n}</span></div><span class="tiny muted">De las últimas 2 semanas, días con cacas, comida pesada, las dos tomas, apetito y energía. Cuantos más, mejores pistas.${peor.length ? ' Lo que más falta: ' + peor.slice(0, 2).map(x => NOMF[x[0]] + ' (' + x[1] + ' días)').join(' y ') + '.' : ''}</span></div>`;
   h += `<div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:10px"><span class="b">Preguntar a Claude</span><span class="small muted">Copia los últimos 30 días con una pregunta ya escrita. Pégalo en una conversación con Claude para que lo analice más a fondo.</span><button class="btn btn-teal" data-a="claude-copiar">Copiar para Claude</button><a href="https://claude.ai/new" style="text-align:center;font-weight:800;color:var(--teal-d)">Abrir Claude</a></div>`;
   return h + `</section>`;
 }
@@ -1151,7 +1349,7 @@ document.addEventListener('change', async e => {
    DIETA: alimentos probados y cómo le sentaron
    ========================================================= */
 function alimentosHTML() {
-  const ds = vivos('cambios').filter(c => c.tipo === 'dieta').sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const ds = vivos('cambios').filter(ES_DIETA).sort((a, b) => a.fecha.localeCompare(b.fecha));
   if (!ds.length) return '';
   const map = datosDia();
   return `<section class="card col" style="gap:10px"><div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Alimentos probados</h2><span class="tiny muted">Cada dieta, cuánto duró y cómo fue. Marca cómo le sentó.</span></div>
@@ -1305,7 +1503,7 @@ function vistaDiario() {
    ========================================================= */
 function sheetToma(t, mom) {
   const f = hoy();
-  if (t) S.form = { id: t.id, fecha: t.fecha, momento: t.momento, hora: t.hora, peso: t.peso != null ? fNum(t.peso) : '', sel: Object.fromEntries((t.meds || []).map(m => [m.id, true])), autor: t.autor, existe: true };
+  if (t) S.form = { id: t.id, fecha: t.fecha, momento: t.momento, hora: t.hora, peso: t.peso != null ? fNum(t.peso) : '', pmom: t.pesoMom || '', sel: Object.fromEntries((t.meds || []).map(m => [m.id, true])), autor: t.autor, existe: true };
   else S.form = { id: 'toma-' + f + '-' + mom, fecha: f, momento: mom, hora: nowHM(), peso: '', sel: Object.fromEntries(medsToma(mom).map(m => [m.id, true])), existe: false };
   abrirSheet('toma');
 }
@@ -1316,6 +1514,7 @@ function vistaSheetToma() {
   return `<h2>Toma de la ${NOMBRE_MOM[F.momento]}</h2><span class="small muted" style="margin-top:-8px">${fFecha(F.fecha)}${F.existe ? ' · apuntada por ' + esc(F.autor) : ''}</span>
     <div class="form">
       <div class="grid2"><label class="lbl">Hora<input class="field" type="time" data-bind="form.hora" value="${esc(F.hora)}"></label><label class="lbl">Peso (g)<input class="field" inputmode="decimal" data-bind="form.peso" value="${esc(F.peso)}" placeholder="—"></label></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="tiny muted">Pesada:</span>${[['antes', 'antes de comer'], ['despues', 'después de comer']].map(([k, l]) => `<button class="chip" style="min-height:36px" data-a="f-pmom" data-v="${k}" aria-pressed="${F.pmom === k}">${l}</button>`).join('')}</div>
       <div class="lbl">Qué se le dio<div class="chips">${meds.map(m => `<button class="chip" data-a="f-sel" data-id="${m.id}" aria-pressed="${!!F.sel[m.id]}">${esc(m.nombre)} · ${esc(m.dosis)}</button>`).join('')}</div></div>
       <button class="btn btn-teal" data-a="toma-guardar">Guardar</button>
       ${F.existe ? `<button class="btn btn-danger" data-a="toma-borrar">Borrar esta toma</button>` : ''}
@@ -1343,6 +1542,8 @@ function pintarSheet() {
   else if (t === 'cita') c = vistaSheetCita();
   else if (t === 'ana') c = vistaSheetAnalitica();
   else if (t === 'foto') c = `<h2>Foto</h2><img alt="Foto" src="${S.sheet.extra.data}" style="width:100%;border-radius:16px"><span class="tiny muted">${fFecha(S.sheet.extra.fecha)} · ${esc(S.sheet.extra.autor || '')}</span><button class="btn btn-danger" data-a="foto-borrar">Borrar foto</button><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
+  else if (t === 'trans') c = vistaSheetTrans();
+  else if (t === 'kcal') c = vistaSheetKcal();
   else if (t === 'meta') c = `<h2>Meta de comida</h2><p class="small muted">Los gramos que debería comer al día. Se puede cambiar cuando quieras y vale para los dos móviles.</p><div class="form"><label class="lbl">Gramos al día<input class="field" id="meta-in" inputmode="decimal" value="${fNum(metaComida())}" style="font-size:24px;text-align:center;font-weight:800"></label><button class="btn btn-teal" data-a="meta-guardar">Guardar</button></div>`;
   else if (t === 'borrar') c = `<h2>¿Borrar?</h2><p class="muted">${esc(S.sheet.extra.texto)}</p><button class="btn btn-danger" data-a="borrar-ok">Borrar</button><button class="btn btn-soft" data-a="cerrar">Cancelar</button>`;
   else if (t === 'informe') c = `<h2>Informe</h2><p class="small muted">Si no se ha copiado solo, mantén pulsado el texto para copiarlo.</p><textarea class="field" rows="14" readonly>${esc(S.sheet.extra)}</textarea><button class="btn btn-soft" data-a="cerrar">Cerrar</button>`;
@@ -1371,7 +1572,7 @@ function pintar() {
 }
 function repintar() { S.keepScroll = true; pintar(); }
 let toastT;
-function toast(t, ms) { const el = document.getElementById('toast'); el.innerHTML = `<div class="toast" role="status">${esc(t)}</div>`; clearTimeout(toastT); toastT = setTimeout(() => el.innerHTML = '', 2400); }
+function toast(t, ms) { const el = document.getElementById('toast'); el.innerHTML = `<div class="toast" role="status">${esc(t)}</div>`; clearTimeout(toastT); toastT = setTimeout(() => el.innerHTML = '', ms || 2400); }
 
 /* =========================================================
    Acciones
@@ -1394,7 +1595,7 @@ document.addEventListener('change', e => {
     if (q === 'cacas') S.cacas.fecha = t.value; else { S.comida.fecha = t.value; S.comida.horas = null; }
     repintar();
   }
-  if (t.dataset.repinta && S.tab === 'reg' && (S.comida.horas || []).length > 1) repintar();
+  if (t.dataset.repinta && S.tab === 'reg') repintar();
   if (t.id === 'file-in' && t.files[0]) {
     const r = new FileReader();
     r.onload = () => { try { const o = JSON.parse(r.result); const n = juntar(o); toast(n ? 'Copia cargada: ' + n + ' registros' : 'No había nada nuevo'); repintar(); } catch (err) { toast('Ese archivo no es una copia de Susitio'); } };
@@ -1417,12 +1618,13 @@ document.addEventListener('click', e => {
 
     /* Hoy */
     case 'hero-hora': { const mom = heroMomento(f); const F = heroForm(f, mom); F.editHora = true; F.hora = F.hora || nowHM(); repintar(); const i = document.querySelector('.hero-time'); if (i) i.focus(); break; }
+    case 'hero-pmom': { const mom = heroMomento(f); const F = heroForm(f, mom); F.pmom = F.pmom === d.v ? '' : d.v; repintar(); break; }
     case 'hero-med': { const mom = heroMomento(f); const F = heroForm(f, mom); F.sel[d.id] = F.sel[d.id] === false; repintar(); break; }
     case 'hero-dar': {
       const mom = d.mom; const F = heroForm(f, mom);
       const peso = num(F.peso);
       const meds = medsToma(mom).filter(m => F.sel[m.id] !== false).map(m => ({ id: m.id, nombre: m.nombre, dosis: m.dosis }));
-      poner('tomas', { id: 'toma-' + f + '-' + mom, fecha: f, momento: mom, hora: F.editHora && F.hora ? F.hora : nowHM(), peso, meds, autor: yo() });
+      poner('tomas', { id: 'toma-' + f + '-' + mom, fecha: f, momento: mom, hora: F.editHora && F.hora ? F.hora : nowHM(), peso, pesoMom: F.pmom || '', meds, autor: yo() });
       delete S.hero[f + mom];
       toast('Toma de la ' + NOMBRE_MOM[mom] + ' apuntada' + (peso == null ? ' (sin peso)' : ''));
       window.scrollTo(0, 0); pintar(); break;
@@ -1430,11 +1632,12 @@ document.addEventListener('click', e => {
     case 'toma-edit': { const t = DB.tomas.find(x => x.id === d.id); if (t) sheetToma(t); break; }
     case 'toma-nueva': sheetToma(null, d.mom); break;
     case 'f-sel': S.form.sel[d.id] = !S.form.sel[d.id]; pintarSheet(); break;
+    case 'f-pmom': S.form.pmom = S.form.pmom === d.v ? '' : d.v; pintarSheet(); break;
     case 'toma-guardar': {
       const F = S.form;
       const meds = Object.keys(F.sel).filter(k => F.sel[k]).map(id => { const m = DB.meds.find(x => x.id === id) || {}; return { id, nombre: m.nombre, dosis: m.dosis }; });
       const prev = DB.tomas.find(x => x.id === F.id);
-      poner('tomas', { id: F.id, fecha: F.fecha, momento: F.momento, hora: F.hora || nowHM(), peso: num(F.peso), meds, autor: prev && !prev.borrado ? prev.autor : yo(), editadoPor: prev ? yo() : undefined });
+      poner('tomas', { id: F.id, fecha: F.fecha, momento: F.momento, hora: F.hora || nowHM(), peso: num(F.peso), pesoMom: F.pmom || '', meds, autor: prev && !prev.borrado ? prev.autor : yo(), editadoPor: prev ? yo() : undefined });
       cerrarSheet(); repintar(); toast('Guardado'); break;
     }
     case 'toma-borrar': borrar('tomas', S.form.id); cerrarSheet(); repintar(); toast('Toma borrada'); break;
@@ -1462,13 +1665,15 @@ document.addEventListener('click', e => {
     case 'comida-add': {
       const que = (S.comida.que || '').trim();
       if (!que) { toast('Escribe qué ha comido'); break; }
-      const g = num(S.comida.g);
+      const puse = num(S.comida.puse), sobro = num(S.comida.sobro);
+      let g = num(S.comida.g);
+      if (g == null && puse != null && sobro != null) g = Math.max(0, puse - sobro);
       const fe = S.comida.fecha || f;
       let horas = (S.comida.horas || []).filter(Boolean);
       if (!horas.length) horas = [''];
       const parte = g == null ? null : Math.round(g / horas.length * 10) / 10;
-      horas.forEach(hh => poner('comidas', { id: uid(), fecha: fe, hora: hh, que, g: parte, autor: yo() }));
-      S.comida.que = ''; S.comida.g = ''; S.comida.horas = null; repintar(); toast(horas.length > 1 ? 'Añadido en ' + horas.length + ' veces' : 'Añadido'); break;
+      horas.forEach(hh => poner('comidas', Object.assign({ id: uid(), fecha: fe, hora: hh, que, g: parte, autor: yo() }, puse != null && sobro != null ? { puse, sobro, veces: horas.length } : {})));
+      S.comida.que = ''; S.comida.g = ''; S.comida.horas = null; S.comida.puse = ''; S.comida.sobro = ''; repintar(); toast(horas.length > 1 ? 'Añadido en ' + horas.length + ' veces' : 'Añadido'); break;
     }
     case 'comida-borrar': borrar('comidas', d.id); repintar(); break;
     case 'comida-hora-mas': S.comida.horas.push(''); repintar(); break;
@@ -1477,6 +1682,16 @@ document.addEventListener('click', e => {
     case 'comida-guardar': { const c = DB.comidas.find(x => x.id === S.form.id); if (c) { const r = Object.assign({}, c, { que: (S.form.que || '').trim() || c.que, hora: S.form.hora, g: num(S.form.g) }); poner('comidas', r); } cerrarSheet(); repintar(); toast('Guardado'); break; }
     case 'comida-borrar-sheet': borrar('comidas', S.form.id); cerrarSheet(); repintar(); toast('Borrado'); break;
     case 'meta': abrirSheet('meta'); break;
+    case 'trans-abrir': { const t = transicion(); S.form = t ? Object.assign({ existe: true }, t) : { alimento: '', desde: hoy(), inicio: null, paso: 1, cada: 2, hasta: null }; abrirSheet('trans'); break; }
+    case 'trans-guardar': { const F = S.form; const r = { id: 'transicion', alimento: (F.alimento || '').trim(), desde: F.desde, inicio: num(F.inicio), paso: num(F.paso), cada: parseInt(F.cada, 10), hasta: num(F.hasta), activa: true, autor: yo() };
+      if (!r.alimento || !r.desde || r.inicio == null || r.paso == null || !(r.cada > 0)) { toast('Rellena alimento, día, gramos, cuánto sube y cada cuántos días'); break; }
+      poner('ajustes', r); cerrarSheet(); repintar(); toast('Transición guardada'); break; }
+    case 'trans-fin': { const t = transicion(); if (t) poner('ajustes', Object.assign({}, t, { activa: false, fin: hoy() })); cerrarSheet(); repintar(); toast('Transición terminada'); break; }
+    case 'kcal-abrir': {
+      const nombres = []; const add = n => { const k = claveAlim(n); if (k && !nombres.some(x => claveAlim(x) === k)) nombres.push(n.trim()); };
+      vivos('comidas').filter(c => c.fecha >= addDays(hoy(), -30)).forEach(c => add(c.que)); const t = transicion(); if (t) add(t.alimento);
+      S.form = { lista: nombres.map(n => { const k = kcal100(n); return { nombre: n, v: k ? k.v : null, est: !!(k && k.est) }; }) }; abrirSheet('kcal'); break; }
+    case 'kcal-guardar': { const mapa = Object.assign({}, kcalMapa()); S.form.lista.forEach((x, i) => { const el = document.getElementById('kcal-' + i); const v = el ? num(el.value) : null; const k = claveAlim(x.nombre); if (v != null && v > 0 && !(x.est && v === x.v)) mapa[k] = v; else if (v == null) delete mapa[k]; }); poner('ajustes', { id: 'kcal', mapa, autor: yo() }); cerrarSheet(); repintar(); toast('Calorías guardadas'); break; }
     case 'meta-guardar': { const v = num(document.getElementById('meta-in').value); if (v == null || v <= 0) { toast('Pon los gramos de la meta'); break; } poner('ajustes', { id: 'meta-comida', g: v, autor: yo() }); cerrarSheet(); repintar(); toast('Meta: ' + fNum(v) + ' g al día'); break; }
     case 'apetito': { const fe = S.comida.fecha || f; const ex = apetitoDe(fe); if (ex && ex.valor === d.v) borrar('apetito', ex.id); else poner('apetito', { id: 'apetito-' + fe, fecha: fe, valor: d.v, hora: nowHM(), autor: yo() }); repintar(); break; }
     case 'sosp-abrir': { const x = sospechaDe(d.f); S.form = { fecha: d.f, items: x ? x.items.slice() : [], nota: x ? x.nota || '' : '' }; abrirSheet('sosp'); break; }
@@ -1510,11 +1725,12 @@ document.addEventListener('click', e => {
     case 'sintoma-edit': { const x = DB.sintomas.find(y => y.id === d.id); if (x) { S.sint = { id: x.id, fecha: x.fecha, hora: x.hora || '', tipo: x.tipo, aspecto: (x.aspecto || []).slice(), cantidad: x.cantidad || '', nota: x.nota || '', autor: x.autor }; S.tab = 'reg'; S.reg = 'sintoma'; window.scrollTo(0, 0); pintar(); toast('Cambia lo que quieras y pulsa Guardar'); } break; }
     case 'sint-borrar': if (S.sint && S.sint.id) { borrar('sintomas', S.sint.id); S.sint = null; repintar(); toast('Borrado'); } break;
     case 'cambio-tipo': S.cambio.tipo = d.v; repintar(); break;
+    case 'cambio-ajuste': S.cambio.ajuste = !S.cambio.ajuste; repintar(); break;
     case 'cambio-guardar': {
       const F = S.cambio;
       if (F.tipo === 'dieta' && !(F.alimento || '').trim()) { toast('Escribe qué come ahora'); break; }
       if (!F.texto.trim() && F.tipo !== 'dieta') { toast('Escribe qué ha cambiado'); break; }
-      poner('cambios', Object.assign({ id: uid(), fecha: F.fecha || f, tipo: F.tipo, alimento: F.tipo === 'dieta' ? F.alimento.trim() : undefined, texto: F.texto.trim(), autor: yo() }, F.tipo === 'dieta' ? { marca: (F.marca || '').trim(), proteina: (F.proteina || '').trim(), diasPrueba: parseInt(F.diasPrueba, 10) || null } : {}));
+      poner('cambios', Object.assign({ id: uid(), fecha: F.fecha || f, tipo: F.tipo, alimento: F.tipo === 'dieta' ? F.alimento.trim() : undefined, texto: F.texto.trim(), autor: yo() }, F.tipo === 'dieta' ? { marca: (F.marca || '').trim(), proteina: (F.proteina || '').trim(), diasPrueba: parseInt(F.diasPrueba, 10) || null, ajuste: !!F.ajuste } : {}));
       S.cambio = null; repintar(); toast('Cambio guardado'); break;
     }
     case 'cambio-borrar': abrirSheet('borrar', { col: 'cambios', id: d.id, texto: 'Este cambio dejará de separar etapas en Progreso.' }); break;
@@ -1522,6 +1738,9 @@ document.addEventListener('click', e => {
 
     /* Progreso */
     case 'rango': S.rango = d.v; repintar(); break;
+    case 'pat-tipo': S.patTipo = d.v; repintar(); break;
+    case 'cierre-ap': { const ex = apetitoDe(d.f); if (ex && ex.valor === d.v) borrar('apetito', ex.id); else poner('apetito', { id: 'apetito-' + d.f, fecha: d.f, valor: d.v, hora: nowHM(), autor: yo() }); repintar(); break; }
+    case 'cierre-en': { const ex = energiaDe(d.f); const v = Number(d.v); if (ex && ex.valor === v) borrar('energia', ex.id); else poner('energia', { id: 'energia-' + d.f, fecha: d.f, valor: v, hora: nowHM(), autor: yo() }); repintar(); break; }
     case 'peso-pt': toast(d.t); break;
     case 'informe': {
       const t = textoInforme();
@@ -1963,6 +2182,7 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
 let ultimoDia = hoy();
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !S.sheet) { if (hoy() !== ultimoDia) { ultimoDia = hoy(); aplicarPlanes(); S.hero = {}; S.cacas = null; S.comida = { que: '', g: '' }; } repintar(); } });
 migrar3();
+migrar4();
 aplicarPlanes();
 pintar();
 if (!yo()) abrirSheet('quien');
