@@ -186,7 +186,7 @@ function actualizar() {
   ini.getRange(filaD, 1, 2, 1).setFontWeight('bold');
   ini.autoResizeColumns(1, 2);
 
-  escribir_(ss, 'Resumen diario', ['Fecha', 'Día', 'Peso mañana (g)', 'Peso noche (g)', 'Peso medio (g)', 'Cacas', 'Tipos de caca', 'Color', 'Nº cacas', 'Energía (1-5)', 'Comida (g)', 'Meta (g)', '% de la meta', 'Comidas sin pesar', 'Apetito', 'Vómitos', 'Dieta'], filasDia, { 0: FECHA, 12: '0%' });
+  escribir_(ss, 'Resumen diario', ['Fecha', 'Día', 'Peso mañana (g)', 'Peso noche (g)', 'Peso medio (g)', 'Cacas', 'Tipos de caca', 'Color', 'Nº cacas', 'Energía (1-5)', 'Comida (g)', 'Meta (g)', '% de la meta', 'Comidas sin pesar', 'Apetito', 'Vómitos', 'Dieta'], filasDia, { 0: FECHA, 9: '0', 12: '0%' });
   escribir_(ss, 'Por semana', ['Semana (lunes)', 'Días buenos', 'Regulares', 'Malos', '% buenos', 'Peso medio (g)', 'Comida media (g/día)', '% de la meta', 'Vómitos', 'Dieta', 'Cambios esa semana'], filasSem, { 0: FECHA, 4: '0%', 7: '0%' });
   escribir_(ss, 'Por mes', ['Mes', 'Días buenos', 'Regulares', 'Malos', '% buenos', 'Peso medio (g)', 'Peso mínimo (g)', 'Peso máximo (g)', 'Comida media (g/día)', 'Vómitos', 'Dieta al final del mes', 'Cambios'], filasMes, { 4: '0%' });
   escribir_(ss, 'Tomas', ['Fecha', 'Toma', 'Hora', 'Peso (g)', 'Medicación dada', 'Quién'], D.tomas.slice().sort(porFechaDesc_).map(t => [fecha_(t.fecha), MOMENTO[t.momento] || t.momento, t.hora, t.peso, (t.meds || []).map(m => m.nombre + ' ' + (m.dosis || '')).join(', '), t.autor]), { 0: FECHA, 2: '@' });
