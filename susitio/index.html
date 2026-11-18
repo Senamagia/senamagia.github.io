@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.8.1';
+const VERSION = '2.8.2';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -272,6 +272,19 @@ function migrar4() {
     if (paso > 0 && cada > 0) { DB.ajustes.push({ id: 'transicion', alimento: u.alimento, desde: u.fecha, inicio: u.g, paso, cada, hasta: null, auto: true, upd: Date.now(), autor: yo() || 'Sena' }); SYNC.marcar('ajustes', 'transicion'); }
   }
   DB.migr = 4;
+  guardar();
+}
+// Versión 5: el cambio de Melena de león a 0,5 g del 11 nov fue un error al apuntar (no pasó): se quita y se vuelve a 1 g
+function migrar5() {
+  if ((DB.migr || 1) >= 5) return;
+  const malo = DB.cambios.find(c => !c.borrado && c.tipo === 'dosis' && c.fecha === '2026-11-11' && /^Melena de le[oó]n: 1 g por semana → 0,5 g por semana$/.test(c.texto || ''));
+  if (malo) {
+    malo.borrado = true; malo.upd = Date.now(); malo.por = 'corrección'; SYNC.marcar('cambios', malo.id);
+    const m = DB.meds.find(x => !x.borrado && /^melena de le[oó]n$/i.test(x.nombre || ''));
+    if (m && m.dosis === '0,5 g por semana') { m.dosis = '1 g por semana'; m.upd = Date.now(); SYNC.marcar('meds', m.id); }
+    DB.tomas.forEach(t => { let c = false; (t.meds || []).forEach(x => { if (m && x.id === m.id && x.dosis === '0,5 g por semana') { x.dosis = '1 g por semana'; c = true; } }); if (c) { t.upd = Date.now(); SYNC.marcar('tomas', t.id); } });
+  }
+  DB.migr = 5;
   guardar();
 }
 const vivos = c => DB[c].filter(r => !r.borrado);
@@ -1510,7 +1523,7 @@ function vistaSheetMed() {
       ${stockHTML(F)}
       <button class="btn btn-teal" data-a="med-guardar">Guardar</button>
       ${F.nuevo ? '' : `<button class="btn btn-danger" data-a="med-dejar">Dejar de dárselo</button>`}
-      ${F.nuevo ? '' : `<span class="tiny muted" style="text-align:center">Si cambias la dosis queda apuntado como cambio en Progreso.</span>`}
+      ${F.nuevo ? '' : `<button class="chip" style="align-self:center" data-a="f-correccion" aria-pressed="${!!F.correccion}">${F.correccion ? '✓ ' : ''}Solo corrijo un error al apuntar</button><span class="tiny muted" style="text-align:center">${F.correccion ? 'No se apuntará como cambio en Progreso.' : 'Si cambias la dosis queda apuntado como cambio en Progreso.'}</span>`}
     </div>`;
 }
 const sw = on => `<span aria-hidden="true" style="width:50px;height:30px;border-radius:999px;background:${on ? 'var(--teal)' : '#CFC3B5'};display:flex;align-items:center;justify-content:${on ? 'flex-end' : 'flex-start'};padding:3px;flex:0 0 50px"><span style="width:24px;height:24px;border-radius:999px;background:#fff;display:block"></span></span>`;
@@ -1679,6 +1692,7 @@ document.addEventListener('click', e => {
     case 'toma-edit': { const t = DB.tomas.find(x => x.id === d.id); if (t) sheetToma(t); break; }
     case 'toma-nueva': sheetToma(null, d.mom); break;
     case 'f-sel': S.form.sel[d.id] = !S.form.sel[d.id]; pintarSheet(); break;
+    case 'f-correccion': S.form.correccion = !S.form.correccion; pintarSheet(); break;
     case 'f-pmom': S.form.pmom = S.form.pmom === d.v ? '' : d.v; pintarSheet(); break;
     case 'toma-guardar': {
       const F = S.form;
@@ -1808,7 +1822,7 @@ document.addEventListener('click', e => {
       const F = S.form;
       if (!F.nombre.trim()) { toast('Pon el nombre'); break; }
       const viejo = DB.meds.find(m => m.id === F.id);
-      const rec = Object.assign({}, F); delete rec.nuevo; delete rec.ultPrep; delete rec.ultPrep0;
+      const rec = Object.assign({}, F); delete rec.nuevo; delete rec.ultPrep; delete rec.ultPrep0; delete rec.correccion;
       ['planF', 'planD', 'stockC', 'stockU', 'stockCada'].forEach(k => delete rec[k]);
       if (F.stockC != null || F.stockCada != null || F.stockU != null) {
         const c = num(F.stockC != null ? F.stockC : (existencias(F) ? existencias(F).quedan : null)), cada = num(F.stockCada != null ? F.stockCada : (F.stock && F.stock.cada));
@@ -1821,7 +1835,7 @@ document.addEventListener('click', e => {
       if (!viejo) { rec.desde = f; poner('meds', rec); poner('cambios', { id: uid(), fecha: f, tipo: 'medicacion', texto: 'Empieza ' + rec.nombre + (rec.dosis ? ' ' + rec.dosis : ''), autor: yo() }); }
       else {
         poner('meds', rec);
-        if (viejo.dosis !== rec.dosis) poner('cambios', { id: uid(), fecha: f, tipo: 'dosis', texto: rec.nombre + ': ' + (viejo.dosis || '—') + ' → ' + (rec.dosis || '—'), autor: yo() });
+        if (viejo.dosis !== rec.dosis && !F.correccion) poner('cambios', { id: uid(), fecha: f, tipo: 'dosis', texto: rec.nombre + ': ' + (viejo.dosis || '—') + ' → ' + (rec.dosis || '—'), autor: yo() });
       }
       cerrarSheet(); repintar(); toast('Guardado'); break;
     }
@@ -2230,6 +2244,7 @@ let ultimoDia = hoy();
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !S.sheet) { if (hoy() !== ultimoDia) { ultimoDia = hoy(); aplicarPlanes(); S.hero = {}; S.cacas = null; S.comida = { que: '', g: '' }; } repintar(); } });
 migrar3();
 migrar4();
+migrar5();
 aplicarPlanes();
 pintar();
 if (!yo()) abrirSheet('quien');
