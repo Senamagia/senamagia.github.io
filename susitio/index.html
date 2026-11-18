@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.8.3';
+const VERSION = '2.8.4';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -437,7 +437,7 @@ function vistaHoy() {
       </div>
       <h2>Toma de la ${NOMBRE_MOM[mom]}</h2>
       <div class="hero-peso"><label for="hpeso">Peso (g)</label><input id="hpeso" inputmode="decimal" placeholder="${F.ref != null ? fNum(F.ref) : '—'}" value="${esc(F.peso)}" data-hero="peso"></div>
-      <div class="row" style="gap:6px;align-items:center"><span class="tiny grow" style="color:var(--teal-t)">¿Pesada antes o después de comer?</span>${[['antes', 'Antes'], ['despues', 'Después']].map(([k, l]) => `<button class="pill-btn" style="min-height:34px;padding:0 12px;${F.pmom === k ? 'background:#fff;color:var(--teal-d)' : ''}" data-a="hero-pmom" data-v="${k}" aria-pressed="${F.pmom === k}">${l}</button>`).join('')}</div>
+      <div class="col" style="gap:6px"><span class="tiny" style="color:var(--teal-t)">Justo antes de pesarla… (toca si es así)</span><div class="grid2">${[['comio', 'Ha comido'], ['caca', 'Ha hecho caca']].map(([k, l]) => `<button class="pill-btn" style="min-height:40px;${F[k] ? 'background:#fff;color:var(--teal-d)' : ''}" data-a="hero-antes" data-v="${k}" aria-pressed="${!!F[k]}">${F[k] ? '✓ ' : ''}${l}</button>`).join('')}</div></div>
       ${meds.length ? `<div class="grid2">${meds.map(m => `<button class="hero-item" data-a="hero-med" data-id="${m.id}" aria-pressed="${F.sel[m.id] !== false}"><span class="n">${esc(m.nombre)}</span><span class="d">${esc(m.dosis)}</span></button>`).join('')}</div>
       <span class="tiny" style="color:var(--teal-t)">Toca uno si esta vez no se lo has dado.</span>` : `<span class="small" style="color:var(--teal-t)">No hay medicación en esta toma. Puedes añadirla en Medicación.</span>`}
       <button class="btn btn-big btn-white" data-a="hero-dar" data-mom="${mom}">Ya se la he dado</button>
@@ -923,7 +923,7 @@ function graficaPeso(desde, hasta, map) {
   const conNum = pts.length <= 14;
   pts.forEach((p, k) => {
     const last = k === pts.length - 1, x = XP(p), y = Y(p.v);
-    const info = `${fCorta(p.t.fecha)} · toma de ${p.t.momento === 'noche' ? 'noche' : 'mañana'}${p.t.hora ? ' (' + p.t.hora + ')' : ''}: ${fNum(p.v)} g${p.t.pesoMom ? (p.t.pesoMom === 'antes' ? ' · antes de comer' : ' · después de comer') : ''}`;
+    const info = `${fCorta(p.t.fecha)} · toma de ${p.t.momento === 'noche' ? 'noche' : 'mañana'}${p.t.hora ? ' (' + p.t.hora + ')' : ''}: ${fNum(p.v)} g${p.t.pesoComio || p.t.pesoMom === 'despues' ? ' · acababa de comer' : ''}${p.t.pesoCaca ? ' · acababa de hacer caca' : ''}`;
     s += `<g data-a="peso-pt" data-t="${esc(info)}" style="cursor:pointer"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="12" fill="transparent"/>`;
     if (pts.length < 60 || last) s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${last ? 5.5 : 3.5}" fill="#2A2320" stroke="#fff" stroke-width="1.5"/>`;
     if (conNum || last) { const abajo = k > 0 ? p.v < pts[k - 1].v : p.v < pts[1].v; s += `<text x="${x.toFixed(1)}" y="${(y + (abajo ? 17 : -9)).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="${last ? 800 : 600}" fill="#2A2320">${fNum(p.v)}</text>`; }
@@ -1574,7 +1574,7 @@ function vistaDiario() {
    ========================================================= */
 function sheetToma(t, mom) {
   const f = hoy();
-  if (t) S.form = { id: t.id, fecha: t.fecha, momento: t.momento, hora: t.hora, peso: t.peso != null ? fNum(t.peso) : '', pmom: t.pesoMom || '', sel: Object.fromEntries((t.meds || []).map(m => [m.id, true])), autor: t.autor, existe: true };
+  if (t) S.form = { id: t.id, fecha: t.fecha, momento: t.momento, hora: t.hora, peso: t.peso != null ? fNum(t.peso) : '', comio: !!t.pesoComio || t.pesoMom === 'despues', caca: !!t.pesoCaca, sel: Object.fromEntries((t.meds || []).map(m => [m.id, true])), autor: t.autor, existe: true };
   else S.form = { id: 'toma-' + f + '-' + mom, fecha: f, momento: mom, hora: nowHM(), peso: '', sel: Object.fromEntries(medsToma(mom).map(m => [m.id, true])), existe: false };
   abrirSheet('toma');
 }
@@ -1585,7 +1585,7 @@ function vistaSheetToma() {
   return `<h2>Toma de la ${NOMBRE_MOM[F.momento]}</h2><span class="small muted" style="margin-top:-8px">${fFecha(F.fecha)}${F.existe ? ' · apuntada por ' + esc(F.autor) : ''}</span>
     <div class="form">
       <div class="grid2"><label class="lbl">Hora<input class="field" type="time" data-bind="form.hora" value="${esc(F.hora)}"></label><label class="lbl">Peso (g)<input class="field" inputmode="decimal" data-bind="form.peso" value="${esc(F.peso)}" placeholder="—"></label></div>
-      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="tiny muted">Pesada:</span>${[['antes', 'antes de comer'], ['despues', 'después de comer']].map(([k, l]) => `<button class="chip" style="min-height:36px" data-a="f-pmom" data-v="${k}" aria-pressed="${F.pmom === k}">${l}</button>`).join('')}</div>
+      <div class="lbl">Justo antes de pesarla<div class="chips">${[['comio', 'Había comido'], ['caca', 'Había hecho caca']].map(([k, l]) => `<button class="chip" style="min-height:40px" data-a="f-antes" data-v="${k}" aria-pressed="${!!F[k]}">${F[k] ? '✓ ' : ''}${l}</button>`).join('')}</div></div>
       <div class="lbl">Qué se le dio<div class="chips">${meds.map(m => `<button class="chip" data-a="f-sel" data-id="${m.id}" aria-pressed="${!!F.sel[m.id]}">${esc(m.nombre)} · ${esc(m.dosis)}</button>`).join('')}</div></div>
       <button class="btn btn-teal" data-a="toma-guardar">Guardar</button>
       ${F.existe ? `<button class="btn btn-danger" data-a="toma-borrar">Borrar esta toma</button>` : ''}
@@ -1689,13 +1689,13 @@ document.addEventListener('click', e => {
 
     /* Hoy */
     case 'hero-hora': { const mom = heroMomento(f); const F = heroForm(f, mom); F.editHora = true; F.hora = F.hora || nowHM(); repintar(); const i = document.querySelector('.hero-time'); if (i) i.focus(); break; }
-    case 'hero-pmom': { const mom = heroMomento(f); const F = heroForm(f, mom); F.pmom = F.pmom === d.v ? '' : d.v; repintar(); break; }
+    case 'hero-antes': { const mom = heroMomento(f); const F = heroForm(f, mom); F[d.v] = !F[d.v]; repintar(); break; }
     case 'hero-med': { const mom = heroMomento(f); const F = heroForm(f, mom); F.sel[d.id] = F.sel[d.id] === false; repintar(); break; }
     case 'hero-dar': {
       const mom = d.mom; const F = heroForm(f, mom);
       const peso = num(F.peso);
       const meds = medsToma(mom).filter(m => F.sel[m.id] !== false).map(m => ({ id: m.id, nombre: m.nombre, dosis: m.dosis }));
-      poner('tomas', { id: 'toma-' + f + '-' + mom, fecha: f, momento: mom, hora: F.editHora && F.hora ? F.hora : nowHM(), peso, pesoMom: F.pmom || '', meds, autor: yo() });
+      poner('tomas', { id: 'toma-' + f + '-' + mom, fecha: f, momento: mom, hora: F.editHora && F.hora ? F.hora : nowHM(), peso, pesoComio: !!F.comio, pesoCaca: !!F.caca, meds, autor: yo() });
       delete S.hero[f + mom];
       toast('Toma de la ' + NOMBRE_MOM[mom] + ' apuntada' + (peso == null ? ' (sin peso)' : ''));
       window.scrollTo(0, 0); pintar(); break;
@@ -1704,12 +1704,12 @@ document.addEventListener('click', e => {
     case 'toma-nueva': sheetToma(null, d.mom); break;
     case 'f-sel': S.form.sel[d.id] = !S.form.sel[d.id]; pintarSheet(); break;
     case 'f-correccion': S.form.correccion = !S.form.correccion; pintarSheet(); break;
-    case 'f-pmom': S.form.pmom = S.form.pmom === d.v ? '' : d.v; pintarSheet(); break;
+    case 'f-antes': S.form[d.v] = !S.form[d.v]; pintarSheet(); break;
     case 'toma-guardar': {
       const F = S.form;
       const meds = Object.keys(F.sel).filter(k => F.sel[k]).map(id => { const m = DB.meds.find(x => x.id === id) || {}; return { id, nombre: m.nombre, dosis: m.dosis }; });
       const prev = DB.tomas.find(x => x.id === F.id);
-      poner('tomas', { id: F.id, fecha: F.fecha, momento: F.momento, hora: F.hora || nowHM(), peso: num(F.peso), pesoMom: F.pmom || '', meds, autor: prev && !prev.borrado ? prev.autor : yo(), editadoPor: prev ? yo() : undefined });
+      poner('tomas', { id: F.id, fecha: F.fecha, momento: F.momento, hora: F.hora || nowHM(), peso: num(F.peso), pesoComio: !!F.comio, pesoCaca: !!F.caca, meds, autor: prev && !prev.borrado ? prev.autor : yo(), editadoPor: prev ? yo() : undefined });
       cerrarSheet(); repintar(); toast('Guardado'); break;
     }
     case 'toma-borrar': borrar('tomas', S.form.id); cerrarSheet(); repintar(); toast('Toma borrada'); break;
