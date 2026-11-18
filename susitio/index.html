@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.8.4';
+const VERSION = '2.8.5';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -559,11 +559,13 @@ function alarmas(f) {
   const hipo = s24.filter(x => ['babeo', 'mirada', 'patas'].includes(x.tipo));
   if (hipo.length) rojo('Posible bajada de azúcar: ' + [...new Set(hipo.map(x => SINTOMA_N[x.tipo].toLowerCase()))].join(', ') + '. Si se queda floja o no responde, es urgente.');
   if (s24.some(x => x.tipo === 'no_come') || (apetitoDe(f) && apetitoDe(f).valor === 'nada')) rojo('No quiere comer.');
-  // peso: comparado con la media de hace 1 o 2 semanas
-  const ult = ultimoPeso();
-  if (ult && ult.fecha >= addDays(f, -1)) {
-    const prev = vivos('tomas').filter(t => t.peso != null && t.fecha >= addDays(f, -14) && t.fecha <= addDays(f, -7)).map(t => t.peso);
-    if (prev.length >= 3) { const m = prev.reduce((a, b) => a + b, 0) / prev.length; const pct = (m - ult.peso) / m * 100; if (pct > 5) rojo('Ha perdido un ' + fNum(Math.round(pct * 10) / 10) + ' % de peso (de ' + Math.round(m) + ' g a ' + fNum(ult.peso) + ' g).'); }
+  // peso: solo con pesadas comparables (sin haber comido ni hecho caca justo antes) y con suficientes de cada tramo
+  const recientes = pesosComparables(addDays(f, -2), f), antes = pesosComparables(addDays(f, -10), addDays(f, -3));
+  if (recientes.length >= 3 && antes.length >= 4) {
+    const a = mediana(recientes), b = mediana(antes), pct = (b - a) / b * 100, g = b - a;
+    const txt = 'En las pesadas comparables (sin comer ni hacer caca justo antes), el peso ha pasado de unos ' + Math.round(b) + ' g a unos ' + Math.round(a) + ' g (' + fNum(Math.round(pct * 10) / 10) + ' % menos).';
+    if (pct > 7 && g >= 30) rojo(txt + ' Conviene comentarlo con la vete.');
+    else if (pct > 4 && g >= 20) ambar(txt + ' Mirad cómo sigue los próximos días.');
   }
   // cacas: no ha hecho, o no hay nada apuntado
   const cH = cacaDe(f), cA = cacaDe(ayer);
@@ -573,21 +575,18 @@ function alarmas(f) {
   // comida: mucho tiempo sin comer (solo si se apuntan las comidas)
   const com = vivos('comidas').filter(c => c.hora && c.fecha >= addDays(f, -2));
   if (com.length >= 3) { const u = Math.max(...com.map(c => tomaMs({ fecha: c.fecha, hora: c.hora }))); const h = (ahora - u) / 3600000; if (h > 10 && h < 72) ambar('No hay comida apuntada desde hace ' + Math.round(h) + ' horas.'); }
-  // bajada rápida de peso: media de los 3 últimos días frente a los 3 anteriores
-  const p3 = [f, ayer, addDays(f, -2)].map(pesoDia).filter(x => x != null), p0 = [3, 4, 5].map(i => pesoDia(addDays(f, -i))).filter(x => x != null);
-  if (p3.length >= 2 && p0.length >= 2 && !out.some(x => /perdido/.test(x.t))) { const a = media(p3), b = media(p0), pct = (b - a) / b * 100; if (pct > 3) rojo('El peso ha bajado un ' + fNum(Math.round(pct * 10) / 10) + ' % en 3 días (de unos ' + Math.round(b) + ' g a unos ' + Math.round(a) + ' g).'); }
   // dos días seguidos comiendo menos del 70 % de la meta
   const gA = gramosDia(ayer), gB = gramosDia(addDays(f, -2)), meta = metaComida();
-  if (gA != null && gB != null && gA < meta * 0.7 && gB < meta * 0.7) rojo('Lleva 2 días comiendo menos del 70 % de la meta (' + Math.round(gB) + ' g y ' + Math.round(gA) + ' g, de ' + fNum(meta) + ' g).');
+  if (gA != null && gB != null && gA < meta * 0.7 && gB < meta * 0.7) ambar('Según lo apuntado, los 2 últimos días ha comido menos del 70 % de la meta (' + Math.round(gB) + ' g y ' + Math.round(gA) + ' g, de ' + fNum(meta) + ' g). Si sigue igual, comentadlo con la vete.');
   // dos días seguidos con mucosa, diarrea o vómito
   const diaMal = d => { const c = cacaDe(d); return !!(c && (c.tipos || []).some(t => t === 'mucosa' || t === 'diarrea')) || vivos('sintomas').some(x => x.fecha === d && x.tipo === 'vomito'); };
-  if ((diaMal(f) && diaMal(ayer)) || (diaMal(ayer) && diaMal(addDays(f, -2)))) rojo('Dos días seguidos con mucosa, diarrea o vómito.');
+  if ((diaMal(f) && diaMal(ayer)) || (diaMal(ayer) && diaMal(addDays(f, -2)))) ambar('Dos días seguidos con mucosa, diarrea o vómito. Si sigue mañana, comentadlo con la vete.');
   // a mitad del día: va comiendo menos de lo que suele a esta hora
-  if (f === hoy() && horaSusi() >= 4) {
+  if (f === hoy() && horaSusi() >= 10) {
     const ya = hk(nowHM());
     const hasta = d => vivos('comidas').filter(c => c.fecha === d && c.g != null && c.hora && hk(c.hora) <= ya).reduce((a, c) => a + c.g, 0);
     const prevs = []; for (let i = 1; i <= 14; i++) { const d = addDays(f, -i); if (vivos('comidas').some(c => c.fecha === d && c.hora && c.g != null)) prevs.push(hasta(d)); }
-    if (prevs.length >= 5) { const m = mediana(prevs), y = hasta(f); if (m >= 30 && y < m * 0.6) ambar('Hoy va comiendo poco: lleva ' + Math.round(y) + ' g y a esta hora suele llevar unos ' + Math.round(m) + ' g.'); }
+    if (prevs.length >= 5) { const m = mediana(prevs), y = hasta(f); if (m >= 40 && y < m * 0.5) ambar('Según lo apuntado hasta ahora, hoy lleva ' + Math.round(y) + ' g y a esta hora suele llevar unos ' + Math.round(m) + ' g. Si falta algo por apuntar, no hagas caso.'); }
   }
   // a comentar en la próxima visita
   const s7 = vivos('sintomas').filter(x => x.fecha >= addDays(f, -6));
@@ -925,7 +924,8 @@ function graficaPeso(desde, hasta, map) {
     const last = k === pts.length - 1, x = XP(p), y = Y(p.v);
     const info = `${fCorta(p.t.fecha)} · toma de ${p.t.momento === 'noche' ? 'noche' : 'mañana'}${p.t.hora ? ' (' + p.t.hora + ')' : ''}: ${fNum(p.v)} g${p.t.pesoComio || p.t.pesoMom === 'despues' ? ' · acababa de comer' : ''}${p.t.pesoCaca ? ' · acababa de hacer caca' : ''}`;
     s += `<g data-a="peso-pt" data-t="${esc(info)}" style="cursor:pointer"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="12" fill="transparent"/>`;
-    if (pts.length < 60 || last) s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${last ? 5.5 : 3.5}" fill="#2A2320" stroke="#fff" stroke-width="1.5"/>`;
+    const hueco = p.t.pesoComio || p.t.pesoCaca || p.t.pesoMom === 'despues';
+    if (pts.length < 60 || last) s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${last ? 5.5 : 3.5}" fill="${hueco ? '#fff' : '#2A2320'}" stroke="${hueco ? '#2A2320' : '#fff'}" stroke-width="${hueco ? 2 : 1.5}"/>`;
     if (conNum || last) { const abajo = k > 0 ? p.v < pts[k - 1].v : p.v < pts[1].v; s += `<text x="${x.toFixed(1)}" y="${(y + (abajo ? 17 : -9)).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="${last ? 800 : 600}" fill="#2A2320">${fNum(p.v)}</text>`; }
     s += `</g>`;
   });
@@ -941,7 +941,7 @@ function graficaPeso(desde, hasta, map) {
   }
   if (N > 10) s += `<text x="${x0}" y="${H - 4}" font-size="11" fill="#6E625A">${fCorta(desde)}</text><text x="${x1}" y="${H - 4}" text-anchor="end" font-size="11" fill="#6E625A">hoy</text>`;
   s += `</svg>`;
-  s += `<div class="row tiny muted" style="gap:12px;flex-wrap:wrap"><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#2E9E5B"></span>Bueno</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#F2B33D"></span>Regular</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#C8382F"></span>Malo</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#EFE7DD"></span>Sin apuntar</span></div>`;
+  s += `<div class="row tiny muted" style="gap:12px;flex-wrap:wrap"><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#2E9E5B"></span>Bueno</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#F2B33D"></span>Regular</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#C8382F"></span>Malo</span><span class="row" style="gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#EFE7DD"></span>Sin apuntar</span><span class="row" style="gap:4px"><span style="width:9px;height:9px;border-radius:9px;border:2px solid #2A2320;background:#fff"></span>Acababa de comer o de hacer caca</span></div>`;
   // Leyenda: qué pasó en cada marca, con el peso antes y después
   const media = (a, b) => { const v = []; for (let f = a; f <= b; f = addDays(f, 1)) { const d = map[f]; if (d) v.push(...d.pesos); } return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
   const efecto = f => { const a = media(addDays(f, -7), addDays(f, -1)), b = media(f, addDays(f, 6)); if (a == null || b == null) return ''; const d = b - a; return ` · <b style="color:${d < -2 ? 'var(--warn)' : 'var(--teal-d)'}">${Math.abs(d) < 2 ? 'peso igual' : (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'}</b> la semana siguiente`; };
@@ -956,16 +956,16 @@ function graficaPeso(desde, hasta, map) {
   return h + '</section>';
 }
 function statsRango(a, b) {
-  const s = { dias: diffDays(b, a) + 1, pesos: [], g: [], kcal: [], buenos: 0, malos: 0, alp: 0, muc: 0, vom: 0, punt: [], cacasDias: 0 };
+  const s = { dias: diffDays(b, a) + 1, pesos: [], comp: [], g: [], kcal: [], buenos: 0, malos: 0, alp: 0, muc: 0, vom: 0, punt: [], cacasDias: 0 };
   for (let f = a; f <= b; f = addDays(f, 1)) {
-    vivos('tomas').forEach(t => { if (t.fecha === f && t.peso != null) s.pesos.push(t.peso); });
+    vivos('tomas').forEach(t => { if (t.fecha === f && t.peso != null) { s.pesos.push(t.peso); if (esComparable(t)) s.comp.push(t.peso); } });
     const g = gramosDia(f); if (g != null) s.g.push(g);
     const k = kcalDia(f); if (k != null) s.kcal.push(k);
     const c = cacaDe(f);
     if (c) { s.cacasDias++; if (c.dia === 'bueno') s.buenos++; else if (c.dia === 'malo') s.malos++; const t = c.tipos || []; if (t.includes('alpistada') || t.includes('alpistada_sf')) s.alp++; if (t.includes('mucosa') || t.includes('diarrea')) s.muc++; const p = puntCaca(c); if (p != null) s.punt.push(p); }
     s.vom += vivos('sintomas').filter(x => x.fecha === f && x.tipo === 'vomito').length;
   }
-  s.peso = media(s.pesos); s.gm = media(s.g); s.km = media(s.kcal); s.pm = media(s.punt);
+  s.peso = media(s.pesos); s.pesoC = s.comp.length ? mediana(s.comp) : null; s.gm = media(s.g); s.km = media(s.kcal); s.pm = media(s.punt);
   return s;
 }
 const rangoTxt = (a, b) => { const A = parseD(a), B = parseD(b); return A.getMonth() === B.getMonth() ? A.getDate() + '–' + B.getDate() + ' ' + MESES[B.getMonth()] : fCorta(a) + ' – ' + fCorta(b); };
@@ -998,7 +998,7 @@ function cambiosHTML() {
     if (nD < minimo) return `<div class="col" style="gap:8px;background:var(--soft);border-radius:14px;padding:12px">${titulo}<span class="small muted">${next && nD < minimo ? 'Solo duró ' + nD + ' día' + (nD === 1 ? '' : 's') + ' antes del siguiente cambio: no da para comparar.' : 'Aún es pronto: lleva ' + nD + ' día' + (nD === 1 ? '' : 's') + '. Se compara a partir de ' + minimo + ' días' + (ES_DIETA(c) ? ' (una dieta se valora bien a las 2–3 semanas)' : '') + '.'}</span></div>`;
     const out = { mejor: [], peor: [] };
     const filas = [
-      filaComp('Peso medio', A.peso, D.peso, v => Math.round(v) + ' g', 1, 3, 'g', out),
+      (A.comp.length >= 4 && D.comp.length >= 4) ? filaComp('Peso (pesadas comparables)', A.pesoC, D.pesoC, v => Math.round(v) + ' g', 1, 5, 'g', out) : filaComp('Peso medio', A.peso, D.peso, v => Math.round(v) + ' g', 1, 8, 'g', out),
       filaComp('Come al día', A.gm, D.gm, v => Math.round(v) + ' g', 1, 5, 'g', out),
       filaComp('Cacas (nota de 1 a 5)', A.pm, D.pm, f1, 1, 0.2, '', out),
       filaComp('Días buenos', pct(A.buenos, A.cacasDias), pct(D.buenos, D.cacasDias), v => Math.round(v) + ' %', 1, 5, '%', out),
@@ -1031,7 +1031,7 @@ function semanas() {
   const A = statsRango(addDays(fin, -6), fin), B = statsRango(addDays(fin, -13), addDays(fin, -7));
   const f1 = n => fNum(Math.round(n * 10) / 10);
   const filas = [
-    ['Peso medio', B.peso, A.peso, v => Math.round(v) + ' g', 1, 3],
+    (A.comp.length >= 4 && B.comp.length >= 4) ? ['Peso (pesadas comparables)', B.pesoC, A.pesoC, v => Math.round(v) + ' g', 1, 5] : ['Peso medio', B.peso, A.peso, v => Math.round(v) + ' g', 1, 8],
     ['Come al día', B.gm, A.gm, v => Math.round(v) + ' g', 1, 5, (st) => st.km != null ? '~' + Math.round(st.km) + ' kcal' : ''],
     ['Cacas (nota de 1 a 5)', B.pm, A.pm, f1, 1, 0.2],
     ['Días buenos', B.cacasDias ? B.buenos : null, A.cacasDias ? A.buenos : null, v => v + ' de ' + 7, 1, 0],
@@ -1046,7 +1046,7 @@ function semanas() {
     if (a != null && b != null) {
       const d = a - b;
       if (Math.abs(d) <= umbral) { dtxt = 'igual'; flecha = '='; }
-      else { const bien = d * sentido > 0; color = bien ? 'var(--teal-d)' : 'var(--bad)'; flecha = bien ? '✓' : '✗'; dtxt = (d > 0 ? '+' : '−') + (Number.isInteger(d) ? Math.abs(d) : fNum(Math.round(Math.abs(d) * 10) / 10)) + (n === 'Peso medio' || n === 'Come al día' ? ' g' : ''); if (n === 'Peso medio' || n === 'Come al día') dtxt = (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'; (bien ? mejor : peor).push(n.toLowerCase()); }
+      else { const bien = d * sentido > 0; color = bien ? 'var(--teal-d)' : 'var(--bad)'; flecha = bien ? '✓' : '✗'; dtxt = (d > 0 ? '+' : '−') + (Number.isInteger(d) ? Math.abs(d) : fNum(Math.round(Math.abs(d) * 10) / 10)) + (/^Peso/.test(n) || n === 'Come al día' ? ' g' : ''); if (/^Peso/.test(n) || n === 'Come al día') dtxt = (d > 0 ? '+' : '−') + Math.round(Math.abs(d)) + ' g'; (bien ? mejor : peor).push(n.toLowerCase()); }
     }
     const sub = st => extra ? extra(st) : '';
     return `<div class="row" style="gap:8px;padding:9px 0;border-top:1px solid var(--line);align-items:center"><span class="small b grow" style="min-width:0">${n}</span><span class="col" style="align-items:flex-end;text-align:right"><span class="tiny muted">${b != null ? fmt(b) : '—'}${sub(B) ? ' · ' + sub(B) : ''}</span><span class="small b">${a != null ? fmt(a) : '—'}${sub(A) ? ' <span class="tiny muted">· ' + sub(A) + '</span>' : ''}</span></span><span class="small b" style="color:${color};min-width:62px;text-align:right;white-space:nowrap">${flecha ? flecha + ' ' + dtxt : ''}</span></div>`;
@@ -1069,7 +1069,7 @@ function semanas() {
   return `<section class="card col" style="gap:4px"><div class="col" style="gap:2px;padding-bottom:6px"><h2 style="font-size:19px;font-weight:800">Esta semana frente a la anterior</h2><span class="tiny muted">${rangoTxt(addDays(fin, -6), fin)} frente a ${rangoTxt(addDays(fin, -13), addDays(fin, -7))} · arriba la anterior, abajo la última</span></div>
     <div style="background:${fondo};border-radius:12px;padding:10px 12px;margin-bottom:6px"><span class="small b">${esc(concl)}</span></div>
     ${rows.join('')}
-    <span class="tiny muted" style="padding-top:6px">✓ verde: mejora · ✗ rojo: empeora. Nota de las cacas: 5 normal, 4 con forma, 3 pastosa, 2 sin forma o alpistada, 1 diarrea, mucosa o alpistada sin forma. Días con cacas apuntadas: ${A.cacasDias} de 7.</span>
+    <span class="tiny muted" style="padding-top:6px">✓ verde: mejora · ✗ rojo: empeora. Nota de las cacas: 5 normal, 4 con forma, 3 pastosa, 2 sin forma o alpistada, 1 diarrea, mucosa o alpistada sin forma. Días con cacas apuntadas: ${A.cacasDias} de 7. El peso medio mezcla pesadas con y sin comida en la tripa (puede variar 20–40 g); cuando haya al menos 4 pesadas comparables en cada semana, se usarán solo esas.</span>
     ${prev.length ? `<details style="padding-top:8px"><summary class="small b" style="color:var(--teal-d);cursor:pointer">Ver semanas anteriores</summary>${prev.join('')}</details>` : ''}
   </section>`;
 }
@@ -1134,6 +1134,10 @@ const FACTOR_N = {
 SOSPECHAS.forEach(([k, l]) => FACTOR_N['sosp_' + k] = 'Sospecha: ' + l.charAt(0).toLowerCase() + l.slice(1));
 const sospechaDe = f => vivos('sospechas').find(x => x.fecha === f);
 const gramosDia = f => { const l = vivos('comidas').filter(c => c.fecha === f && c.g != null); return l.length ? l.reduce((a, c) => a + c.g, 0) : null; };
+// Pesada comparable: apuntada diciendo que justo antes no había comido ni hecho caca
+const esComparable = t => t.peso != null && t.pesoComio === false && t.pesoCaca === false;
+const pesosComparables = (a, b) => vivos('tomas').filter(t => t.fecha >= a && t.fecha <= b && esComparable(t)).map(t => t.peso);
+const pesoComp = f => { const l = pesosComparables(f, f); return l.length ? media(l) : null; };
 const pesoDia = f => { const l = vivos('tomas').filter(t => t.fecha === f && t.peso != null).map(t => t.peso); return l.length ? l.reduce((a, b) => a + b, 0) / l.length : null; };
 function esMalo(f) { const c = cacaDe(f); return !!(c && c.dia === 'malo') || vivos('sintomas').some(x => x.fecha === f && x.tipo === 'vomito'); }
 function tieneDatos(f) { return !!cacaDe(f) || vivos('sintomas').some(x => x.fecha === f && x.tipo === 'vomito'); }
@@ -1182,9 +1186,8 @@ function factores(f, tipo) {
   vivos('diluciones').filter(x => dos.includes(x.fecha)).forEach(x => { const m = DB.meds.find(y => y.id === x.medId); add('tanda', cuando(x.fecha) + ' se preparó ' + (m ? m.nombre : 'una tanda nueva')); });
   // peso
   if (tipo !== 'peso') {
-    const pA = pesoDia(ayer) != null ? pesoDia(ayer) : pesoDia(f);
-    const pb = []; for (let i = 2; i <= 8; i++) { const p = pesoDia(addDays(f, -i)); if (p != null) pb.push(p); }
-    if (pA != null && pb.length >= 3) { const m = media(pb); if (pA < m * 0.98) add('peso_baja', 'El peso bajó a ' + Math.round(pA) + ' g (venía de ' + Math.round(m) + ' g)'); }
+    const pa = pesosComparables(ayer, f), pb = pesosComparables(addDays(f, -8), ante);
+    if (pa.length >= 1 && pb.length >= 3) { const a = mediana(pa), m = mediana(pb); if (a < m * 0.97) add('peso_baja', 'El peso bajó a unos ' + Math.round(a) + ' g (venía de unos ' + Math.round(m) + ' g, en pesadas comparables)'); }
   }
   // cacas malas antes (para comer poco o bajar de peso)
   if (tipo !== 'cacas') [ante, ayer].forEach(d => { if (esMalo(d)) add('caca_mala', cuando(d) + ' tuvo cacas malas o vómito'); });
@@ -1199,15 +1202,15 @@ const TIPOS_PROB = [['cacas', 'Cacas malas'], ['come', 'Come poco'], ['peso', 'B
 const TIPO_DESC = {
   cacas: 'Días con cacas malas o vómito, comparados con el resto.',
   come: 'Días en que comió menos del 80 % de lo que suele (su mediana de las 2 semanas anteriores).',
-  peso: 'Días en que el peso de esos 2 días bajó más de un 3 % respecto a los días anteriores.'
+  peso: 'Días en que el peso bajó más de un 4 %, contando solo pesadas comparables (sin comer ni hacer caca justo antes).'
 };
 const TIPO_DIA = { cacas: 'días malos', come: 'días de comer poco', peso: 'días de bajar de peso' };
 const TIPO_UNO = { cacas: 'un día malo', come: 'un día de comer poco', peso: 'un día de bajar de peso' };
 function comeHabitual(f) { const l = []; for (let i = 1; i <= 14; i++) { const g = gramosDia(addDays(f, -i)); if (g != null) l.push(g); } return l.length >= 5 ? mediana(l) : null; }
 function comePoco(f) { if (f >= hoy()) return false; const g = gramosDia(f), m = comeHabitual(f); return g != null && m != null && g < m * 0.8; }
-function bajaPeso(f) { const a = [pesoDia(f), pesoDia(addDays(f, -1))].filter(x => x != null), b = []; for (let i = 3; i <= 7; i++) { const p = pesoDia(addDays(f, -i)); if (p != null) b.push(p); } return a.length > 0 && b.length >= 2 && media(a) < media(b) * 0.97; }
+function bajaPeso(f) { const a = pesosComparables(addDays(f, -1), f), b = pesosComparables(addDays(f, -8), addDays(f, -3)); return a.length >= 2 && b.length >= 3 && mediana(a) < mediana(b) * 0.96; }
 const esProblema = (f, tipo) => tipo === 'come' ? comePoco(f) : tipo === 'peso' ? bajaPeso(f) : esMalo(f);
-const hayDatos = (f, tipo) => tipo === 'come' ? f < hoy() && gramosDia(f) != null : tipo === 'peso' ? pesoDia(f) != null : tieneDatos(f);
+const hayDatos = (f, tipo) => tipo === 'come' ? f < hoy() && gramosDia(f) != null : tipo === 'peso' ? pesoComp(f) != null : tieneDatos(f);
 // Compara los días problema con el resto: qué aparece más antes de ellos
 function patrones(tipo) {
   tipo = tipo || 'cacas';
