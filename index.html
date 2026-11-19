@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#0f1117">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" href="icon-512.png">
+<link rel="icon" href="icon-192.png">
 <title>SenaBoard</title>
 <style>
 :root{
@@ -46,11 +46,15 @@ header{position:sticky;top:0;z-index:10;background:#0f1117;
 #wakeDot.na{display:none}
 
 #installTip{display:none;margin:14px 20px 0;padding:14px 16px;border-radius:14px;background:rgba(242,196,109,.1);border:1px solid rgba(242,196,109,.25);color:#f5dca8;font-size:14px;line-height:1.45}
-#installTip button{float:right;font-weight:700;padding:0 0 0 10px}
+#tipClose{float:right;font-weight:700;padding:0 0 0 10px}
+#installBtn{margin:10px 0 0}
+#editHint{display:none;margin:12px calc(var(--safe-r) + 20px) 0 calc(var(--safe-l) + 20px);padding:10px 14px;border-radius:12px;background:rgba(242,196,109,.1);border:1px solid rgba(242,196,109,.25);color:#f5dca8;font-size:13.5px;line-height:1.4}
+body.edit #editHint{display:block}
+.hbreak{display:none}
 
 /* Rejilla */
 main{padding:18px calc(var(--safe-r) + 20px) calc(var(--safe-b) + 110px) calc(var(--safe-l) + 20px)}
-#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:14px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(118px,calc(50% - 7px)),1fr));gap:14px}
 .pad{position:relative;overflow:hidden;aspect-ratio:1/1;min-height:110px;border-radius:20px;
   background:linear-gradient(155deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 55%), var(--c,#555);
   padding:12px 12px 14px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;
@@ -93,7 +97,7 @@ body.size-s #grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:1
 body.size-s .pad{border-radius:16px;padding:9px 9px 11px;min-height:90px}
 body.size-s .pad .name{font-size:13px}
 body.size-s .pad .meta{font-size:11px}
-body.size-l #grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:16px}
+body.size-l #grid{grid-template-columns:repeat(auto-fill,minmax(min(165px,calc(50% - 8px)),1fr));gap:16px}
 body.size-l .pad .name{font-size:18px}
 body.size-l .pad .pnote{font-size:13px}
 body.prog-full .pad .bar{top:0;height:auto;border-radius:0;background:rgba(255,255,255,.24);transition:width .12s linear}
@@ -103,7 +107,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:30px}
 /* Hojas modales */
 .sheet{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;background:rgba(5,6,10,.7)}
 .sheet.open{display:flex}
-.sheet .box{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:24px 24px 0 0;
+.sheet .box{width:100%;max-width:520px;max-height:92vh;max-height:92dvh;overflow:auto;overscroll-behavior:contain;background:var(--panel);border:1px solid var(--line);border-radius:24px 24px 0 0;
   padding:18px calc(var(--safe-r) + 20px) calc(var(--safe-b) + 22px) calc(var(--safe-l) + 20px);-webkit-overflow-scrolling:touch;box-shadow:0 -10px 40px rgba(0,0,0,.4)}
 @media (min-width:640px){
   .sheet{align-items:center}
@@ -131,7 +135,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:30px}
 .blist small{color:var(--muted)}
 .note{color:var(--muted);font-size:13.5px;line-height:1.5}
 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
-#toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 96px);transform:translateX(-50%);z-index:80;background:rgba(238,240,246,.96);color:#14161d;
+#toast{position:fixed;left:50%;bottom:calc(var(--footer-h, 90px) + 14px);transform:translateX(-50%);z-index:80;background:rgba(238,240,246,.96);color:#14161d;
   padding:10px 18px;border-radius:20px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 #toast.show{opacity:1}
 /* Reloj y cronómetro */
@@ -143,12 +147,14 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 @media (max-width:600px){ .clockBox{min-width:0;padding:3px 8px} .clockBox b{font-size:15px} }
 
 /* Pie, notas y pasos */
-main{padding-bottom:calc(var(--safe-b) + 110px)}
+main{padding-bottom:calc(var(--footer-h, 90px) + 24px)}
+body.noscroll{overflow:hidden}
 .vol{flex:1;max-width:420px}
-.pad .top{position:relative;display:flex;flex-direction:column;gap:5px;min-height:0}
+.pad .top{position:relative;display:flex;flex-direction:column;gap:5px;min-height:0;flex:1 1 auto;overflow:hidden;margin-bottom:4px}
+.pad .meta{flex:none}
 .pad.hasNote .name{-webkit-line-clamp:2}
 .pad .pnote{font-family:"Georgia","Times New Roman",ui-serif,serif;font-style:italic;font-size:11.5px;line-height:1.25;color:rgba(255,255,255,.92);
-  background:rgba(0,0,0,.2);border-radius:8px;padding:4px 7px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  background:rgba(0,0,0,.2);border-radius:8px;padding:4px 7px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-height:calc(3.75em + 8px)}
 .pad .pnote:empty{display:none}
 .pad .nextAct{max-width:100%;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.92);color:#1a1d26;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:700;white-space:nowrap}
 .pad.paused{box-shadow:0 0 0 3px rgba(242,196,109,.95), 0 8px 20px rgba(0,0,0,.3)}
@@ -170,12 +176,49 @@ main{padding-bottom:calc(var(--safe-b) + 110px)}
 #startOverlay.hide{display:none}
 #startOverlay .ver{margin-top:6px;font-size:13px;color:var(--muted)}
 #startOverlay .ver b{color:var(--accent)}
-#updBar{position:fixed;left:50%;top:calc(var(--safe-t) + 70px);transform:translateX(-50%);z-index:110;display:none;align-items:center;gap:10px;
+@media (max-height:520px){
+  #startOverlay{gap:10px}
+  #startOverlay img{width:84px;height:84px;border-radius:20px}
+  #startOverlay h1{font-size:24px}
+  #startOverlay .go{margin-top:2px;padding:12px 34px}
+}
+#updBar{position:fixed;left:50%;top:calc(var(--header-h, 61px) + 10px);transform:translateX(-50%);z-index:110;display:none;align-items:center;gap:10px;
   background:#1f2536;border:1px solid rgba(242,196,109,.5);border-radius:16px;padding:10px 10px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.5);font-size:15px;font-weight:600;max-width:94vw}
 #updBar.show{display:flex}
 #updBar button{padding:9px 14px;border-radius:12px;font-weight:700;font-size:14px}
 #updLater{color:var(--muted)}
 #updNow{background:var(--accent);color:#1b1607}
+/* ===== Móvil en vertical ===== */
+@media (max-width:600px){
+  header{flex-wrap:wrap;row-gap:8px;column-gap:8px;padding-left:calc(var(--safe-l) + 12px);padding-right:calc(var(--safe-r) + 12px);padding-bottom:8px}
+  #boardBtn{order:1;font-size:19px;padding:4px 0}
+  #addBtn,#editBtn,#menuBtn{order:2}
+  .hbtn{height:38px;min-width:40px;padding:0 12px}
+  .hbreak{display:block;order:3;flex-basis:100%;height:0}
+  #showTimer,#clockBox{order:4;flex:1 1 0;min-width:0;flex-direction:row;gap:8px;padding:6px 10px;align-items:baseline}
+  .clockBox small{font-size:10px}
+  .clockBox b{font-size:17px}
+  #wakeDot{order:5}
+  main{padding-left:calc(var(--safe-l) + 12px);padding-right:calc(var(--safe-r) + 12px);padding-top:12px}
+  #grid{gap:10px}
+  #installTip{margin:12px 12px 0}
+  #editHint{margin:12px 12px 0}
+  footer{flex-wrap:wrap;gap:10px;padding:10px calc(var(--safe-r) + 12px) calc(var(--safe-b) + 10px) calc(var(--safe-l) + 12px)}
+  .vol{order:-1;flex:1 1 100%;max-width:none;flex-direction:row;align-items:center;gap:12px}
+  .vol span{white-space:nowrap;min-width:92px}
+  #stopAll,#fadeAll{flex:1 1 0;height:54px;padding:0 8px}
+  .sheet .box{padding-left:calc(var(--safe-l) + 16px);padding-right:calc(var(--safe-r) + 16px)}
+  .actRow{grid-template-columns:64px 1fr 44px}
+}
+@media (max-width:600px){
+  .pad.hasNote .name{-webkit-line-clamp:2;font-size:14px}
+  .pad .pnote{font-size:11px;-webkit-line-clamp:2;padding:3px 6px;max-height:calc(2.5em + 6px)}
+}
+@media (max-width:360px){
+  .hbtn{padding:0 10px}
+  #boardBtn{font-size:17px}
+  .clockBox b{font-size:15px}
+}
 /* Arrastrar */
 .pad.dragSrc{opacity:.25}
 .dragGhost{position:fixed;z-index:60;pointer-events:none;transform:scale(1.08);box-shadow:0 18px 40px rgba(0,0,0,.55)!important;opacity:.95}
@@ -192,14 +235,16 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
 <body>
 <header>
   <button id="boardBtn" aria-label="Tableros"><svg class="brand" viewBox="180 395 664 190" aria-hidden="true"><g fill="#f2c46d"><path id="mh" d="M512 526 C 540 498, 598 490, 650 506 C 700 522, 742 524, 776 500 C 806 478, 814 446, 798 428 C 788 417, 770 420, 771 436 C 764 410, 800 398, 820 420 C 846 450, 832 500, 790 530 C 744 560, 664 574, 604 570 C 562 567, 530 556, 512 546 Z"/><use href="#mh" transform="translate(1024 0) scale(-1 1)"/></g></svg><span class="n" id="boardName">…</span><span class="c">▾</span></button>
+  <span class="hbreak"></span>
   <button id="showTimer" class="clockBox" aria-label="Cronómetro del show"><small>SHOW</small><b id="timerVal">0:00:00</b></button>
-  <div class="clockBox"><small>HORA</small><b id="clockVal">--:--:--</b></div>
+  <div class="clockBox" id="clockBox"><small>HORA</small><b id="clockVal">--:--:--</b></div>
   <span id="wakeDot" title="Pantalla encendida"></span>
   <button class="hbtn" id="addBtn" aria-label="Añadir">＋</button>
   <button class="hbtn" id="editBtn">Editar</button>
   <button class="hbtn" id="menuBtn" aria-label="Ajustes">⚙︎</button>
 </header>
-<div id="installTip"><button id="tipClose">✕</button>Para instalarla: en Safari toca <b>Compartir</b> (el cuadrado con la flecha ↑) y luego <b>«Añadir a pantalla de inicio»</b>.</div>
+<div id="installTip"><button id="tipClose" aria-label="Cerrar">✕</button><span id="installText"></span><button class="btn primary" id="installBtn" hidden>Instalar SenaBoard</button></div>
+<div id="editHint">✎ <b>Modo edición:</b> toca una pista para editarla · mantén el dedo y arrastra para moverla · pulsa <b>Hecho</b> al terminar</div>
 <main>
   <div id="grid"></div>
   <div id="empty" hidden>Este tablero está vacío.<br>Toca <b>＋</b> para añadir canciones.</div>
@@ -215,7 +260,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <h2>Añadir sonidos <button data-close>Cerrar</button></h2>
   <button class="btn primary" id="importBtn">📁 Importar canciones (Archivos)</button>
   <button class="btn" id="recBtn">🎙 Grabar con el micrófono</button>
-  <p class="note">Las canciones que te manden por AirDrop, WhatsApp o email: guárdalas primero en la app <b>Archivos</b> del iPad («Guardar en Archivos») y luego impórtalas aquí. Puedes elegir varias a la vez.</p>
+  <p class="note" id="addNote"></p>
   <input type="file" id="fileIn" multiple accept="audio/*,.mp3,.m4a,.wav,.aac,.aif,.aiff,.caf,.flac,.ogg,.opus,.mp4" hidden>
 </div></div>
 
@@ -224,7 +269,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <h2>Grabar <button data-close id="recClose">Cancelar</button></h2>
   <div id="recTime">0:00</div>
   <button class="btn primary" id="recToggle">● Empezar a grabar</button>
-  <p class="note">La grabación se añadirá como un botón nuevo en este tablero. Al terminar, el sonido de la app se reinicia unos segundos para recuperar la calidad (el micrófono pone el iPad en «modo llamada»).</p>
+  <p class="note" id="recNote"></p>
 </div></div>
 
 <!-- Editar pista -->
@@ -232,7 +277,7 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <h2><span>Editar pista</span><button data-close>Listo</button></h2>
   <div class="row"><label>Nombre</label><input type="text" id="pName" maxlength="60"></div>
   <div class="row"><label>Color</label><div class="swatches" id="pColors"></div></div>
-  <div class="row"><label>Volumen <b id="pVolL"></b></label><input type="range" id="pVol" min="0" max="150" step="1"><p class="note" id="pVolWarn" hidden>⚠︎ Por encima del 100 % el sonido puede saturar y oírse peor. Mejor sube el volumen del iPad o del altavoz.</p></div>
+  <div class="row"><label>Volumen <b id="pVolL"></b></label><input type="range" id="pVol" min="0" max="150" step="1"><p class="note" id="pVolWarn" hidden>⚠︎ Por encima del 100 % el sonido puede saturar y oírse peor. Mejor sube el volumen del <span class="devName">dispositivo</span> o del altavoz.</p></div>
   <div class="row two">
     <div><label>Fade in</label><div class="stepper"><button data-f="fadeIn" data-d="-0.5" aria-label="Menos">−</button><span id="pFinV">0 s</span><button data-f="fadeIn" data-d="0.5" aria-label="Más">＋</button></div></div>
     <div><label>Fade out</label><div class="stepper"><button data-f="fadeOut" data-d="-0.5" aria-label="Menos">−</button><span id="pFoutV">2 s</span><button data-f="fadeOut" data-d="0.5" aria-label="Más">＋</button></div></div>
@@ -294,13 +339,13 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   <div class="row"><label>Avance de la canción</label><div class="seg" id="progSeg"><button data-v="thin">Barra fina abajo</button><button data-v="full">Todo el botón</button></div></div>
   <div class="row"><label>Duración del botón FADE</label><div class="stepper" id="fadeAllStep"><button data-d="-0.5" aria-label="Menos">−</button><span id="fadeAllV">3 s</span><button data-d="0.5" aria-label="Más">＋</button></div></div>
   <hr>
-  <label class="switch"><span>Mantener la pantalla encendida<small id="wakeInfo">Evita que el iPad se bloquee solo</small></span><input type="checkbox" id="keepAwake"></label>
+  <label class="switch"><span>Mantener la pantalla encendida<small id="wakeInfo"></small></span><input type="checkbox" id="keepAwake"></label>
   <hr>
   <div class="row"><label>Copia de seguridad</label>
     <button class="btn" id="exportBtn">⬆︎ Exportar copia (todo)</button>
     <button class="btn" id="restoreBtn">⬇︎ Restaurar copia</button>
     <input type="file" id="restoreIn" hidden>
-    <p class="note">La copia incluye todos los tableros y canciones. Guárdala en Archivos o iCloud Drive.</p>
+    <p class="note" id="backupNote"></p>
   </div>
   <hr>
   <div class="row"><label>Sonido</label>
@@ -310,13 +355,13 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
   </div>
   <div class="row"><label>Prueba de calidad</label>
     <select id="abPad"></select>
-    <div class="two" style="margin-top:8px"><button class="btn" id="abEngine">▶ Motor SenaBoard</button><button class="btn" id="abNative">▶ Reproductor de Safari</button></div>
+    <div class="two" style="margin-top:8px"><button class="btn" id="abEngine">▶ Motor SenaBoard</button><button class="btn" id="abNative">▶ Reproductor del navegador</button></div>
     <p class="note">Escucha la misma canción de las dos formas (20 segundos cada una, o toca otra vez para parar) y compáralas con tu app de antes. Así sabremos si la diferencia está en el motor de SenaBoard o en cómo el iPad saca el sonido.</p>
   </div>
   <hr>
   <p class="note" id="storageInfo"></p>
   <p class="note">SenaBoard · versión <b class="appVer"></b></p>
-  <p class="note"><b>Consejos para el show:</b> pon el iPad en modo avión o «No molestar» para que no entren llamadas, y usa el <b>Acceso guiado</b> (Ajustes → Accesibilidad) para fijar la app. En este iPad, pon también el <b>bloqueo automático en «Nunca»</b>. El sonido se corta si bloqueas la pantalla o cambias de app.</p>
+  <p class="note" id="showTips"></p>
 </div></div>
 
 <!-- Cronómetro -->
@@ -342,7 +387,14 @@ textarea{resize:vertical;-webkit-user-select:text;user-select:text;line-height:1
 
 <script>
 'use strict';
-const APP_VERSION = '12';
+const APP_VERSION = '13';
+/* ================= Plataforma ================= */
+const UA = navigator.userAgent;
+const IS_IOS = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
+const IS_ANDROID = /Android/.test(UA);
+const DEV = IS_IOS ? (/iPhone|iPod/.test(UA) ? 'iPhone' : 'iPad') : IS_ANDROID ? 'móvil' : 'dispositivo';
+const STANDALONE = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+const NATIVE_LBL = IS_IOS ? '▶ Reproductor de Safari' : '▶ Reproductor del navegador';
 /* ================= Utilidades ================= */
 const $ = s => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -432,14 +484,14 @@ function silentWavUrl(rate){
   return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
 }
 function unmuteIOS(){
-  if (navigator.audioSession || (silentEl && !silentEl.paused)) return;
+  if (!IS_IOS || navigator.audioSession || (silentEl && !silentEl.paused)) return;
   if (!silentEl){ silentEl = document.createElement('audio'); silentEl.setAttribute('x-webkit-airplay', 'deny'); silentEl.setAttribute('playsinline', ''); silentEl.loop = true; silentEl.src = silentWavUrl(ctx ? ctx.sampleRate : 44100); }
   silentEl.play().catch(() => {});
 }
 function ensureCtx(){
   if (!ctx){
     const AC = window.AudioContext || window.webkitAudioContext;
-    ctx = new AC({ latencyHint: 'playback' }); audioGen++;
+    ctx = new AC({ latencyHint: IS_IOS ? 'playback' : 'balanced' }); audioGen++;
     master = ctx.createGain(); master.gain.value = state.masterVolume; master.connect(ctx.destination);
   }
   if (ctx.state !== 'running') ctx.resume().catch(() => {});
@@ -454,7 +506,8 @@ function ensureCtx(){
    y bucles perfectos. Imita la interfaz de <audio> para que el resto de la app
    no cambie. Si una pista no se puede preparar, se usa <audio> como reserva. */
 const SEG = 4, FIRST_SEG = 1, AHEAD = 2.5, LEAD = 0.015;
-const PCM_BUDGET = 480 * 1048576; // ~45 min de música estéreo en memoria
+// ~45 min de música estéreo en memoria; en móviles con poca memoria, menos (Android informa de la memoria)
+const PCM_BUDGET = Math.round((navigator.deviceMemory ? clamp(navigator.deviceMemory * 1024 * 0.12, 150, 480) : 480) * 1048576);
 let pcmBytes = 0;
 const pcmActive = new Set();
 class PcmTrack {
@@ -543,6 +596,7 @@ function getPlayer(pad){
     let el, src = null, url = null, mode = 'pcm', pcm = null;
     try { pcm = await decodePcm(blob); } catch (e) { mode = 'media'; }
     if (gen !== audioGen){ if (pcm) pcmBytes -= pcm.bytes; throw new Error('obsoleto'); } // el sonido se reinició mientras tanto
+    if (!board().pads.includes(pad.id)){ if (pcm) pcmBytes -= pcm.bytes; throw new Error('obsoleto'); } // se cambió de tablero mientras tanto
     const g = ctx.createGain(); g.gain.value = 0; g.connect(master);
     if (pcm) el = new PcmTrack(g, pcm);
     else {
@@ -628,7 +682,7 @@ function preloadBoard(){
   const ids = b.pads.filter(id => state.pads[id]);
   let done = 0;
   const info = () => { const el = $('#startInfo'); if (!el) return; const n = ids.length;
-    el.textContent = done < n ? 'Preparando pistas… ' + done + ' de ' + n : n + (n === 1 ? ' pista lista' : ' pistas listas'); };
+    el.textContent = !n ? 'Tablero «' + b.name + '» vacío' : done < n ? 'Preparando pistas… ' + done + ' de ' + n : n + (n === 1 ? ' pista lista' : ' pistas listas'); };
   info();
   ids.forEach(id => getPlayer(state.pads[id]).catch(() => markMissing(id)).then(() => { done++; info(); renderPadState(id); }));
 }
@@ -738,7 +792,7 @@ function onPadTap(pad){
   if (editMode) return openPadEditor(pad.id);
   ensureCtx(); requestWake();
   const p = players.get(pad.id);
-  if (!p) return launch(pad.id);
+  if (!p){ if (pending.has(pad.id)) return toast('«' + pad.name + '» se está preparando. Espera un momento.'); return launch(pad.id); }
   if (p.state === 'idle') return playExclusive(p);
   if (p.state === 'stopping') return hardStop(p, false); // tocar durante un fade: corta
   const i = nextStepIndex(p);
@@ -817,8 +871,9 @@ function releaseWake(){ if (wakeLock){ wakeLock.release().catch(() => {}); wakeL
 function updateWakeUI(){
   $('#wakeDot').classList.toggle('on', !!wakeLock);
   $('#wakeDot').classList.toggle('na', !('wakeLock' in navigator));
-  $('#wakeInfo').textContent = !('wakeLock' in navigator) ? 'Tu iPad no lo permite desde aquí: pon Ajustes → Pantalla y brillo → Bloqueo automático → Nunca'
-    : wakeLock ? 'Activo: el punto verde de arriba lo indica' : 'Evita que el iPad se bloquee solo';
+  $('#wakeInfo').textContent = !('wakeLock' in navigator)
+    ? (IS_IOS ? 'Tu ' + DEV + ' no lo permite desde aquí: pon Ajustes → Pantalla y brillo → Bloqueo automático → Nunca' : 'Tu navegador no lo permite: alarga el tiempo de apagado de pantalla en los ajustes del móvil')
+    : wakeLock ? 'Activo: el punto verde de arriba lo indica' : 'Evita que el ' + DEV + ' se bloquee solo';
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && state) saveNow(); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { requestWake(); if (ctx && ctx.state !== 'running') ctx.resume().catch(()=>{}); } });
@@ -960,24 +1015,57 @@ $('#timerReset').onclick = async () => {
 
 document.addEventListener('click', e => { if (ctx && !(e.target.closest && e.target.closest('.pad'))) primeAll(); }, true);
 /* ================= Hojas ================= */
-function openSheet(id){ $('#' + id).classList.add('open'); }
-function closeSheet(id){
+const sheetStack = [];
+let popIgnore = 0;
+function openSheet(id){
+  const el = $('#' + id); if (el.classList.contains('open')) return;
+  el.classList.add('open'); sheetStack.push(id); document.body.classList.add('noscroll');
+  syncHistory();
+}
+// Una sola entrada en el historial mientras haya alguna ventana abierta. Se ajusta al final
+// del toque (no a mitad), y solo se vuelve atrás si esa entrada es nuestra: nunca se sale de la app.
+let histSyncT = null;
+function syncHistory(){
+  clearTimeout(histSyncT);
+  histSyncT = setTimeout(() => {
+    const want = sheetStack.length > 0, has = !!(history.state && history.state.sb === 'sheet');
+    if (want && !has){ try { history.pushState({ sb: 'sheet' }, ''); } catch (e) {} }
+    else if (!want && has){ popIgnore++; try { history.back(); } catch (e) { popIgnore--; } }
+  }, 0);
+}
+function closeSheet(id, fromBack){
+  if (!$('#' + id).classList.contains('open')) return;
+  if (id === 'askSheet' && askResolve){ const r = askResolve; askResolve = null; r(false); }
   if (id === 'padSheet'){ try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {} commitEditor(); }
   $('#' + id).classList.remove('open');
   if (id === 'padSheet') editingId = null;
   if (id === 'menuSheet' && (abPlayer || abNativeEl)) abStop();
   if (id === 'recSheet') cancelRec();
+  const i = sheetStack.lastIndexOf(id); if (i >= 0) sheetStack.splice(i, 1);
+  if (!sheetStack.length) document.body.classList.remove('noscroll');
+  syncHistory();
 }
+// Android: «atrás» cierra la ventana abierta; sin ventanas, hay que pulsarlo dos veces para salir
+let exitGuard = false, lastBack = 0;
+function armExitGuard(){ if (!IS_ANDROID || exitGuard) return; exitGuard = true; try { history.pushState({ sb: 'guard' }, ''); } catch (e) {} }
+window.addEventListener('popstate', () => {
+  if (popIgnore > 0){ popIgnore--; return; }
+  if (sheetStack.length){ closeSheet(sheetStack[sheetStack.length - 1], true); return; }
+  if (IS_ANDROID){ exitGuard = false; lastBack = Date.now(); toast('Pulsa «atrás» otra vez para salir de SenaBoard'); }
+});
+document.addEventListener('click', () => armExitGuard(), true);
 document.querySelectorAll('.sheet').forEach(s => {
   s.addEventListener('click', e => { if (e.target === s && s.id !== 'recSheet') closeSheet(s.id); });
   s.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(s.id)));
 });
+let askResolve = null;
 function ask(title, msg, okText, danger){
   return new Promise(res => {
     $('#askTitle').textContent = title; $('#askMsg').textContent = msg || '';
     const ok = $('#askOk'); ok.textContent = okText || 'Aceptar'; ok.className = 'btn ' + (danger ? 'danger' : 'primary');
     $('#askCancel').hidden = false;
-    const done = v => { closeSheet('askSheet'); ok.onclick = $('#askCancel').onclick = null; res(v); };
+    const done = v => { askResolve = null; closeSheet('askSheet'); ok.onclick = $('#askCancel').onclick = null; res(v); };
+    askResolve = res;
     ok.onclick = () => done(true); $('#askCancel').onclick = () => done(false);
     openSheet('askSheet');
   });
@@ -1032,16 +1120,16 @@ $('#recToggle').onclick = async () => {
   rec.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
   rec.onstop = async () => {
     clearInterval(recTimer); recStream.getTracks().forEach(t => t.stop()); setSession('playback'); micUsed = true;
-    if (rec._cancel){ rec = null; if (!anyActive()) rebuildAudio(); return; }
+    if (rec._cancel){ rec = null; if (IS_IOS && !anyActive()) rebuildAudio(); return; }
     const blob = new Blob(recChunks, { type: rec.mimeType || type || 'audio/mp4' }); rec = null;
     const audioId = uid(); await putAudio(audioId, blob);
     const d = await probeDuration(blob);
     const n = Object.values(state.pads).filter(p => p.name.startsWith('Grabación')).length + 1;
     const pad = newPad('Grabación ' + n, audioId, Math.max(0, d));
     state.pads[pad.id] = pad; board().pads.push(pad.id); save(); renderBoard(); preloadBoard();
-    $('#recSheet').classList.remove('open');
+    closeSheet('recSheet');
     // usar el micrófono deja el iPad en «modo llamada» (sonido más bajo y apagado): se rehace el sonido
-    if (!anyActive()) rebuildAudio('Grabación añadida · sonido restablecido'); else toast('Grabación añadida');
+    if (IS_IOS && !anyActive()) rebuildAudio('Grabación añadida · sonido restablecido'); else toast('Grabación añadida');
   };
   rec.start(250); recStart = Date.now();
   $('#recToggle').innerHTML = '<span class="recDot"></span>Parar y guardar';
@@ -1120,8 +1208,8 @@ function setEnd(v){ const pad = editing(); const d = pad.duration || Infinity;
   $('#pEnd').value = pad.end > 0 ? fmt(pad.end, true) : ''; changed(); drawWave(); }
 $('#pStart').onchange = e => { if (editing()) setStart(parseTime(e.target.value)); };
 $('#pEnd').onchange = e => { if (editing()) setEnd(parseTime(e.target.value)); };
-$('#pMarkStart').onclick = () => { const p = players.get(editing().id); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setStart(p.el.currentTime); };
-$('#pMarkEnd').onclick = () => { const p = players.get(editing().id); if (!p || p.state === 'idle') return toast('Primero toca ▶ Probar'); setEnd(p.el.currentTime); };
+$('#pMarkStart').onclick = () => { const p = players.get(editing().id); if (!p || p.state === 'idle') return toast('Primero pulsa «▶ Escuchar»'); setStart(p.el.currentTime); };
+$('#pMarkEnd').onclick = () => { const p = players.get(editing().id); if (!p || p.state === 'idle') return toast('Primero pulsa «▶ Escuchar»'); setEnd(p.el.currentTime); };
 async function preview(fromEnd){
   const pad = editing(); ensureCtx();
   let p; try { p = await getPlayer(pad); } catch (e) { return toast('No encuentro el audio'); }
@@ -1299,7 +1387,7 @@ function abStop(){
   clearTimeout(abTimer);
   if (abNativeEl){ try { abNativeEl.pause(); URL.revokeObjectURL(abNativeEl.src); } catch (e) {} abNativeEl = null; }
   if (abPlayer && abPlayer.state !== 'idle') hardStop(abPlayer, false); abPlayer = null;
-  $('#abEngine').textContent = '▶ Motor SenaBoard'; $('#abNative').textContent = '▶ Reproductor de Safari';
+  $('#abEngine').textContent = '▶ Motor SenaBoard'; $('#abNative').textContent = NATIVE_LBL;
 }
 function abFillPads(){
   const sel = $('#abPad'), prev = sel.value; sel.innerHTML = '';
@@ -1352,6 +1440,7 @@ async function rebuildAudio(reason){
 }
 function checkRoute(force){
   if (!ctx || rebuilding || anyActive()) return false;
+  if (!force && !IS_IOS) return false;
   const hw = hardwareRate(); lastHw = hw;
   if (!force && hw && hw !== ctx.sampleRate){
     const pair = hw + '/' + ctx.sampleRate;
@@ -1366,7 +1455,7 @@ function renderAudioInfo(){
   if (!ctx){ el.textContent = ''; return; }
   const n = [...players.values()].filter(p => p.mode === 'pcm').length, m = [...players.values()].filter(p => p.mode === 'media').length;
   el.textContent = 'Diagnóstico: motor a ' + ctx.sampleRate.toLocaleString('es-ES') + ' Hz'
-    + (lastHw ? ' · salida del iPad a ' + lastHw.toLocaleString('es-ES') + ' Hz' + (lastHw === ctx.sampleRate ? ' ✓' : ' ✗') : '')
+    + (lastHw ? ' · salida del ' + DEV + ' a ' + lastHw.toLocaleString('es-ES') + ' Hz' + (lastHw === ctx.sampleRate ? ' ✓' : ' ✗') : '')
     + ' · ' + n + ' pistas en memoria' + (m ? ' · ' + m + ' en reserva' : '')
     + (micUsed ? ' · micrófono usado en esta sesión' : '');
 }
@@ -1393,6 +1482,7 @@ async function restoreBackup(file){
   const len = new DataView(pre.buffer).getUint32(4);
   const data = JSON.parse(new TextDecoder().decode(await file.slice(8, 8 + len).arrayBuffer()));
   const base = 8 + len;
+  audioGen++; pending.clear();
   for (const p of [...players.keys()]){ const pl = players.get(p); if (pl.state !== 'idle') hardStop(pl); disposePlayer(p); }
   await idb('audio', 'readwrite', s => s.clear());
   for (const e of data.entries){
@@ -1411,7 +1501,7 @@ $('#exportBtn').onclick = async () => {
   const file = new File([blob], name, { type: 'application/octet-stream' });
   closeSheet('menuSheet');
   // Segundo toque para compartir (iOS exige que sea al tocar)
-  $('#askTitle').textContent = 'Copia lista'; $('#askMsg').textContent = name + ' · ' + (blob.size / 1048576).toFixed(1) + ' MB. Elige «Guardar en Archivos» para guardarla.';
+  $('#askTitle').textContent = 'Copia lista'; $('#askMsg').textContent = name + ' · ' + (blob.size / 1048576).toFixed(1) + ' MB. ' + (IS_IOS ? 'Elige «Guardar en Archivos» para guardarla.' : 'Se guardará en Descargas o podrás elegir dónde compartirla.');
   const ok = $('#askOk'); ok.className = 'btn primary'; ok.textContent = 'Guardar / Compartir';
   ok.onclick = async () => {
     if (navigator.canShare && navigator.canShare({ files: [file] })){
@@ -1447,6 +1537,64 @@ document.querySelectorAll('#sizeSeg button').forEach(b => b.onclick = () => { st
 document.querySelectorAll('#progSeg button').forEach(b => b.onclick = () => { state.progress = b.dataset.v; save(); applyPrefs(); });
 document.querySelectorAll('#fadeAllStep button').forEach(b => b.onclick = () => { state.fadeAllSec = clamp(Math.round((state.fadeAllSec + parseFloat(b.dataset.d)) * 2) / 2, 0.5, 20); save(); applyPrefs(); });
 document.querySelectorAll('.appVer').forEach(e => { e.textContent = APP_VERSION; });
+function applyPlatformTexts(){
+  document.querySelectorAll('.devName').forEach(e => { e.textContent = DEV; });
+  $('#abNative').textContent = NATIVE_LBL;
+  $('#addNote').innerHTML = IS_IOS
+    ? 'Las canciones que te manden por AirDrop, WhatsApp o email: guárdalas primero en la app <b>Archivos</b> («Guardar en Archivos») y luego impórtalas aquí. Puedes elegir varias a la vez.'
+    : IS_ANDROID
+      ? 'También puedes enviarlas directamente desde WhatsApp, Archivos o el correo: toca <b>Compartir</b> y elige <b>SenaBoard</b> (con la app instalada). Aquí puedes elegir varias a la vez.'
+      : 'Puedes elegir varias canciones a la vez.';
+  $('#recNote').textContent = 'La grabación se añadirá como un botón nuevo en este tablero.' + (IS_IOS ? ' Al terminar, el sonido de la app se reinicia unos segundos para recuperar la calidad (el micrófono pone el ' + DEV + ' en «modo llamada»).' : '');
+  $('#backupNote').textContent = 'La copia incluye todos los tableros y canciones. ' + (IS_IOS ? 'Guárdala en Archivos o iCloud Drive.' : 'Guárdala en Descargas o en Google Drive.');
+  $('#showTips').innerHTML = IS_IOS
+    ? '<b>Consejos para el show:</b> pon el ' + DEV + ' en modo avión o «No molestar» para que no entren llamadas, y usa el <b>Acceso guiado</b> (Ajustes → Accesibilidad) para fijar la app.' + (('wakeLock' in navigator) ? '' : ' Pon también el <b>bloqueo automático en «Nunca»</b>.') + ' El sonido se corta si bloqueas la pantalla o cambias de app.'
+    : '<b>Consejos para el show:</b> pon el móvil en modo avión o «No molestar» para que no entren llamadas, y usa <b>Fijar aplicación</b> (Ajustes → Seguridad) para no salirte de la app sin querer. La pantalla se queda encendida sola mientras SenaBoard está abierta. Si bloqueas la pantalla o cambias de app, el sonido puede cortarse.';
+}
+// Instalar: iPhone/iPad (Safari) y Android (Chrome)
+let deferredInstall = null;
+function tipClosed(){ try { return localStorage.getItem('tipClosed') === '1'; } catch (e) { return false; } }
+function showInstallTip(){
+  if (STANDALONE || tipClosed()) return;
+  if (IS_IOS) $('#installText').innerHTML = 'Para instalarla: en Safari toca <b>Compartir</b> (el cuadrado con la flecha ↑) y luego <b>«Añadir a pantalla de inicio»</b>.';
+  else if (IS_ANDROID) $('#installText').innerHTML = deferredInstall ? 'Instálala como una app más del móvil: tendrá su icono y funcionará sin internet.' : 'Para instalarla: en Chrome toca el menú <b>⋮</b> y luego <b>«Instalar aplicación»</b> (o «Añadir a pantalla de inicio»).';
+  else return;
+  $('#installBtn').hidden = !deferredInstall;
+  $('#installTip').style.display = 'block';
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; showInstallTip(); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; $('#installTip').style.display = 'none'; });
+$('#installBtn').onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  try { await deferredInstall.userChoice; } catch (e) {}
+  deferredInstall = null; $('#installBtn').hidden = true;
+};
+// Android: canciones recibidas desde «Compartir → SenaBoard»
+async function importShared(){
+  if (!('caches' in window)) return;
+  let cache; try { cache = await caches.open('senaboard-share'); } catch (e) { return; }
+  const keys = await cache.keys();
+  if (keys.length){
+    const files = [];
+    for (const k of keys){
+      const r = await cache.match(k); if (!r) continue;
+      const blob = await r.blob(); const name = decodeURIComponent(r.headers.get('x-name') || 'Pista');
+      files.push(new File([blob], name, { type: blob.type || r.headers.get('content-type') || '' }));
+    }
+    for (const k of keys) await cache.delete(k);
+    if (files.length) await addFiles(files);
+  } else if (/[?&]shared=/.test(location.search)) toast('No llegó ninguna canción compatible');
+  if (/[?&]shared=/.test(location.search)){ try { history.replaceState(history.state, '', location.pathname); } catch (e) {} }
+}
+// Alto real de la cabecera y de la barra de abajo (cambian en móvil)
+function measureBars(){
+  const r = document.documentElement.style;
+  r.setProperty('--header-h', $('header').offsetHeight + 'px');
+  r.setProperty('--footer-h', $('footer').offsetHeight + 'px');
+}
+if (window.ResizeObserver){ const ro = new ResizeObserver(measureBars); ro.observe($('header')); ro.observe($('footer')); }
+window.addEventListener('resize', measureBars);
 /* ================= Actualizaciones ================= */
 let swReg = null, updating = false;
 function setupUpdates(){
@@ -1483,9 +1631,8 @@ $('#updNow').onclick = async () => {
   migrate();
   applyState();
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
-  let closed = false; try { closed = localStorage.getItem('tipClosed') === '1'; } catch (e) {}
-  if (!standalone && !closed && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1))) $('#installTip').style.display = 'block';
+  applyPlatformTexts(); showInstallTip(); measureBars();
+  importShared().catch(() => {});
   setupUpdates();
   requestWake();
 })();
