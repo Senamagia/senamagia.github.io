@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.8.5';
+const VERSION = '2.8.6';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -780,7 +780,7 @@ function formCambio() {
     <button class="btn btn-teal" data-a="cambio-guardar">Guardar cambio</button>
   </section>
   <section class="col" style="gap:8px"><h2 class="sec-title">Cambios apuntados</h2>
-    ${lista.length ? `<div class="card" style="padding:4px 16px">${lista.map(c => `<div class="list-row"><span class="col grow"><span class="b">${esc(nombreCambio(c))}</span><span class="tiny muted">${fFecha(c.fecha)} · ${esc(c.ajuste ? 'Subida de cantidad' : TIPO_CAMBIO_N[c.tipo] || '')} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Borrar cambio" data-a="cambio-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Apunta aquí cuándo empezasteis los suplementos, para que Progreso compare desde ese día.</div>`}
+    ${lista.length ? `<div class="card" style="padding:4px 16px">${lista.map(c => `<div class="list-row"><span class="col grow"><span class="b">${esc(nombreCambio(c))}</span><span class="tiny muted">${fFecha(c.fecha)} · ${esc(ES_SUBIDA(c) ? 'Subida de cantidad' : TIPO_CAMBIO_N[c.tipo] || '')} · ${esc(c.autor)}</span></span><button class="x-btn" aria-label="Borrar cambio" data-a="cambio-borrar" data-id="${c.id}">${I.x}</button></div>`).join('')}</div>` : `<div class="empty">Apunta aquí cuándo empezasteis los suplementos, para que Progreso compare desde ese día.</div>`}
   </section>`;
 }
 
@@ -860,10 +860,19 @@ function conclusion(ER) {
   if (dp != null) t += ' y ' + (Math.abs(dp) < 3 ? 'el peso estable' : (dp > 0 ? Math.round(dp) + ' g más' : Math.round(-dp) + ' g menos') + ' de media');
   return `<div class="row" style="background:var(--teal-s);border-radius:14px;padding:12px;gap:10px"><span class="small b" style="color:var(--teal-d)">${t}.</span></div>`;
 }
-const ES_DIETA = c => c.tipo === 'dieta' && !c.ajuste;
-const ES_SUBIDA = c => c.tipo === 'dieta' && !!c.ajuste;
+// Una dieta que solo cambia los gramos del mismo alimento que la anterior (pavo 8 g → 9 g) es una subida, no una dieta nueva
+const RE_GRAMOS = /([a-záéíóúñ]+)\s*\(\s*(\d+(?:[.,]\d+)?)\s*g\s*\)/i;
+function esSubidaAuto(c) {
+  if (c.tipo !== 'dieta') return false;
+  const b = RE_GRAMOS.exec(c.alimento || ''); if (!b) return false;
+  const prev = vivos('cambios').filter(x => x.tipo === 'dieta' && x !== c && (x.fecha < c.fecha || (x.fecha === c.fecha && (x.upd || 0) < (c.upd || 0)))).sort((x, y) => x.fecha.localeCompare(y.fecha) || (x.upd || 0) - (y.upd || 0)).pop();
+  const a = prev && RE_GRAMOS.exec(prev.alimento || '');
+  return !!a && a[1].toLowerCase() === b[1].toLowerCase();
+}
+const ES_SUBIDA = c => c.tipo === 'dieta' && (!!c.ajuste || esSubidaAuto(c));
+const ES_DIETA = c => c.tipo === 'dieta' && !ES_SUBIDA(c);
 const sinGramos = a => transicion() ? (a || '').replace(/\s*\(\s*\d+(?:[.,]\d+)?\s*g\s*\)/i, '').trim() : (a || '');
-const nombreCambio = c => c.tipo === 'dieta' && c.alimento ? 'Solo ' + (c.ajuste ? c.alimento : sinGramos(c.alimento)) : (c.texto || TIPO_CAMBIO_N[c.tipo] || '');
+const nombreCambio = c => c.tipo === 'dieta' && c.alimento ? 'Solo ' + (ES_SUBIDA(c) ? c.alimento : sinGramos(c.alimento)) : (c.texto || TIPO_CAMBIO_N[c.tipo] || '');
 function dietaActual() { const d = vivos('cambios').filter(c => ES_DIETA(c) && c.fecha <= hoy()).sort((a, b) => a.fecha.localeCompare(b.fecha)).pop(); return d || null; }
 const ES_MED = c => ['dosis', 'medicacion', 'suplemento'].includes(c.tipo);
 function graficaPeso(desde, hasta, map) {
@@ -1805,7 +1814,7 @@ document.addEventListener('click', e => {
       const F = S.cambio;
       if (F.tipo === 'dieta' && !(F.alimento || '').trim()) { toast('Escribe qué come ahora'); break; }
       if (!F.texto.trim() && F.tipo !== 'dieta') { toast('Escribe qué ha cambiado'); break; }
-      poner('cambios', Object.assign({ id: uid(), fecha: F.fecha || f, tipo: F.tipo, alimento: F.tipo === 'dieta' ? F.alimento.trim() : undefined, texto: F.texto.trim(), autor: yo() }, F.tipo === 'dieta' ? { marca: (F.marca || '').trim(), proteina: (F.proteina || '').trim(), diasPrueba: parseInt(F.diasPrueba, 10) || null, ajuste: !!F.ajuste } : {}));
+      poner('cambios', Object.assign({ id: uid(), fecha: F.fecha || f, tipo: F.tipo, alimento: F.tipo === 'dieta' ? F.alimento.trim() : undefined, texto: F.texto.trim(), autor: yo() }, F.tipo === 'dieta' ? Object.assign({ marca: (F.marca || '').trim(), proteina: (F.proteina || '').trim(), diasPrueba: parseInt(F.diasPrueba, 10) || null }, F.ajuste ? { ajuste: true } : {}) : {}));
       S.cambio = null; repintar(); toast('Cambio guardado'); break;
     }
     case 'cambio-borrar': abrirSheet('borrar', { col: 'cambios', id: d.id, texto: 'Este cambio dejará de separar etapas en Progreso.' }); break;
