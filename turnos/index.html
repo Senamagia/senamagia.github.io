@@ -124,7 +124,7 @@ const INICIO = '2026-11-13', FIN = '2027-01-05';
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const MESC = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-const DEF = { e2: 55, e4: 100, mp: 100, inc: true, iva: 10, irpf: 15, aviso: true, hora: 23 };
+const DEF = { e2: 55, e4: 100, mp: 100, inc: false, iva: 10, irpf: 15, aviso: true, hora: 23 };
 const FB_CONFIG = { apiKey: 'AIzaSyDXdrRm69cympP9-zd1MOl5lGfVWJVcCqo', authDomain: 'laura-8a65c.firebaseapp.com', projectId: 'laura-8a65c', storageBucket: 'laura-8a65c.firebasestorage.app', messagingSenderId: '710521295313', appId: '1:710521295313:web:f23fd7d248200f54d810f0' };
 const FB_VER = '10.12.2';
 const VAPID = 'BEud5XhyFgYZeuEl6O3sUkyozTvwAXo9ZQUDqyUhpcPEaPwQCsKJQ2lO_SQGT38yyEXIzROSm_K-hlOWnPss18I';
@@ -211,6 +211,7 @@ async function sincronizar() {
     D = Object.assign({ dias: {}, ajustes: {}, facturas: {}, nominas: {} }, j.datos);
     COLA.forEach(aplicar);
     guardar(); S.sync = 'ok'; S.err = '';
+    corregirIVA();
   } catch (e) {
     S.sync = 'error'; S.err = String(e.message || e);
     if (/código/i.test(S.err)) { PIN = ''; LS.set('pin', ''); }
@@ -224,6 +225,15 @@ function aplicar(o) {
   else if (o.t === 'ajustes') D.ajustes = o.d;
   else if (o.t === 'factura') D.facturas[o.mes] = o.d;
   else if (o.t === 'nomina') { if (o.v == null) delete D.nominas[o.mes]; else D.nominas[o.mes] = o.v; }
+}
+
+/* Corrección (v1.1): el precio de mago es sin IVA (total + IVA − IRPF).
+   Los días apuntados antes con «IVA incluido» se pasan a la cuenta buena una sola vez. */
+function corregirIVA() {
+  if (LS.get('fix-iva', 0)) return;
+  LS.set('fix-iva', 1);
+  Object.keys(D.dias).forEach(k => { const d = D.dias[k]; if (d.p && d.p.inc) { d.p = Object.assign({}, d.p, { inc: false }); op({ t: 'dia', f: k, d }); } });
+  if (D.ajustes && D.ajustes.inc) { D.ajustes = Object.assign({}, D.ajustes, { inc: false }); op({ t: 'ajustes', d: D.ajustes }); }
 }
 
 /* ---------- Pintar ---------- */
@@ -283,7 +293,7 @@ function pHoy() {
       <button class="opt ${eOn(4)}" data-a="e" data-v="4">4<small>${eur(a.e4)}</small></button>
     </div>
     ${d && (d.e === 2 || d.e === 4) ? `<label class="pnrow"><span><span class="tag">PN</span>Hoy he sido Papá Noel</span><span class="sw"><input type="checkbox" data-a="pn" ${d.pn ? 'checked' : ''}><span></span></span></label>` : ''}
-    ${u ? `<div class="saved"><span style="display:flex;align-items:center;gap:6px">${IC.ok}Guardado · ${eur(c.elfo + c.conIva)} hoy</span><button data-a="deshacer">Deshacer</button></div>` : ''}
+    ${u ? `<div class="saved"><span style="display:flex;align-items:center;gap:6px">${IC.ok}Guardado · ${eur(c.elfo + c.ingreso)} hoy</span><button data-a="deshacer">Deshacer</button></div>` : ''}
   </section>
   <section class="blk m" aria-label="Mago">
     <div class="rowb"><h2>Mago</h2><span class="hint">${eur(a.mp)} por turno${a.iva ? ' · IVA ' + (a.inc ? 'incl.' : 'aparte') : ''}</span></div>
@@ -296,7 +306,7 @@ function pHoy() {
     <div class="rowb"><span class="lab">${nomMes(ym)} hasta hoy</span><button class="lnk" data-a="ir" data-v="cue">Ver cuentas</button></div>
     <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
       <div><div style="font-size:13px;color:var(--elfo);font-weight:600">Elfo</div><div class="big">${eur(t.elfo)}</div><div style="font-size:12px;color:var(--mut)">${t.turnosE} turnos · netos</div></div>
-      <div><div style="font-size:13px;color:var(--mago);font-weight:600">Mago</div><div class="big">${eur(t.tuyo)}</div><div style="font-size:12px;color:var(--mut)">${t.n} turnos · ${eur(t.conIva)} con IVA</div></div>
+      <div><div style="font-size:13px;color:var(--mago);font-weight:600">Mago</div><div class="big">${eur(t.tuyo)}</div><div style="font-size:12px;color:var(--mut)">${t.n} turnos · te ingresan ${eur(t.ingreso)}</div></div>
     </div>
     <div class="hr"></div>
     <div class="rowb"><span style="font-size:15px;font-weight:600">Te queda limpio</span><span class="huge">${eur(t.limpio)}</span></div>
@@ -429,9 +439,10 @@ function pCue() {
   </section>
   <section class="card" style="gap:6px">
     <span class="disp" style="font-size:18px;font-weight:700;color:var(--mago)">Mago</span>
-    <div class="li"><span>${t.n} turno${t.n === 1 ? '' : 's'} (con IVA)</span><span>${eur(t.conIva)}</span></div>
-    <div class="li"><span>${ivaTxt}</span><span>${eur(t.iva)} / −${eur(t.irpf)}</span></div>
-    <div class="li"><span>Total de la factura</span><span>${eur(t.ingreso, 1)}</span></div>
+    <div class="li"><span>${t.n} turno${t.n === 1 ? '' : 's'}${a.inc ? ' (sin el IVA)' : ' × ' + eur(a.mp)}</span><span>${eur(t.base, 1)}</span></div>
+    <div class="li"><span>+ IVA ${a.iva} %</span><span>+${eur(t.iva, 1)}</span></div>
+    <div class="li"><span>− IRPF ${a.irpf} %</span><span>−${eur(t.irpf, 1)}</span></div>
+    <div class="li"><span>Total de la factura (te ingresan)</span><span>${eur(t.ingreso, 1)}</span></div>
     <div class="li b2"><span>Tuyo (sin el IVA)</span><span>${eur(t.tuyo)}</span></div>
     ${sel !== 'total' && t.n ? `
     <details style="font-size:13px;color:var(--mut)"><summary style="min-height:32px;display:flex;align-items:center;cursor:pointer">Datos para la factura</summary>
@@ -499,7 +510,7 @@ function pAju() {
     ${D.hoja ? `<div class="f"><span>Tu Excel</span><a href="${esc(D.hoja)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--elfo)">Abrir la hoja</a></div>` : ''}
   </div>
   ${estadoHTML()}
-  <p class="note">Turnos · versión 1.0</p>`;
+  <p class="note">Turnos · versión 1.1</p>`;
 }
 
 function pModal() {

@@ -12,7 +12,7 @@
 const PROYECTO_AVISOS = 'laura-8a65c';   // proyecto de Firebase que reparte los avisos al iPhone
 const TZ = 'Europe/Madrid';
 const INICIO = '2026-11-13', FIN = '2027-01-05'; // contrato: solo avisa estos días
-const DEF = { e2: 55, e4: 100, mp: 100, inc: true, iva: 10, irpf: 15, aviso: true, hora: 23 };
+const DEF = { e2: 55, e4: 100, mp: 100, inc: false, iva: 10, irpf: 15, aviso: true, hora: 23 };
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 const EUR = '#,##0.00 "€"';
