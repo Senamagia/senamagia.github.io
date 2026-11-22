@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.8.6';
+const VERSION = '2.9';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -353,6 +353,24 @@ const MALO = ['diarrea', 'mucosa'], REGULAR = ['pastosa', 'sin_forma', 'alpistad
 const COLORES = [['marron', 'Marrón'], ['verde', 'Verde'], ['amarillo', 'Amarillo'], ['negro', 'Negra / alquitrán'], ['sangre', 'Con sangre roja'], ['clara', 'Muy clara o gris']];
 const COLOR_N = Object.fromEntries(COLORES);
 const sugerirDia = (tipos, colores, ninguna) => { colores = colores || []; if (ninguna) return 'regular'; return tipos.some(t => MALO.includes(t)) || colores.some(c => c === 'negro' || c === 'sangre') ? 'malo' : tipos.some(t => REGULAR.includes(t)) || colores.some(c => c === 'verde' || c === 'amarillo' || c === 'clara') ? 'regular' : tipos.length ? 'bueno' : null; };
+// Recuento por tipo (desde la 2.9): { normal: 4, diarrea: 1 }. Las malas pueden llevar hora.
+const CON_HORA = ['sin_forma', 'alpistada_sf', 'diarrea', 'mucosa'];
+const comoLista = x => Array.isArray(x) ? x : Object.keys(x || {}).reduce((a, i) => { a[Number(i)] = x[i]; return a; }, []);
+const totalCuenta = cu => Object.values(cu || {}).reduce((a, b) => a + (b || 0), 0);
+function sugerirDiaCuenta(cu, colores, ninguna) {
+  colores = colores || []; if (ninguna) return 'regular';
+  const tot = totalCuenta(cu); if (!tot) return null;
+  const malas = MALO.reduce((a, k) => a + (cu[k] || 0), 0), reg = REGULAR.reduce((a, k) => a + (cu[k] || 0), 0);
+  if (colores.some(c => c === 'negro' || c === 'sangre') || malas / tot > 0.5) return 'malo';
+  if (malas || reg / tot > 0.5 || colores.some(c => c === 'verde' || c === 'amarillo' || c === 'clara')) return 'regular';
+  return 'bueno';
+}
+// Texto de las cacas de un día: "4 normal, 1 diarrea (19:10)" o, en días antiguos, los tipos sin recuento
+function tiposTexto(c) {
+  if (!c) return '';
+  if (c.cuenta && totalCuenta(c.cuenta)) return HECES.filter(([k]) => c.cuenta[k]).map(([k, l]) => c.cuenta[k] + ' ' + l.toLowerCase() + ((c.horasMalas && (c.horasMalas[k] || []).filter(Boolean).length) ? ' (' + c.horasMalas[k].filter(Boolean).join(', ') + ')' : '')).join(', ');
+  return (c.tipos || []).map(k => HECES_N[k]).join(', ');
+}
 const energiaDe = f => vivos('energia').find(x => x.fecha === f);
 const ENERGIA = [[1, 'Muy baja'], [2, 'Baja'], [3, 'Normal'], [4, 'Buena'], [5, 'Muy activa']];
 const DIA_N = { bueno: 'Bueno', regular: 'Regular', malo: 'Malo' };
@@ -627,6 +645,9 @@ function cacasForm() {
     F.tipos = r ? r.tipos.slice() : [];
     F.colores = r ? (r.colores || []).slice() : [];
     F.num = r && r.num != null ? r.num : null;
+    F.cuenta = r && r.cuenta ? Object.assign({}, r.cuenta) : {};
+    F.horas = r && r.horasMalas ? JSON.parse(JSON.stringify(r.horasMalas)) : {};
+    F.viejo = !!(r && !r.cuenta && (r.tipos || []).length);
     F.ninguna = r ? !!r.ninguna : false;
     F.dia = r ? r.dia : null;
     F.manual = r ? !!r.manual : false;
@@ -636,22 +657,25 @@ function cacasForm() {
 }
 function formCacas() {
   const F = cacasForm();
-  const sug = sugerirDia(F.tipos, F.colores, F.ninguna);
+  const tot = totalCuenta(F.cuenta);
+  const sug = tot ? sugerirDiaCuenta(F.cuenta, F.colores, F.ninguna) : sugerirDia(F.tipos, F.colores, F.ninguna);
   const dia = F.manual ? F.dia : sug;
   const r = cacaDe(F.fecha);
   const en = energiaDe(F.fecha);
   return `<section class="card form">
-    <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cacas del día, en general</h2><span class="small muted">Marca cómo han sido la mayoría. Puedes cambiarlo durante el día.</span></div>
+    <div class="col" style="gap:2px"><h2 style="font-size:19px;font-weight:800">Cacas del día</h2><span class="small muted">Suma una por cada caca, según cómo fue. Puedes ir sumando durante el día.</span></div>
     ${fechaPicker('cacas', F.fecha)}
     <button class="chip" style="align-self:flex-start" data-a="caca-ninguna" aria-pressed="${F.ninguna}">${F.ninguna ? '✓ ' : ''}No ha hecho caca</button>
-    ${F.ninguna ? '' : `<div class="chips">${HECES.map(([k, l]) => `<button class="chip" data-a="caca-tipo" data-k="${k}" aria-pressed="${F.tipos.includes(k)}">${l}</button>`).join('')}</div>
+    ${F.ninguna ? '' : `${F.viejo && !tot ? `<span class="small muted" style="background:var(--soft);border-radius:12px;padding:10px">Este día se apuntó sin recuento: ${esc((F.tipos || []).map(k => HECES_N[k]).join(', '))}${F.num ? ' · ' + F.num + ' cacas' : ''}. Si sumas aquí, se sustituye.</span>` : ''}
+    <div class="col">${HECES.map(([k, l]) => { const n = F.cuenta[k] || 0; const col = MALO.includes(k) ? '#B3261E' : REGULAR.includes(k) ? '#C98A00' : '#1F8A4C'; return `<div class="col" style="border-top:1px solid var(--line);padding:6px 0"><div class="row" style="justify-content:space-between;gap:8px"><span class="row b" style="gap:8px"><span style="width:9px;height:9px;border-radius:9px;background:${col}"></span>${l}</span><div class="row" style="gap:6px"><button class="x-btn" style="background:var(--soft);font-size:22px;font-weight:800" aria-label="Una ${l.toLowerCase()} menos" data-a="caca-cnt" data-k="${k}" data-v="-1">−</button><span style="min-width:30px;text-align:center;font-size:20px;font-weight:800;${n ? '' : 'color:var(--muted)'}">${n}</span><button class="x-btn" style="background:var(--soft);font-size:22px;font-weight:800" aria-label="Una ${l.toLowerCase()} más" data-a="caca-cnt" data-k="${k}" data-v="1">+</button></div></div>${n && CON_HORA.includes(k) ? `<div class="row" style="gap:6px;flex-wrap:wrap;padding:4px 0 2px 17px"><span class="tiny muted">Hora (si la sabes):</span>${Array.from({ length: n }, (_, i) => `<input class="field" type="time" style="width:auto;height:38px;padding:0 8px" value="${esc(comoLista(F.horas[k])[i] || '')}" data-bind="cacas.horas.${k}.${i}" aria-label="Hora de la ${l.toLowerCase()} ${i + 1}">`).join('')}</div>` : ''}</div>`; }).join('')}</div>
+    ${tot ? `<span class="small b">${tot} caca${tot === 1 ? '' : 's'} · ${MALO.reduce((a, k) => a + (F.cuenta[k] || 0), 0)} con diarrea o mucosa</span>` : ''}
     <div class="lbl">Color<div class="chips">${COLORES.map(([k, l]) => `<button class="chip" data-a="caca-color" data-k="${k}" aria-pressed="${F.colores.includes(k)}" ${k === 'negro' || k === 'sangre' ? 'style="border-color:#B3261E"' : ''}>${l}</button>`).join('')}</div></div>
-    <div class="row" style="justify-content:space-between"><span class="lbl" style="flex-direction:row">Cuántas ha hecho (aprox.)</span><div class="row" style="gap:6px"><button class="x-btn" style="background:var(--soft);font-size:22px;font-weight:800" aria-label="Una menos" data-a="caca-num" data-v="-1">−</button><span style="min-width:34px;text-align:center;font-size:22px;font-weight:800">${F.num == null ? '—' : F.num}</span><button class="x-btn" style="background:var(--soft);font-size:22px;font-weight:800" aria-label="Una más" data-a="caca-num" data-v="1">+</button></div></div>`}
+`}
     <div class="col" style="gap:8px;border-top:1px solid var(--line);padding-top:14px">
       <span class="b" style="font-size:16px">El día ha sido…</span>
       <div class="dia-opts">${['bueno', 'regular', 'malo'].map(k => `<button data-a="caca-dia" data-v="${k}" aria-pressed="${dia === k}">${DIA_N[k]}</button>`).join('')}</div>
-      ${puntCaca({ tipos: F.tipos, ninguna: F.ninguna }) != null ? `<span class="small b">Nota de las cacas: ${fNum(Math.round(puntCaca({ tipos: F.tipos, ninguna: F.ninguna }) * 10) / 10)} de 5</span>` : ''}
-      <span class="tiny muted">${F.manual ? 'Elegido a mano.' : sug ? 'Propuesto por lo que has marcado; tócalo si no estás de acuerdo.' : 'Marca arriba cómo han sido.'}</span>
+      ${(() => { const pc = puntCaca(tot ? { cuenta: F.cuenta } : { tipos: F.tipos, ninguna: F.ninguna }); return pc != null ? `<span class="small b">Nota de las cacas: ${fNum(Math.round(pc * 10) / 10)} de 5</span>` : ''; })()}
+      <span class="tiny muted">${F.manual ? 'Elegido a mano.' : sug ? 'Propuesto: bueno si no hay ninguna mala, regular si hay alguna, malo si son más de la mitad. Tócalo si no estás de acuerdo.' : 'Suma arriba cómo han sido.'}</span>
     </div>
     <button class="btn btn-teal" data-a="caca-guardar">${r ? 'Actualizar' : 'Guardar'}</button>
     ${r ? `<span class="tiny muted" style="text-align:center">Apuntado por ${esc(r.autor)}. Al guardar se cambia por lo que marques ahora.</span>` : ''}
@@ -965,13 +989,13 @@ function graficaPeso(desde, hasta, map) {
   return h + '</section>';
 }
 function statsRango(a, b) {
-  const s = { dias: diffDays(b, a) + 1, pesos: [], comp: [], g: [], kcal: [], buenos: 0, malos: 0, alp: 0, muc: 0, vom: 0, punt: [], cacasDias: 0 };
+  const s = { dias: diffDays(b, a) + 1, malasU: 0, totU: 0, diasCuenta: 0, pesos: [], comp: [], g: [], kcal: [], buenos: 0, malos: 0, alp: 0, muc: 0, vom: 0, punt: [], cacasDias: 0 };
   for (let f = a; f <= b; f = addDays(f, 1)) {
     vivos('tomas').forEach(t => { if (t.fecha === f && t.peso != null) { s.pesos.push(t.peso); if (esComparable(t)) s.comp.push(t.peso); } });
     const g = gramosDia(f); if (g != null) s.g.push(g);
     const k = kcalDia(f); if (k != null) s.kcal.push(k);
     const c = cacaDe(f);
-    if (c) { s.cacasDias++; if (c.dia === 'bueno') s.buenos++; else if (c.dia === 'malo') s.malos++; const t = c.tipos || []; if (t.includes('alpistada') || t.includes('alpistada_sf')) s.alp++; if (t.includes('mucosa') || t.includes('diarrea')) s.muc++; const p = puntCaca(c); if (p != null) s.punt.push(p); }
+    if (c) { s.cacasDias++; if (c.dia === 'bueno') s.buenos++; else if (c.dia === 'malo') s.malos++; const t = c.tipos || []; if (t.includes('alpistada') || t.includes('alpistada_sf')) s.alp++; if (t.includes('mucosa') || t.includes('diarrea')) s.muc++; const p = puntCaca(c); if (p != null) s.punt.push(p); if (c.cuenta && totalCuenta(c.cuenta)) { s.diasCuenta++; s.totU += totalCuenta(c.cuenta); s.malasU += MALO.reduce((x, k) => x + (c.cuenta[k] || 0), 0); } }
     s.vom += vivos('sintomas').filter(x => x.fecha === f && x.tipo === 'vomito').length;
   }
   s.peso = media(s.pesos); s.pesoC = s.comp.length ? mediana(s.comp) : null; s.gm = media(s.g); s.km = media(s.kcal); s.pm = media(s.punt);
@@ -1049,6 +1073,7 @@ function semanas() {
     ['Días con mucosa o diarrea', B.cacasDias ? B.muc : null, A.cacasDias ? A.muc : null, v => String(v), -1, 0],
     ['Vómitos', B.vom, A.vom, v => String(v), -1, 0]
   ];
+  if (A.diasCuenta >= 4 && B.diasCuenta >= 4) filas.splice(7, 0, ['Cacas con diarrea o mucosa', B.malasU * 100 / B.totU, A.malasU * 100 / A.totU, v => Math.round(v) + ' %', -1, 3]);
   const mejor = [], peor = [];
   const rows = filas.map(([n, b, a, fmt, sentido, umbral, extra]) => {
     let flecha = '', color = 'var(--muted)', dtxt = '';
@@ -1120,7 +1145,7 @@ const claveAlim = q => (q || '').trim().toLowerCase();
 function kcal100(que) { const m = kcalMapa(), k = claveAlim(que); if (m[k] != null) return { v: m[k], est: false }; if (/caballo|leonardo/.test(k)) return { v: 90, est: true }; if (/pavo/.test(k)) return { v: 110, est: true }; return null; }
 function kcalDia(f) { const l = vivos('comidas').filter(c => c.fecha === f && c.g != null); if (!l.length) return null; let t = 0; for (const c of l) { const k = kcal100(c.que); if (!k) return null; t += c.g * k.v / 100; } return t; }
 const PUNT = { normal: 5, con_forma: 4, pastosa: 3, sin_forma: 2, alpistada: 2, alpistada_sf: 1, diarrea: 1, mucosa: 1 };
-function puntCaca(c) { if (!c || c.ninguna) return null; const l = (c.tipos || []).map(t => PUNT[t]).filter(x => x != null); return l.length ? l.reduce((a, b) => a + b, 0) / l.length : null; }
+function puntCaca(c) { if (!c || c.ninguna) return null; if (c.cuenta && totalCuenta(c.cuenta)) { let t = 0, n = 0; Object.entries(c.cuenta).forEach(([k, v]) => { if (PUNT[k] != null && v) { t += PUNT[k] * v; n += v; } }); return n ? t / n : null; } const l = (c.tipos || []).map(t => PUNT[t]).filter(x => x != null); return l.length ? l.reduce((a, b) => a + b, 0) / l.length : null; }
 const media = l => l.length ? l.reduce((a, b) => a + b, 0) / l.length : null;
 function mediana(l) { const s = l.slice().sort((a, b) => a - b), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; }
 const minSusi = h => { const [a, b] = (h || '0:0').split(':').map(Number); return ((a + 20) % 24) * 60 + (b || 0); };
@@ -1289,7 +1314,7 @@ function textoClaude() {
   L.push('Meta de comida: ' + fNum(metaComida()) + ' g al día'); L.push('');
   for (let f = desde; f <= h; f = addDays(f, 1)) {
     const p = [];
-    const c = cacaDe(f); if (c) p.push(c.ninguna ? 'NO HIZO CACA' : 'cacas ' + DIA_N[c.dia].toLowerCase() + ' (' + c.tipos.map(k => HECES_N[k]).concat((c.colores || []).map(k => 'color ' + COLOR_N[k].toLowerCase())).join(', ') + (c.num ? ', ' + c.num + ' veces' : '') + ')');
+    const c = cacaDe(f); if (c) p.push(c.ninguna ? 'NO HIZO CACA' : 'cacas ' + DIA_N[c.dia].toLowerCase() + ' (' + [tiposTexto(c)].filter(Boolean).concat((c.colores || []).map(k => 'color ' + COLOR_N[k].toLowerCase())).join(', ') + (c.num ? ', ' + c.num + ' veces' : '') + ')');
     const en = energiaDe(f); if (en) p.push('energía ' + en.valor + '/5');
     ['manana', 'noche'].forEach(mom => { const t = tomaDe(f, mom); p.push(t ? 'toma ' + NOMBRE_MOM[mom] + ' ' + t.hora + (t.peso != null ? ' ' + fNum(t.peso) + ' g' : '') + faltan(t) : 'toma ' + NOMBRE_MOM[mom] + ' sin apuntar'); });
     const com = comidasDe(f); if (com.length) p.push('comida: ' + com.map(x => (x.hora ? x.hora + ' ' : '') + x.que + (x.g != null ? ' ' + fNum(x.g) + ' g' : '')).join(', '));
@@ -1558,7 +1583,7 @@ function eventos() {
   const ev = [];
   vivos('tomas').forEach(t => ev.push({ f: t.fecha, h: t.hora, autor: t.autor, t: 'Toma de la ' + NOMBRE_MOM[t.momento], d: [t.peso != null ? fNum(t.peso) + ' g' : null, (t.meds || []).map(m => m.nombre).join(', ') || 'sin medicación'].filter(Boolean).join(' · '), a: 'toma-edit', id: t.id }));
   vivos('semanales').forEach(s => { const m = DB.meds.find(x => x.id === s.medId) || {}; ev.push({ f: s.fecha, h: s.hora, autor: s.autor, t: m.nombre || 'Semanal', d: s.dosis || m.dosis || '', a: 'borrar', col: 'semanales', id: s.id }); });
-  vivos('cacas').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: c.ninguna ? 'No ha hecho caca' : 'Cacas: ' + (DIA_N[c.dia] || '—').toLowerCase(), d: [c.tipos.map(t => HECES_N[t]).join(', '), (c.colores || []).map(k => COLOR_N[k]).join(', '), c.num ? c.num + ' cacas' : ''].filter(Boolean).join(' · '), a: 'reg-caca', id: c.id, fecha: c.fecha }));
+  vivos('cacas').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: c.ninguna ? 'No ha hecho caca' : 'Cacas: ' + (DIA_N[c.dia] || '—').toLowerCase(), d: [tiposTexto(c), (c.colores || []).map(k => COLOR_N[k]).join(', '), c.num ? c.num + ' cacas' : ''].filter(Boolean).join(' · '), a: 'reg-caca', id: c.id, fecha: c.fecha }));
   vivos('comidas').forEach(c => ev.push({ f: c.fecha, h: c.hora, autor: c.autor, t: 'Comida', d: c.que + (c.g != null ? ' ' + fNum(c.g) + ' g' : ''), a: 'comida-edit', id: c.id }));
   vivos('apetito').forEach(c => ev.push({ f: c.fecha, h: c.hora || '', autor: c.autor, t: 'Apetito: ' + (Object.fromEntries(APETITO)[c.valor] || '').toLowerCase(), d: '', a: 'borrar', col: 'apetito', id: c.id }));
   vivos('cambios').forEach(c => ev.push({ f: c.fecha, h: '', autor: c.autor, t: 'Cambio: ' + (TIPO_CAMBIO_N[c.tipo] || ''), d: nombreCambio(c), a: 'borrar', col: 'cambios', id: c.id }));
@@ -1736,13 +1761,20 @@ document.addEventListener('click', e => {
     case 'caca-dia': { const F = cacasForm(); F.dia = d.v; F.manual = true; repintar(); break; }
     case 'caca-color': { const F = cacasForm(); const i = F.colores.indexOf(d.k); if (i >= 0) F.colores.splice(i, 1); else F.colores.push(d.k); repintar(); break; }
     case 'caca-ninguna': { const F = cacasForm(); F.ninguna = !F.ninguna; if (F.ninguna) { F.tipos = []; F.colores = []; F.num = 0; } else F.num = null; repintar(); break; }
+    case 'caca-cnt': { const F = cacasForm(); const n = Math.max(0, (F.cuenta[d.k] || 0) + Number(d.v)); if (n) F.cuenta[d.k] = n; else delete F.cuenta[d.k]; if (F.horas[d.k]) { F.horas[d.k] = comoLista(F.horas[d.k]).slice(0, n); if (!n) delete F.horas[d.k]; } repintar(); break; }
     case 'caca-num': { const F = cacasForm(); F.num = Math.max(0, (F.num == null ? 0 : F.num) + Number(d.v)); repintar(); break; }
     case 'energia': { const fe = cacasForm().fecha; const ex = energiaDe(fe); const v = Number(d.v); if (ex && ex.valor === v) borrar('energia', ex.id); else poner('energia', { id: 'energia-' + fe, fecha: fe, valor: v, hora: nowHM(), autor: yo() }); repintar(); break; }
     case 'caca-guardar': {
       const F = cacasForm();
-      const dia = F.manual ? F.dia : sugerirDia(F.tipos, F.colores, F.ninguna);
-      if (!dia) { toast('Marca cómo han sido o elige cómo ha ido el día'); break; }
-      poner('cacas', { id: 'caca-' + F.fecha, fecha: F.fecha, tipos: F.tipos.slice(), colores: F.colores.slice(), num: F.num, ninguna: F.ninguna, dia, manual: F.manual, hora: nowHM(), autor: yo() });
+      const tot = F.ninguna ? 0 : totalCuenta(F.cuenta);
+      const dia = F.manual ? F.dia : tot ? sugerirDiaCuenta(F.cuenta, F.colores, F.ninguna) : sugerirDia(F.tipos, F.colores, F.ninguna);
+      if (!dia) { toast('Suma las cacas o elige cómo ha ido el día'); break; }
+      const rec = { id: 'caca-' + F.fecha, fecha: F.fecha, tipos: F.tipos.slice(), colores: F.colores.slice(), num: F.num, ninguna: F.ninguna, dia, manual: F.manual, hora: nowHM(), autor: yo() };
+      if (tot) {
+        rec.cuenta = Object.assign({}, F.cuenta); rec.tipos = HECES.map(x => x[0]).filter(k => F.cuenta[k]); rec.num = tot;
+        const hm = {}; Object.keys(F.horas || {}).forEach(k => { const l = Array.from({ length: F.cuenta[k] || 0 }, (_, i) => comoLista(F.horas[k])[i] || ''); if (l.some(Boolean)) hm[k] = l; }); if (Object.keys(hm).length) rec.horasMalas = hm;
+      }
+      poner('cacas', rec);
       F.cargada = null; toast('Cacas apuntadas: día ' + DIA_N[dia].toLowerCase()); repintar(); break;
     }
     case 'comida-rapida': { S.comida.que = d.v; const i = document.getElementById('c-que'); if (i) i.value = d.v; const g = document.getElementById('c-g'); if (g) g.focus(); break; }
