@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.10';
+const VERSION = '2.10.1';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -225,7 +225,7 @@ function sembrarMeds() {
     m({ nombre: 'Vitamina B12', dosis: '0,25 ml subcutánea', tipo: 'semanal', dias: [1, 4], aviso: true }),
     m(SUPL.melena), m(SUPL.maxi), m(SUPL.glut)
   ];
-  DB.migr = 6;
+  DB.migr = 7;
   guardar();
 }
 // Suplementos: se preparan para varios días y se le da un poco cada día
@@ -296,6 +296,14 @@ function migrar6() {
     DB.tomas.forEach(t => { let k = false; (t.meds || []).forEach(x => { if (x.id === m.id && x.dosis !== '0,5 g por semana') { x.dosis = '0,5 g por semana'; k = true; } }); if (k) { t.upd = Date.now(); SYNC.marcar('tomas', t.id); } });
   }
   DB.migr = 6;
+  guardar();
+}
+// Versión 7: prueba sin pavo desde el 24 nov (lo pidió Sena)
+function migrar7() {
+  if ((DB.migr || 1) >= 7) return;
+  const t = DB.ajustes.find(x => x.id === 'transicion' && !x.borrado);
+  if (t && !t.pausa && hoy() <= '2026-11-26') { t.pausa = { desde: '2026-11-24', antes: 11, nota: 'Prueba sin pavo: ¿fue el pavo recongelado?' }; t.upd = Date.now(); SYNC.marcar('ajustes', t.id); }
+  DB.migr = 7;
   guardar();
 }
 const vivos = c => DB[c].filter(r => !r.borrado);
@@ -513,7 +521,7 @@ function vistaHoy() {
   if (da && da.alimento) {
     const n = diffDays(f, da.fecha) + 1;
     const mp = datosDia(); const r = resumen(da.fecha, f, mp);
-    h += `<button class="mini" data-a="tab" data-tab="prog"><span class="ico" style="background:var(--teal-s);font-size:18px;font-weight:800;color:var(--teal-d)">${n}</span><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Dieta actual · día ${n}${da.diasPrueba ? ' de ' + da.diasPrueba : ''}</span><span class="b" style="font-size:17px">Solo ${esc(sinGramos(da.alimento))}</span>${gramosTransicion(f) != null ? `<span class="small b" style="color:${subeTransicion(f) ? 'var(--warn)' : 'var(--teal-d)'}">${subeTransicion(f) ? 'Hoy sube ' : 'Hoy: '}${esc(transicion().alimento)} ${fNum(gramosTransicion(f))} g</span>` : ''}<span class="small muted">${r.tot ? r.g + ' días buenos de ' + r.tot : 'Aún sin días apuntados'}${r.peso != null ? ' · peso medio ' + Math.round(r.peso) + ' g' : ''}</span></span>${I.chev}</button>`;
+    h += `<button class="mini" data-a="tab" data-tab="prog"><span class="ico" style="background:var(--teal-s);font-size:18px;font-weight:800;color:var(--teal-d)">${n}</span><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Dieta actual · día ${n}${da.diasPrueba ? ' de ' + da.diasPrueba : ''}</span><span class="b" style="font-size:17px">Solo ${esc(sinGramos(da.alimento))}</span>${gramosTransicion(f) != null ? (enPausa(transicion(), f) ? `<span class="small b" style="color:var(--warn)">Hoy: sin ${esc(transicion().alimento)} (prueba${transicion().pausa.nota ? ': ' + esc(transicion().pausa.nota) : ''})</span>` : `<span class="small b" style="color:${subeTransicion(f) ? 'var(--warn)' : 'var(--teal-d)'}">${subeTransicion(f) ? 'Hoy sube ' : 'Hoy: '}${esc(transicion().alimento)} ${fNum(gramosTransicion(f))} g</span>`) : ''}<span class="small muted">${r.tot ? r.g + ' días buenos de ' + r.tot : 'Aún sin días apuntados'}${r.peso != null ? ' · peso medio ' + Math.round(r.peso) + ' g' : ''}</span></span>${I.chev}</button>`;
   }
   // Cómo va hoy
   const up = ultimoPeso();
@@ -786,6 +794,7 @@ function formComida() {
 function transCard(f) {
   const t = transicion();
   if (!t) return `<button class="linkbtn" style="align-self:flex-start" data-a="trans-abrir">¿Hacéis una transición poco a poco a un alimento nuevo? Configúrala</button>`;
+  if (enPausa(t, f)) return `<div class="col" style="gap:8px;background:#FFF4E0;border-radius:14px;padding:10px 12px"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Transición en pausa</span><span class="b">Sin ${esc(t.alimento)} desde el ${fCorta(t.pausa.desde)}</span>${t.pausa.nota ? `<span class="tiny muted">${esc(t.pausa.nota)}</span>` : ''}<div class="row" style="gap:8px;flex-wrap:wrap"><label class="lbl" style="flex:1;min-width:120px">Volver con (g)<input class="field" inputmode="decimal" id="trans-reanudar-g" value="${fNum(t.pausa.antes != null ? Math.max(0, t.pausa.antes - (t.paso || 1)) : (t.inicio || 0))}"></label><button class="btn btn-teal" style="align-self:flex-end;min-height:46px" data-a="trans-reanudar">Volver a darle ${esc(t.alimento)}</button></div></div>`;
   const g = gramosTransicion(f), sig = (() => { for (let k = 1; k <= 30; k++) if (subeTransicion(addDays(f, k))) return addDays(f, k); return null; })();
   return `<button class="row" style="gap:10px;background:var(--soft);border-radius:14px;padding:10px 12px;text-align:left" data-a="trans-abrir"><span class="col grow"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Transición</span><span class="b">${esc(t.alimento)}: ${g != null ? fNum(g) + ' g ' + (f === hoy() ? 'hoy' : 'ese día') : 'empieza el ' + fCorta(t.desde)}</span><span class="tiny muted">Sube ${fNum(t.paso)} g cada ${t.cada} día${t.cada > 1 ? 's' : ''}${t.hasta ? ' hasta ' + fNum(t.hasta) + ' g' : ''}${sig ? ' · próxima subida: ' + fCorta(sig) + ' (' + fNum(gramosTransicion(sig)) + ' g)' : ''}${t.auto ? ' · calculado de lo apuntado, corrígelo si no es así' : ''}</span></span>${I.chev}</button>`;
 }
@@ -798,7 +807,7 @@ function vistaSheetTrans() {
       <div class="grid2"><label class="lbl">Sube (g)<input class="field" inputmode="decimal" data-bind="form.paso" value="${esc(F.paso != null ? fNum(F.paso) : '')}"></label><label class="lbl">Cada (días)<input class="field" inputmode="numeric" data-bind="form.cada" value="${esc(F.cada != null ? F.cada : '')}"></label></div>
       <label class="lbl">Hasta (g, opcional)<input class="field" inputmode="decimal" data-bind="form.hasta" value="${esc(F.hasta != null ? fNum(F.hasta) : '')}" placeholder="Sin límite"></label>
       <button class="btn btn-teal" data-a="trans-guardar">Guardar</button>
-      ${F.existe ? `<button class="btn btn-danger" data-a="trans-fin">Terminar la transición</button>` : ''}
+      ${F.existe ? `<button class="btn btn-line" data-a="trans-pausa">Pausar: hoy sin ${esc(F.alimento || 'el alimento nuevo')} (prueba)</button><button class="btn btn-danger" data-a="trans-fin">Terminar la transición</button>` : ''}
     </div>`;
 }
 function vistaSheetKcal() {
@@ -1182,8 +1191,9 @@ function textoInforme() {
    TRANSICIÓN, CALORÍAS Y PUNTUACIÓN DE LAS CACAS
    ========================================================= */
 const transicion = () => { const r = (DB.ajustes || []).find(x => x.id === 'transicion' && !x.borrado); return r && r.activa !== false && r.desde ? r : null; };
-function gramosTransicion(f) { const t = transicion(); if (!t || f < t.desde) return null; let g = (t.inicio || 0) + Math.floor(diffDays(f, t.desde) / (t.cada || 1)) * (t.paso || 0); if (t.hasta) g = Math.min(g, t.hasta); return g; }
-function subeTransicion(f) { const t = transicion(); if (!t || f <= t.desde) return false; return diffDays(f, t.desde) % (t.cada || 1) === 0 && gramosTransicion(f) > gramosTransicion(addDays(f, -1)); }
+const enPausa = (t, f) => !!(t && t.pausa && f >= t.pausa.desde && (!t.pausa.hasta || f <= t.pausa.hasta));
+function gramosTransicion(f) { const t = transicion(); if (!t || f < t.desde) return null; if (enPausa(t, f)) return 0; let g = (t.inicio || 0) + Math.floor(diffDays(f, t.desde) / (t.cada || 1)) * (t.paso || 0); if (t.hasta) g = Math.min(g, t.hasta); return g; }
+function subeTransicion(f) { const t = transicion(); if (!t || f <= t.desde || enPausa(t, f)) return false; return diffDays(f, t.desde) % (t.cada || 1) === 0 && gramosTransicion(f) > gramosTransicion(addDays(f, -1)); }
 const kcalMapa = () => { const r = (DB.ajustes || []).find(x => x.id === 'kcal' && !x.borrado); return (r && r.mapa) || {}; };
 const claveAlim = q => (q || '').trim().toLowerCase();
 // kcal por 100 g: lo que hayáis puesto; si no, una estimación (caballo en lata ~90, pavo magro ~110)
@@ -1844,6 +1854,8 @@ document.addEventListener('click', e => {
     case 'trans-guardar': { const F = S.form; const r = { id: 'transicion', alimento: (F.alimento || '').trim(), desde: F.desde, inicio: num(F.inicio), paso: num(F.paso), cada: parseInt(F.cada, 10), hasta: num(F.hasta), activa: true, autor: yo() };
       if (!r.alimento || !r.desde || r.inicio == null || r.paso == null || !(r.cada > 0)) { toast('Rellena alimento, día, gramos, cuánto sube y cada cuántos días'); break; }
       poner('ajustes', r); cerrarSheet(); repintar(); toast('Transición guardada'); break; }
+    case 'trans-pausa': { const t = transicion(); if (t) poner('ajustes', Object.assign({}, t, { pausa: { desde: hoy(), antes: gramosTransicion(addDays(hoy(), -1)), nota: 'Prueba sin ' + t.alimento } })); cerrarSheet(); repintar(); toast('Transición en pausa'); break; }
+    case 'trans-reanudar': { const t = transicion(); const el = document.getElementById('trans-reanudar-g'); const g = el ? num(el.value) : null; if (!t || g == null) { toast('Pon los gramos'); break; } const r = Object.assign({}, t, { desde: hoy(), inicio: g, cada: Math.max(t.cada || 2, 3), pausas: (t.pausas || []).concat([Object.assign({}, t.pausa, { hasta: addDays(hoy(), -1) })]) }); delete r.pausa; poner('ajustes', r); repintar(); toast('Vuelve con ' + fNum(g) + ' g de ' + t.alimento + ', subiendo cada ' + r.cada + ' días'); break; }
     case 'trans-fin': { const t = transicion(); if (t) poner('ajustes', Object.assign({}, t, { activa: false, fin: hoy() })); cerrarSheet(); repintar(); toast('Transición terminada'); break; }
     case 'kcal-abrir': {
       const nombres = []; const add = n => { const k = claveAlim(n); if (k && !nombres.some(x => claveAlim(x) === k)) nombres.push(n.trim()); };
@@ -2343,6 +2355,7 @@ migrar3();
 migrar4();
 migrar5();
 migrar6();
+migrar7();
 aplicarPlanes();
 pintar();
 if (!yo()) abrirSheet('quien');
