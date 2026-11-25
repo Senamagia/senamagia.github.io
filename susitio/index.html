@@ -172,7 +172,7 @@ body.imprimiendo #imprimir{display:block;background:#fff}
    se borra queda marcado como borrado: así mañana se pueden
    juntar los datos de Sena y Sara en la nube sin perder nada.
    ========================================================= */
-const VERSION = '2.10.1';
+const VERSION = '2.10.2';
 const KEY = 'susitio-datos';
 const KEY_YO = 'susitio-yo';
 
@@ -393,7 +393,7 @@ function sugerirDiaCuenta(cu, colores, ninguna) {
 // Texto de las cacas de un día: "4 normal, 1 diarrea (19:10)" o, en días antiguos, los tipos sin recuento
 function tiposTexto(c) {
   if (!c) return '';
-  if (c.lista && c.lista.length) { const g = []; c.lista.forEach(x => { const k = claveUna(x); let e = g.find(y => y.k === k); if (!e) g.push(e = { k, t: textoUna(x).toLowerCase(), n: 0, h: [] }); e.n++; if (malaUna(x) && x.h) e.h.push(x.h); }); return g.map(e => e.n + ' ' + e.t + (e.h.length ? ' (' + e.h.join(', ') + ')' : '')).join(', '); }
+  if (c.lista && c.lista.length) { const g = []; c.lista.forEach(x => { const k = claveUna(x); let e = g.find(y => y.k === k); if (!e) g.push(e = { k, t: textoUna(x).toLowerCase(), n: 0, h: [] }); e.n++; if (malaUna(x) && (x.h || x.fr)) e.h.push(x.h || 'de noche'); }); return g.map(e => e.n + ' ' + e.t + (e.h.length ? ' (' + e.h.join(', ') + ')' : '')).join(', '); }
   if (c.cuenta && totalCuenta(c.cuenta)) return HECES.filter(([k]) => c.cuenta[k]).map(([k, l]) => c.cuenta[k] + ' ' + l.toLowerCase() + ((c.horasMalas && (c.horasMalas[k] || []).filter(Boolean).length) ? ' (' + c.horasMalas[k].filter(Boolean).join(', ') + ')' : '')).join(', ');
   return (c.tipos || []).map(k => HECES_N[k]).join(', ');
 }
@@ -692,12 +692,18 @@ function rapidasCaca() {
   [{ f: ['formada'], m: [] }, { f: ['formada'], m: ['alpistada'] }, { f: ['formada', 'liquida'], m: [] }, { f: ['pastosa'], m: [] }, { f: ['formada'], m: ['mucosa'] }, { f: ['liquida'], m: [] }].forEach(x => { if (!l.some(y => claveUna(y) === claveUna(x))) l.push(x); });
   return l.slice(0, 6);
 }
+function nuevaCaca(F, c) {
+  const cu = S.cacaCuando || 'ahora';
+  const x = { f: c.f.slice(), m: (c.m || []).slice(), h: cu === 'ahora' && F.fecha === hoy() ? nowHM() : '' };
+  if (cu === 'noche') x.fr = 'noche';
+  return x;
+}
 function guardarCacas(F, aviso) {
   const tot = F.ninguna ? 0 : F.lista.length;
   const dia = F.manual ? F.dia : tot ? sugerirDiaLista(F.lista, F.colores, F.ninguna) : totalCuenta(F.cuenta) ? sugerirDiaCuenta(F.cuenta, F.colores, F.ninguna) : sugerirDia(F.tipos, F.colores, F.ninguna);
   if (!dia) { if (aviso) toast('Añade las cacas o elige cómo ha ido el día'); return false; }
   const rec = { id: 'caca-' + F.fecha, fecha: F.fecha, tipos: F.tipos.slice(), colores: F.colores.slice(), num: F.num, ninguna: F.ninguna, dia, manual: F.manual, hora: nowHM(), autor: yo() };
-  if (tot) { rec.lista = F.lista.map(x => ({ f: x.f.slice(), m: (x.m || []).slice(), h: x.h || '' })); rec.tipos = tiposDeLista(rec.lista); rec.num = tot; }
+  if (tot) { rec.lista = F.lista.map(x => Object.assign({ f: x.f.slice(), m: (x.m || []).slice(), h: x.h || '' }, x.fr ? { fr: x.fr } : {})); rec.tipos = tiposDeLista(rec.lista); rec.num = tot; }
   else if (totalCuenta(F.cuenta)) { rec.cuenta = Object.assign({}, F.cuenta); rec.tipos = HECES.map(x => x[0]).filter(k => F.cuenta[k]); rec.num = totalCuenta(F.cuenta); }
   poner('cacas', rec);
   return dia;
@@ -714,12 +720,13 @@ function formCacas() {
     ${fechaPicker('cacas', F.fecha)}
     <button class="chip" style="align-self:flex-start" data-a="caca-ninguna" aria-pressed="${F.ninguna}">${F.ninguna ? '✓ ' : ''}No ha hecho caca</button>
     ${F.ninguna ? '' : `${F.viejo && !tot ? `<span class="small muted" style="background:var(--soft);border-radius:12px;padding:10px">Este día se apuntó antes: ${esc(tiposTexto(r) || (F.tipos || []).map(k => HECES_N[k]).join(', '))}${!r.cuenta && F.num ? ' · ' + F.num + ' cacas' : ''}. Si añades cacas aquí, se sustituye.</span>` : ''}
+    <div class="col" style="gap:6px"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">¿Cuándo fue?</span><div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[['ahora', 'Ahora'], ['noche', 'Por la noche'], ['sin', 'No sé la hora']].map(([k, l]) => `<button data-a="caca-cuando" data-v="${k}" aria-pressed="${(S.cacaCuando || 'ahora') === k}">${l}</button>`).join('')}</div>${S.cacaCuando === 'noche' ? `<span class="tiny muted">Para las que encontráis al levantaros: se guardan como «de noche», sin hora.</span>` : ''}</div>
     <div class="col" style="gap:6px"><span class="tiny b muted" style="text-transform:uppercase;letter-spacing:.05em">Un toque</span><div class="chips">${rapidasCaca().map((c, i) => `<button class="chip" data-a="caca-rapida" data-i="${i}"><span style="width:8px;height:8px;border-radius:9px;background:${colorUna(c)};display:inline-block;margin-right:6px"></span>${esc(textoUna(c))}</button>`).join('')}</div></div>
     <details ${F.sel.f.length || F.sel.m.length ? 'open' : ''} style="background:var(--soft);border-radius:14px;padding:10px 12px"><summary class="small b" style="color:var(--teal-d);cursor:pointer">Otra forma: elegir cómo era</summary>
       <div class="col" style="gap:8px;margin-top:10px"><span class="tiny muted">Forma (una, o dos si salió mitad y mitad)</span><div class="chips">${FORMAS.map(([k, l]) => `<button class="chip" data-a="caca-sf" data-k="${k}" aria-pressed="${F.sel.f.includes(k)}">${l}</button>`).join('')}</div>
       <span class="tiny muted">Además tenía…</span><div class="chips">${MARCAS.map(([k, l]) => `<button class="chip" data-a="caca-sm" data-k="${k}" aria-pressed="${F.sel.m.includes(k)}">${l}</button>`).join('')}</div>
       <button class="btn btn-line" style="min-height:46px" data-a="caca-add">${F.sel.f.length ? 'Añadir: ' + esc(textoUna(F.sel)) : 'Elige primero la forma'}</button></div></details>
-    ${tot ? `<div class="col">${F.lista.map((c, i) => `<div class="row" style="gap:8px;border-top:1px solid var(--line);padding:6px 0;align-items:center"><span style="width:9px;height:9px;border-radius:9px;background:${colorUna(c)};flex:0 0 9px"></span><span class="small b grow" style="min-width:0">${esc(textoUna(c))}</span><input class="field" type="time" style="width:auto;height:36px;padding:0 6px" value="${esc(c.h || '')}" data-caca-h="${i}" aria-label="Hora de esta caca"><button class="x-btn" aria-label="Quitar esta caca" data-a="caca-quitar" data-i="${i}">${I.x}</button></div>`).join('')}</div>
+    ${tot ? `<div class="col">${F.lista.map((c, i) => `<div class="row" style="gap:8px;border-top:1px solid var(--line);padding:6px 0;align-items:center"><span style="width:9px;height:9px;border-radius:9px;background:${colorUna(c)};flex:0 0 9px"></span><span class="small b grow" style="min-width:0">${esc(textoUna(c))}</span>${c.fr === 'noche' ? `<span class="pill" style="background:var(--soft);padding:6px 10px;border-radius:999px;font-size:13px;font-weight:700">de noche</span>` : `<input class="field" type="time" style="width:auto;height:36px;padding:0 6px" value="${esc(c.h || '')}" data-caca-h="${i}" aria-label="Hora de esta caca">`}<button class="x-btn" aria-label="Quitar esta caca" data-a="caca-quitar" data-i="${i}">${I.x}</button></div>`).join('')}</div>
     <span class="small b">${tot} caca${tot === 1 ? '' : 's'} · ${F.lista.filter(malaUna).length} con líquido o mucosa</span>` : ''}
     <div class="lbl">Color<div class="chips">${COLORES.map(([k, l]) => `<button class="chip" data-a="caca-color" data-k="${k}" aria-pressed="${F.colores.includes(k)}" ${k === 'negro' || k === 'sangre' ? 'style="border-color:#B3261E"' : ''}>${l}</button>`).join('')}</div></div>
 `}
@@ -1817,10 +1824,11 @@ document.addEventListener('click', e => {
     case 'caca-dia': { const F = cacasForm(); F.dia = d.v; F.manual = true; repintar(); break; }
     case 'caca-color': { const F = cacasForm(); const i = F.colores.indexOf(d.k); if (i >= 0) F.colores.splice(i, 1); else F.colores.push(d.k); repintar(); break; }
     case 'caca-ninguna': { const F = cacasForm(); F.ninguna = !F.ninguna; if (F.ninguna) { F.tipos = []; F.colores = []; F.num = 0; } else F.num = null; repintar(); break; }
-    case 'caca-rapida': { const F = cacasForm(); const c = rapidasCaca()[Number(d.i)]; if (!c) break; F.lista.push({ f: c.f.slice(), m: c.m.slice(), h: F.fecha === hoy() ? nowHM() : '' }); F.ninguna = false; guardarCacas(F); repintar(); toast('Añadida: ' + textoUna(c).toLowerCase()); break; }
+    case 'caca-rapida': { const F = cacasForm(); const c = rapidasCaca()[Number(d.i)]; if (!c) break; F.lista.push(nuevaCaca(F, c)); F.ninguna = false; guardarCacas(F); repintar(); toast('Añadida: ' + textoUna(c).toLowerCase()); break; }
+    case 'caca-cuando': S.cacaCuando = d.v; repintar(); break;
     case 'caca-sf': { const F = cacasForm(); const i = F.sel.f.indexOf(d.k); if (i >= 0) F.sel.f.splice(i, 1); else { if (F.sel.f.length >= 2) F.sel.f.shift(); F.sel.f.push(d.k); } repintar(); break; }
     case 'caca-sm': { const F = cacasForm(); const i = F.sel.m.indexOf(d.k); if (i >= 0) F.sel.m.splice(i, 1); else F.sel.m.push(d.k); repintar(); break; }
-    case 'caca-add': { const F = cacasForm(); if (!F.sel.f.length) { toast('Elige primero la forma'); break; } const c = { f: F.sel.f.slice(), m: F.sel.m.slice(), h: F.fecha === hoy() ? nowHM() : '' }; F.lista.push(c); F.sel = { f: [], m: [] }; F.ninguna = false; guardarCacas(F); repintar(); toast('Añadida: ' + textoUna(c).toLowerCase()); break; }
+    case 'caca-add': { const F = cacasForm(); if (!F.sel.f.length) { toast('Elige primero la forma'); break; } const c = nuevaCaca(F, F.sel); F.lista.push(c); F.sel = { f: [], m: [] }; F.ninguna = false; guardarCacas(F); repintar(); toast('Añadida: ' + textoUna(c).toLowerCase()); break; }
     case 'caca-quitar': { const F = cacasForm(); F.lista.splice(Number(d.i), 1); if (F.lista.length || totalCuenta(F.cuenta) || F.tipos.length) guardarCacas(F); else { const r = cacaDe(F.fecha); if (r) borrar('cacas', r.id); } repintar(); break; }
     case 'caca-cnt': { const F = cacasForm(); const n = Math.max(0, (F.cuenta[d.k] || 0) + Number(d.v)); if (n) F.cuenta[d.k] = n; else delete F.cuenta[d.k]; if (F.horas[d.k]) { F.horas[d.k] = comoLista(F.horas[d.k]).slice(0, n); if (!n) delete F.horas[d.k]; } repintar(); break; }
     case 'caca-num': { const F = cacasForm(); F.num = Math.max(0, (F.num == null ? 0 : F.num) + Number(d.v)); repintar(); break; }
